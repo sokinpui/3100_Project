@@ -14,7 +14,8 @@ npx storybook init # Optional, for UI documentation
 
 # run the code
 ```bash
-npm install react-scripts
+cd seta-ui
+npm start
 ```
 
 
