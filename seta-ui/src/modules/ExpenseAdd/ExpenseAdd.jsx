@@ -148,6 +148,7 @@ export default function ExpenseAdd() {
             </TableHead>
             {/* Table body */}
             <TableBody>
+
               {/* Map through expenses array to create rows */}
               {expenses.map((expense, index) => (
                 <TableRow key={index}>
@@ -157,6 +158,7 @@ export default function ExpenseAdd() {
                   <TableCell>{expense.description}</TableCell>
                 </TableRow>
               ))}
+              
               {/* Show message when no expenses exist */}
               {expenses.length === 0 && (
                 <TableRow>
@@ -165,6 +167,7 @@ export default function ExpenseAdd() {
                   </TableCell>
                 </TableRow>
               )}
+
             </TableBody>
           </Table>
         </TableContainer>

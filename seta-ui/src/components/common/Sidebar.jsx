@@ -100,6 +100,7 @@ export default function Sidebar({ children }) {
       >
         <Avatar sx={{ width: 32, height: 32 }}>U</Avatar> {/* User avatar */}
         <Typography variant="body2">User Name</Typography>  {/* User name */}
+        
       </Box>
     </Box>
   );
