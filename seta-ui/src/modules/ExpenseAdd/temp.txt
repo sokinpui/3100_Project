@@ -1,0 +1,148 @@
+import React, { useState } from 'react';
+import useApi from '../../services/useApi';
+import Grid from '@mui/material/Grid2'; // Import Grid2 this way
+import {
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Container,
+  TextField,
+  Box
+} from '@mui/material';
+
+
+export default function ExpenseAdd() {
+  const api = useApi();
+  const [expenses, setExpenses] = useState([]);
+  const [formData, setFormData] = useState({
+    amount: '',
+    category: '',
+    date: '',
+    description: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/expenses', formData);
+      // Add new expense to the table
+      setExpenses([...expenses, formData]);
+      // Reset form
+      setFormData({
+        amount: '',
+        category: '',
+        date: '',
+        description: ''
+      });
+      alert('Expense added successfully!');
+    } catch (error) {
+      alert('Failed to add expense.');
+    }
+  };
+
+  return (
+    <Container maxWidth="md">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <h2>Add Expense</h2>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid xs={12} sm={6}>
+              <TextField
+                type="number"
+                name="amount"
+                label="Amount"
+                value={formData.amount}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid xs={12} sm={6}>
+              <TextField
+                name="category"
+                label="Category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+            <Grid xs={12} sm={6} >
+              <TextField
+                type="date"
+                name="date"
+                label="Date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid xs={12}>
+              <TextField
+                fullWidth={true}
+                multiline
+                rows={4}
+                name="description"
+                label="Description"
+                value={formData.description}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid xs={12}>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="primary"
+              >
+                Add Expense
+              </Button>
+            </Grid>
+          </Grid>
+        </form>
+
+        {/* Expense Records Table */}
+        <TableContainer component={ Paper } sx={{ mt: 6 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Date</TableCell>
+                <TableCell>Category</TableCell>
+                <TableCell align="right">Amount ($)</TableCell>
+                <TableCell>Description</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {expenses.map((expense, index) => (
+                <TableRow key={index}>
+                  <TableCell>{expense.date}</TableCell>
+                  <TableCell>{expense.category}</TableCell>
+                  <TableCell align="right">{expense.amount}</TableCell>
+                  <TableCell>{expense.description}</TableCell>
+                </TableRow>
+              ))}
+              {expenses.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    No expenses added yet
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Container>
+  );
+}

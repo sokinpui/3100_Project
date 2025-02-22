@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 export default function ModuleGrid({ modules }) {
   return (
     <div className="module-grid">
+      <Link to ="/" className="module-card">
+        <h3>Home</h3>
+      </Link>
       {modules.map((module) => (
         <Link
           key={module.id}
