@@ -58,49 +58,70 @@ export default function Sidebar({ children }) {
   // Reusable drawer content component
   // Contains the list of navigation items
   const drawer = (
-    <Box sx={{ overflow: 'auto' }}>      {/* Container with scrolling capability */}
-      {/* Logo/Title of the app */}
+    <Box sx={{ 
+      overflow: 'auto',      // Enable scrolling if content overflows
+      height: '100%',        // Take full height of container
+      display: 'flex',       // Use flexbox layout
+      flexDirection: 'column'// Stack children vertically
+    }}>
+      {/* App Title Section */}
       <Box
-        sx={{                         // Styles for the box component
-          height: '64px',
+        sx={{
+          height: '64px',    // Fixed height header
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-          mb: 2
+          mb: 2             // Margin bottom for spacing
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}> {/* Heading text */}
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
           SETA App
         </Typography>
       </Box>
 
-      <List>                             {/* Vertical list container */}
+      {/* Navigation Menu List */}
+      {/* flexGrow: 1 pushes the user profile section to bottom */}
+      <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>  {/* Individual menu item */}
-            <ListItemButton onClick={() => navigate(item.path)}> {/* Clickable area */}
-              <ListItemIcon>{item.icon}</ListItemIcon>  {/* Icon container */}
-              <ListItemText primary={item.text} />      {/* Text label */}
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton onClick={() => navigate(item.path)}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
 
-      <Box                                // User profile section
+      {/* User Profile Section */}
+      {/* Positioned at bottom using flex layout */}
+      <Box
         sx={{
-          position: 'absolute',
-          bottom: 0,
-          width: drawerWidth-32,
           borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
+          px: 2,              // Horizontal padding only
+          py: 1.5,           // Vertical padding (slightly reduced)
+          display: 'flex',   // Use flexbox for alignment
+          alignItems: 'center', // Center items vertically
+          gap: 1,            // Space between avatar and text
+          boxSizing: 'border-box', // Include padding in width calculation
+          minWidth: 0        // Allow child elements to shrink below their default minimum width
         }}
       >
-        <Avatar sx={{ width: 32, height: 32 }}>U</Avatar> {/* User avatar */}
-        <Typography variant="body2">User Name</Typography>  {/* User name */}
-        
+        <Avatar sx={{ 
+          width: 32, 
+          height: 32,
+          flexShrink: 0     // Prevent avatar from shrinking
+        }}>Hi</Avatar>
+        <Typography 
+          variant="body2" 
+          noWrap           // Prevent text wrapping
+          sx={{
+            flexGrow: 1,   // Take up remaining space
+            minWidth: 0    // Allow text to shrink
+          }}
+        >
+          User Name
+        </Typography>
       </Box>
     </Box>
   );
@@ -109,17 +130,21 @@ export default function Sidebar({ children }) {
     <Box sx={{ display: 'flex' }}>    {/* Flex container for layout */}
       {/* Permanent Drawer - Always visible sidebar */}
       <Drawer
-        variant="permanent"            // Always visible, not collapsible
+        variant="permanent"
         sx={{
-          width: drawerWidth,         // Width of the drawer
-          '& .MuiDrawer-paper': {     // Styles for the paper component inside drawer
-            boxSizing: 'border-box',  // Include padding in width calculation
-            width: drawerWidth,       // Same width as drawer
+          width: drawerWidth,
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            backgroundColor: '#f8f9fa',  // Add this line - you can use any color
+            // Or use MUI theme colors like:
+            // backgroundColor: 'background.default',
+            // backgroundColor: 'grey.100',
           },
         }}
-        open                          // Always open
+        open
       >
-        {drawer}                      {/* Insert drawer content defined above */}
+        {drawer}
       </Drawer>
 
       {/* Main Content Area */}
