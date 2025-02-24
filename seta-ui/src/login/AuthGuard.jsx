@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
@@ -11,7 +11,7 @@ export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
     const loginTime = localStorage.getItem('loginTime');
     const currentTime = new Date().getTime();
 
-    if (!token || !loginTime) {
+    if (!token || !loginTime) {                 // If no token or login time, redirect to login page
       setIsLoggedIn(false);
       if (location.pathname !== '/login') {
         navigate('/login', { replace: true });
@@ -35,7 +35,7 @@ export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
 
   useEffect(() => {
     checkSession();
-    // Check session every 5 seconds instead of every minute
+    // Check session every 5 seconds
     const intervalId = setInterval(checkSession, 5000);
 
     return () => clearInterval(intervalId);

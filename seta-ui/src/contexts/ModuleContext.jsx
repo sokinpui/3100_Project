@@ -3,6 +3,8 @@ import React, { createContext, useContext } from 'react';
 const ModuleContext = createContext();
 
 export const ModuleProvider = ({ children }) => {
+
+  // isPublic and isProtected are used to check in ModuleRouter.jsx
   const modules = [
     {
       id: 'login',
@@ -25,6 +27,12 @@ export const ModuleProvider = ({ children }) => {
       component: React.lazy(() => import('../modules/ExpenseReports/ExpenseReports.jsx')),
       isProtected: true,
     },
+    {
+      id: 'page-not-found',
+      name: 'Page Not Found',
+      path: '*',
+      component: React.lazy(() => import('../components/common/PageNotFound.jsx')),
+    }
   ];
 
   return (
