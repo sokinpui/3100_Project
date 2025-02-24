@@ -1,18 +1,45 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Login from './Login';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const SESSION_DURATION = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+  const checkSession = () => {
+    const token = localStorage.getItem('authToken');
+    const loginTime = localStorage.getItem('loginTime');
+    const currentTime = new Date().getTime();
+
+    if (!token || !loginTime) {
+      setIsLoggedIn(false);
+      if (location.pathname !== '/login') {
         navigate('/login', { replace: true });
       }
+      return;
     }
-  }, [isLoggedIn, navigate]);
+
+    const timeDifference = currentTime - parseInt(loginTime);
+    
+    if (timeDifference > SESSION_DURATION) {
+      // Session expired
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('loginTime');
+      setIsLoggedIn(false);
+      navigate('/login', { replace: true });
+    } else {
+      // Session is still valid
+      setIsLoggedIn(true);
+    }
+  };
+
+  useEffect(() => {
+    checkSession();
+    // Check session every 5 seconds instead of every minute
+    const intervalId = setInterval(checkSession, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [location.pathname]);
 
   return null;
 }
