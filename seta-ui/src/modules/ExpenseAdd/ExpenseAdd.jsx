@@ -1,58 +1,69 @@
-// Import necessary dependencies
-import React, { useState } from 'react';
-// import useApi from '../../services/useApi';  ----> currently non-functional line
+import React, { useState, useEffect } from 'react';
 // Material-UI Grid system for responsive layouts
 import Grid from '@mui/material/Grid2';
-// Import Material-UI components - these are pre-built React components with Material Design
-import { IconButton, Tooltip } from '@mui/material';      // Icon button and tooltip components
-import DeleteIcon from '@mui/icons-material/Delete';      // Icon for delete button
+// Material-UI components for building the UI
 import {
-  Button,        // Material styled button component
-  Table,         // Components for creating tables
-  TableBody,     // Table body wrapper
-  TableCell,     // Individual table cell
-  TableContainer,// Wrapper for tables with additional features
-  TableHead,     // Table header wrapper
-  TableRow,      // Table row component
-  Paper,         // Surface-like component that provides elevation
-  Container,     // Responsive container with max-width
-  TextField,     // Input field component with material design
-  Box           // Basic layout component for div-like elements
+  IconButton,
+  Tooltip,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Container,
+  TextField,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardHeader,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  InputAdornment,
+  Divider,
+  Chip
 } from '@mui/material';
 
+// Import icons
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CategoryIcon from '@mui/icons-material/Category';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import DescriptionIcon from '@mui/icons-material/Description';
+import SummarizeIcon from '@mui/icons-material/Summarize';
+
 // Import date-related dependencies
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'; // Adapter to integrate dayjs with MUI
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'; // Provider for date management
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'; // The actual date picker component
-import dayjs from 'dayjs'; // Modern JavaScript date utility library
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 
+// Predefined expense categories to choose from
+const expenseCategories = [
+  'Food & Dining',
+  'Transportation',
+  'Housing',
+  'Entertainment',
+  'Healthcare',
+  'Shopping',
+  'Education',
+  'Utilities',
+  'Travel',
+  'Personal Care',
+  'Other'
+];
+
+// Main component function
 export default function ExpenseAdd() {
-  // const api = useApi();        ----> currently non-functional line
-
-  // Handler for form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // await api.post('/expenses', formData);
-      // Update local state with new expense
-      setExpenses([...expenses, formData]);       // ...expense = spread operator, used to copy the existing array and add the new expense to it.
-      // Clear form fields
-      setFormData({
-        amount: '',
-        category: '',
-        date: '',
-        description: ''
-      });
-      alert('Expense added successfully!');
-    } catch (error) {
-      alert('Failed to add expense.');
-    }
-  };
-
-  // State for storing list of expenses
+  // State for storing the list of expenses - MUST be at top level of component
   const [expenses, setExpenses] = useState([]);
 
-  // State for form input values
+  // State for storing form input values
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
@@ -60,203 +71,512 @@ export default function ExpenseAdd() {
     description: ''
   });
 
+  // Load existing expenses from localStorage when component mounts
+  useEffect(() => {
+    const savedExpenses = localStorage.getItem('expenses');
+    if (savedExpenses) {
+      setExpenses(JSON.parse(savedExpenses));
+    }
+  }, []);
+
+  // Handler for form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const newExpenses = [...expenses, formData];
+      setExpenses(newExpenses);
+      localStorage.setItem('expenses', JSON.stringify(newExpenses));
+      
+      setFormData({
+        amount: '',
+        category: '',
+        date: '',
+        description: ''
+      });
+      
+      alert('Expense added successfully!');
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      alert('Failed to add expense.');
+    }
+  };
+
   // Handler for input field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
-      ...prev,          // create a copy of previous state             
-      [name]: value     // Update the field that was changed
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Date change handler
+  const handleDateChange = (newValue) => {
+    setFormData(prev => ({
+      ...prev,
+      date: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
     }));
   };
 
   // Handler for deleting an expense
   const handleDelete = (indexToDelete) => {
     try {
-      // Filter out the expense at the specified index
-      const updatedExpenses = expenses.filter((_, index) => index !== indexToDelete); // ignoring the first parameter, using only the index
-
-      // Update the expenses state with the filtered array
+      const updatedExpenses = expenses.filter((_, index) => index !== indexToDelete);
       setExpenses(updatedExpenses);
-      // Show success message
+      localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
       alert('Expense deleted successfully!');
     } catch (error) {
-      // Show error message if deletion fails
+      console.error('Error deleting expense:', error);
       alert('Failed to delete expense.');
     }
   };
 
-  // Date change handler - Called when user selects a new date
-  const handleDateChange = (newValue) => {
-    setFormData(prev => ({
-      ...prev,
-      date: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-      // If a date is selected (newValue exists):
-      // 1. Convert it to dayjs object
-      // 2. Format it to YYYY-MM-DD string
-      // If no date selected (newValue is null), use empty string
-    }));
+  // Calculate the sum of all expenses
+  const calculateTotalExpenses = () => {
+    return expenses.reduce((sum, expense) => {
+      return sum + (parseFloat(expense.amount) || 0);
+    }, 0).toFixed(2);
   };
 
+  // Get today's date for analysis
+  const today = dayjs().format('YYYY-MM-DD');
+  
+  // Count expenses added today
+  const expensesAddedToday = expenses.filter(expense => expense.date === today).length;
+
+  // Component rendering
   return (
-    // Container component centers content and sets max width
     <Container maxWidth="lg">
-      {/* Box component adds margin top and bottom */}
-      <Box sx={{ mt: 8, mb: 2, backgroundColor: '#f5f5f5', p: 4, borderRadius: 2 }}>
-        {/* Heading for the page */}
-        <h2>Add Expense</h2>
-        <form onSubmit={handleSubmit}>
-          {/* Grid container for responsive layout */}
-          {/* spacing prop adds gap between grid items */}
-          <Grid container spacing={1}>
-            {/* Grid items with size prop for responsive columns */}
-            <Grid size={4}>             {/*sum of one line = 12, otherwise will shift to the next line*/}
-              {/* TextField provides styled input with label */}
-              {/* fullWidth makes the input take full width of its co ntainer */}
-              <TextField
-                fullWidth
-                label="Category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-            <Grid size={4}>
-              {/* LocalizationProvider is required to set up the date management system */}
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                {/* DatePicker component with configuration */}
-                <DatePicker
-                  label="Date"
-                  // Convert stored date string to dayjs object for picker
-                  // If date exists in formData, create dayjs object, else null
-                  value={formData.date ? dayjs(formData.date) : null}
-                  onChange={handleDateChange}
-                  // Configure the underlying TextField
-                  slotProps={{         // SlotProps are used to configure the underlying TextField
-                    textField: {
-                      fullWidth: true, // Make the field take full width
-                      required: true   // Mark field as required
+      {/* Page title */}
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        sx={{ 
+          mt: 4, 
+          mb: 3, 
+          fontWeight: 'bold',
+          color: '#1976d2',
+          textAlign: 'center'
+        }}
+      >
+        Expense Tracker
+      </Typography>
+      
+      {/* Summary cards row */}
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {/* Total Expenses Card */}
+        <Card sx={{ 
+          flexGrow: 1, 
+          minWidth: 240,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': { 
+            transform: 'translateY(-4px)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
+          }}}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+            <SummarizeIcon sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
+            <Box>
+              <Typography color="textSecondary" variant="body2">
+                Total Expenses
+              </Typography>
+              <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                ${calculateTotalExpenses()}
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+        
+        {/* Total Entries Card */}
+        <Card sx={{ 
+          flexGrow: 1, 
+          minWidth: 240,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': { 
+            transform: 'translateY(-4px)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
+          }}}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+            <DescriptionIcon sx={{ fontSize: 40, mr: 2, color: 'info.main' }} />
+            <Box>
+              <Typography color="textSecondary" variant="body2">
+                Total Entries
+              </Typography>
+              <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                {expenses.length}
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+        
+        {/* Today's Entries Card */}
+        <Card sx={{ 
+          flexGrow: 1, 
+          minWidth: 240,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': { 
+            transform: 'translateY(-4px)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
+          }}}>
+          <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+            <DateRangeIcon sx={{ fontSize: 40, mr: 2, color: 'success.main' }} />
+            <Box>
+              <Typography color="textSecondary" variant="body2">
+                Added Today
+              </Typography>
+              <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                {expensesAddedToday}
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+      
+      {/* Add Expense Form Card */}
+      <Card 
+        elevation={3} 
+        sx={{ 
+          mb: 4, 
+          overflow: 'visible',
+          borderRadius: 2,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+        }}
+      >
+        <CardHeader 
+          title="Add New Expense" 
+          sx={{ 
+            backgroundColor: 'primary.light', 
+            color: 'primary.contrastText',
+            py: 2,
+            borderRadius: '5px 5px 0 0'
+          }} 
+        />
+        <CardContent sx={{ p: 3 }}>
+          <form onSubmit={handleSubmit}>
+            {/* Grid container for responsive layout */}
+            <Grid container spacing={3}>
+              {/* First row: Category, Date, Amount */}
+              <Grid size={4}>
+                <FormControl fullWidth required>
+                  <InputLabel id="category-label">Category</InputLabel>
+                  <Select
+                    labelId="category-label"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    label="Category"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <CategoryIcon fontSize="small" />
+                      </InputAdornment>
                     }
+                  >
+                    {/* Map through categories array to create dropdown options */}
+                    {expenseCategories.map(category => (
+                      <MenuItem key={category} value={category}>{category}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              {/* Date picker */}
+              <Grid size={4}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Date"
+                    value={formData.date ? dayjs(formData.date) : null}
+                    onChange={handleDateChange}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true,
+                        InputProps: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <DateRangeIcon fontSize="small" />
+                            </InputAdornment>
+                          ),
+                        }
+                      }
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              
+              {/* Amount field */}
+              <Grid size={4}>
+                <TextField
+                  fullWidth
+                  label="Amount"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AttachMoneyIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
                   }}
                 />
-              </LocalizationProvider>
+              </Grid>
+              
+              {/* Second row: Description field */}
+              <Grid size={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={5}
+                  label="Description (Optional)"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+              </Grid>
+              
+              {/* Third row: Submit button */}
+              <Grid size={12} sx={{ display: 'flex', justifyContent: 'end'}}>
+                <Button 
+                  type="submit" 
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddCircleOutlineIcon />}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 'medium',
+                    boxShadow: '0 4px 10px rgba(25, 118, 210, 0.3)',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      boxShadow: '0 6px 15px rgba(25, 118, 210, 0.4)',
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
+                >
+                  Add Expense
+                </Button>
+              </Grid>
             </Grid>
-            <Grid size={4}>
-              <TextField
-                fullWidth
-                label="Amount"
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
-                required
-                type='number'       // Input type set to number
-              />
-            </Grid>
-            <Grid size={12}>{/* Full width description field */}
-              <TextField
-                fullWidth
-                margin='normal'
-                multiline        // Allows multiple lines
-                rows={5}         // Sets height to 5 rows
-                label="Description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-              />
-            </Grid>            
-            {/* Button container with flex alignment */}
-            <Grid size={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button type="submit"
-                variant="contained"
-                color="primary"
-                sx={{
-                  py: 1,
-                  borderRadius: 1,
-                  textTransform: 'none',
-                  boxShadow: 2,
-                  '&:hover': {
-                    boxShadow: 4
-                  }
-                }}>
-                Add Expense
-              </Button>
-            </Grid>
-          </Grid>
-        </form>
-        {/* Table to display expenses */}
-        {/* Paper component gives elevation effect */}
-        <TableContainer component={Paper} sx={{ mt: 12, '& .MuiTableHead-root': { backgroundColor: '#6ac5fe' } }}>
-          <Table>
-            {/* Table header */}
-            <TableHead>
-              <TableRow>
-                {/* Fixed width for date column */}
-                <TableCell width="15%">Date</TableCell>
-                {/* Fixed width for category column */}
-                <TableCell width="20%">Category</TableCell>
-                {/* Fixed width for amount column */}
-                <TableCell width="15%" align="left">Amount ($)</TableCell>
-                {/* Description takes remaining space but with max-width */}
-                <TableCell sx={{ maxWidth: '40%' }} align='left'>Description</TableCell>
-                {/* Fixed width for actions column */}
-                <TableCell width="10%" align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            {/* Table body */}
-            {/* If no expenses, show a single row with message, otherwise show table */}
-            <TableBody>
-              {expenses.length === 0 ? (
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Expenses Table Card */}
+      <Card elevation={3} sx={{ mb: 4, borderRadius: 2 }}>
+        <CardHeader 
+          title="Expense History" 
+          sx={{ 
+            backgroundColor: 'secondary.light', 
+            color: 'secondary.contrastText',
+            py: 2
+          }} 
+        />
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer>
+            <Table>
+              {/* Table header */}
+              <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    No expenses added yet
+                  {/* Date column */}
+                  <TableCell width="15%" sx={{ fontWeight: 'bold' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
+                      Date
+                    </Box>
+                  </TableCell>
+                  {/* Category column */}
+                  <TableCell width="20%" sx={{ fontWeight: 'bold' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
+                      Category
+                    </Box>
+                  </TableCell>
+                  {/* Amount column */}
+                  <TableCell width="15%" align="left" sx={{ fontWeight: 'bold' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
+                      Amount
+                    </Box>
+                  </TableCell>
+                  {/* Description column */}
+                  <TableCell sx={{ maxWidth: '40%', fontWeight: 'bold' }} align="left">
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
+                      Description
+                    </Box>
+                  </TableCell>
+                  {/* Actions column */}
+                  <TableCell width="10%" align="center" sx={{ fontWeight: 'bold' }}>
+                    Actions
                   </TableCell>
                 </TableRow>
-              ) : (
-                expenses.map((expense, index) => (
-                  <TableRow key={index}>
-                    <TableCell width="15%">{expense.date}</TableCell>
-                    <TableCell 
-                      sx={{ 
-                        maxWidth: '200px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'auto',
-                      }}
-                    >
-                      <Tooltip title={expense.category}>
-                        <span>{expense.category}</span>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell width="15%" align="left">{expense.amount}</TableCell>
-                    <TableCell 
-                      sx={{ 
-                        maxWidth: '300px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'auto',
-                      }}
-                    >
-                      <Tooltip title={expense.description}>
-                        <span>{expense.description}</span>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell width="5%" align="center">
-                      <Tooltip title="Delete expense">
-                        <IconButton 
-                          aria-label="delete"
-                          onClick={() => handleDelete(index)}
-                          color="error"
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+              </TableHead>
+              
+              {/* Table body */}
+              <TableBody>
+                {/* Conditional rendering based on whether expenses exist */}
+                {expenses.length === 0 ? (
+                  // If no expenses, show a message
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                      <Typography variant="body1" color="textSecondary">
+                        No expenses added yet
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                        Use the form above to add your first expense
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+                ) : (
+                  // If expenses exist, map through them to create table rows
+                  expenses.map((expense, index) => (
+                    // Each row needs a unique key for React to efficiently update the DOM
+                    <TableRow 
+                      key={index}
+                      sx={{ 
+                        '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
+                        transition: 'background-color 0.2s',
+                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+                      }}
+                    >
+                      {/* Date cell */}
+                      <TableCell width="15%">{expense.date}</TableCell>
+                      
+                      {/* Category cell with tooltip for overflow */}
+                      <TableCell 
+                        sx={{ 
+                          maxWidth: '200px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        <Tooltip title={expense.category} arrow placement="top">
+                          <Chip 
+                            label={expense.category} 
+                            size="small" 
+                            variant="outlined" 
+                            color="primary"
+                            sx={{ maxWidth: '100%' }}
+                          />
+                        </Tooltip>
+                      </TableCell>
+                      
+                      {/* Amount cell */}
+                      <TableCell width="15%" align="left">
+                        <Typography 
+                          sx={{ 
+                            fontWeight: 'medium',
+                            color: parseFloat(expense.amount) > 100 ? 'error.main' : 'success.main'
+                          }}
+                        >
+                          ${parseFloat(expense.amount).toFixed(2)}
+                        </Typography>
+                      </TableCell>
+                      
+                      {/* Description cell with tooltip for overflow */}
+                      <TableCell 
+                        sx={{ 
+                          maxWidth: '300px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {expense.description ? (
+                          <Tooltip title={expense.description} arrow placement="top">
+                            <span>{expense.description}</span>
+                          </Tooltip>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                            No description
+                          </Typography>
+                        )}
+                      </TableCell>
+                      
+                      {/* Actions cell with delete button */}
+                      <TableCell width="5%" align="center">
+                        <Tooltip title="Delete expense" arrow>
+                          <IconButton 
+                            aria-label="delete expense"
+                            onClick={() => handleDelete(index)}
+                            color="error"
+                            size="small"
+                            sx={{
+                              transition: 'transform 0.2s, background-color 0.2s',
+                              '&:hover': {
+                                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                                transform: 'scale(1.1)'
+                              }
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+      
+      {/* Summary section */}
+      <Card 
+        sx={{ 
+          mb: 6, 
+          borderRadius: 2,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          border: '1px solid',
+          borderColor: 'primary.light'
+        }}
+      >
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+              <SummarizeIcon sx={{ mr: 1 }} />
+              Expense Summary
+            </Typography>
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                fontWeight: 'bold', 
+                color: parseFloat(calculateTotalExpenses()) > 1000 ? 'error.main' : 'success.main',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <AttachMoneyIcon sx={{ mr: 0.5 }} />
+              {calculateTotalExpenses()}
+            </Typography>
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="body2" color="textSecondary">Total Entries</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>{expenses.length}</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="body2" color="textSecondary">Added Today</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>{expensesAddedToday}</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+              <Typography variant="body2" color="textSecondary">Avg. Amount</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
+                ${expenses.length > 0 ? (calculateTotalExpenses() / expenses.length).toFixed(2) : '0.00'}
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
     </Container>
   );
 }
