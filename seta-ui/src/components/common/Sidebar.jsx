@@ -4,23 +4,30 @@ import { useNavigate } from 'react-router-dom';
 
 // Material-UI Components
 import {
-  Box,            // A div with enhanced styling capabilities
-  Drawer,         // Side panel that can slide in/out
-  List,           // Container for vertical list items
-  ListItem,       // Individual list item container
-  ListItemButton, // Makes list item clickable
-  ListItemIcon,   // Container for icons in list items
-  ListItemText,   // Container for text in list items
+  Box,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Typography,
-  Avatar
+  Avatar,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 
 // Material-UI Icons for navigation items
 import {
-  Dashboard as DashboardIcon,  // Home/Dashboard icon
-  AddCard as AddCardIcon,      // Card/Payment icon
-  Assessment as AssessmentIcon, // Chart/Report icon
-  Settings as SettingsIcon,    // Gear/Settings icon
+  Dashboard as DashboardIcon,
+  AddCard as AddCardIcon,
+  Assessment as AssessmentIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 
 // Width of the sidebar in pixels
@@ -54,25 +61,64 @@ const menuItems = [
 export default function Sidebar({ children }) {
   // Hook for programmatic navigation
   const navigate = useNavigate();
+  // State to control the logout confirmation dialog
+  const [logoutDialogOpen, setLogoutDialogOpen] = React.useState(false);
+
+  // Handle logout button click
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  // Handle logout confirmation
+  const handleLogoutConfirm = () => {
+    // Remove auth data from localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('loginTime');
+    // Close the dialog
+    setLogoutDialogOpen(false);
+    // Navigate to login page
+    navigate('/login', { replace: true });
+  };
+
+  // Handle dialog close
+  const handleDialogClose = () => {
+    setLogoutDialogOpen(false);
+  };
+
+  // Custom button style with improved hover effects
+  const buttonStyle = {
+    cancel: {
+      color: 'primary.main',
+      '&:hover': {
+        backgroundColor: 'rgba(25, 118, 210, 0.08)', // Light blue background on hover
+      }
+    },
+    logout: {
+      color: 'error.main',
+      '&:hover': {
+        backgroundColor: 'rgba(211, 47, 47, 0.08)', // Light red background on hover
+      }
+    }
+  };
 
   // Reusable drawer content component
   // Contains the list of navigation items
   const drawer = (
     <Box sx={{ 
-      overflow: 'auto',      // Enable scrolling if content overflows
-      height: '100%',        // Take full height of container
-      display: 'flex',       // Use flexbox layout
-      flexDirection: 'column'// Stack children vertically
+      overflow: 'auto',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       {/* App Title Section */}
       <Box
         sx={{
-          height: '64px',    // Fixed height header
+          height: '64px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-          mb: 2             // Margin bottom for spacing
+          mb: 2
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
@@ -81,7 +127,6 @@ export default function Sidebar({ children }) {
       </Box>
 
       {/* Navigation Menu List */}
-      {/* flexGrow: 1 pushes the user profile section to bottom */}
       <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
@@ -91,44 +136,84 @@ export default function Sidebar({ children }) {
             </ListItemButton>
           </ListItem>
         ))}
+        
+        {/* Logout Button */}
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleLogoutClick}>
+            <ListItemIcon>
+              <LogoutIcon sx={{ color: 'error.main' }} />
+            </ListItemIcon>
+            <ListItemText primary="Logout" />
+          </ListItemButton>
+        </ListItem>
       </List>
 
       {/* User Profile Section */}
-      {/* Positioned at bottom using flex layout */}
       <Box
         sx={{
           borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-          px: 2,              // Horizontal padding only
-          py: 1.5,           // Vertical padding (slightly reduced)
-          display: 'flex',   // Use flexbox for alignment
-          alignItems: 'center', // Center items vertically
-          gap: 1,            // Space between avatar and text
-          boxSizing: 'border-box', // Include padding in width calculation
-          minWidth: 0        // Allow child elements to shrink below their default minimum width
+          px: 2,
+          py: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          boxSizing: 'border-box',
+          minWidth: 0
         }}
       >
         <Avatar sx={{ 
           width: 32, 
           height: 32,
-          flexShrink: 0     // Prevent avatar from shrinking
+          flexShrink: 0
         }}>Hi</Avatar>
         <Typography 
           variant="body2" 
-          noWrap           // Prevent text wrapping
+          noWrap
           sx={{
-            flexGrow: 1,   // Take up remaining space
-            minWidth: 0    // Allow text to shrink
+            flexGrow: 1,
+            minWidth: 0
           }}
         >
           User Name
         </Typography>
       </Box>
+      
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={handleDialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Logout Confirmation"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleDialogClose} 
+            sx={buttonStyle.cancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleLogoutConfirm} 
+            autoFocus 
+            sx={buttonStyle.logout}
+          >
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>    {/* Flex container for layout */}
-      {/* Permanent Drawer - Always visible sidebar */}
+    <Box sx={{ display: 'flex' }}>
       <Drawer
         variant="permanent"
         sx={{
@@ -136,10 +221,7 @@ export default function Sidebar({ children }) {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            backgroundColor: '#f8f9fa',  // Add this line - you can use any color
-            // Or use MUI theme colors like:
-            // backgroundColor: 'background.default',
-            // backgroundColor: 'grey.100',
+            backgroundColor: '#f8f9fa',
           },
         }}
         open
@@ -147,17 +229,16 @@ export default function Sidebar({ children }) {
         {drawer}
       </Drawer>
 
-      {/* Main Content Area */}
       <Box
-        component="main"              // Renders as <main> element
+        component="main"
         sx={{
-          flexGrow: 1,               // Take up remaining space
-          p: 3,                      // Padding of 24px (3 * 8px)
-          width: `calc(100% - ${drawerWidth}px)`,  // Full width minus sidebar
-          ml: `${drawerWidth}px`,    // Left margin to account for sidebar
+          flexGrow: 1,
+          p: 3,
+          width: `calc(100% - ${drawerWidth}px)`,
+          ml: `${drawerWidth}px`,
         }}
       >
-        {children}                   {/* Render child components */}
+        {children}
       </Box>
     </Box>
   );

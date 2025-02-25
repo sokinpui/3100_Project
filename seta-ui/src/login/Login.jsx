@@ -91,6 +91,7 @@ export default function Login() {
                 Login
               </button>
             </form>
+            {/* Delete this after */}
             <div className="test-data">
               <b>testing user data for now:</b>
               {user.map((data, index) => (
@@ -100,6 +101,7 @@ export default function Login() {
                 </div>
               ))}
             </div>
+            {/* Until here */}
           </>
         )}
       </div>
