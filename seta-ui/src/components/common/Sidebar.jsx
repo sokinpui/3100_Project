@@ -83,7 +83,6 @@ export default function Sidebar({ children }) {
   // Clears authentication data and redirects to login page
   const handleLogoutConfirm = () => {
     // Remove authentication data from browser storage
-    localStorage.removeItem('authToken');
     localStorage.removeItem('loginTime');
     
     // Close the dialog by updating state

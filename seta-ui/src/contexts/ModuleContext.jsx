@@ -32,6 +32,13 @@ export const ModuleProvider = ({ children }) => {
       name: 'Page Not Found',
       path: '*',
       component: React.lazy(() => import('../components/common/PageNotFound.jsx')),
+    },
+    {
+      id: 'signup',
+      name: 'Signup',
+      path: '/signup',
+      component: React.lazy(() => import('../login/Signup')),
+      isPublic: true,
     }
   ];
 

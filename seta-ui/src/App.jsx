@@ -9,8 +9,8 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    setIsLoggedIn(!!token);
+    const session = localStorage.getItem('loginTime');
+    setIsLoggedIn(!!session);
   }, []);
 
   return (

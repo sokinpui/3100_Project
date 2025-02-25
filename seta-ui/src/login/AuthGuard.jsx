@@ -7,13 +7,15 @@ export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
   const SESSION_DURATION = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 
   const checkSession = () => {
-    const token = localStorage.getItem('authToken');
     const loginTime = localStorage.getItem('loginTime');
     const currentTime = new Date().getTime();
 
-    if (!token || !loginTime) {                 // If no token or login time, redirect to login page
+    if (!loginTime) {                 // If no loginTime, redirect to login page
       setIsLoggedIn(false);
-      if (location.pathname !== '/login') {
+      if (location.pathname === '/signup') {
+        navigate('/signup', { replace: true });
+      }
+      else if (location.pathname !== '/login') {
         navigate('/login', { replace: true });
       }
       return;
@@ -23,7 +25,7 @@ export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
     
     if (timeDifference > SESSION_DURATION) {
       // Session expired
-      localStorage.removeItem('authToken');
+      // localStorage.removeItem('authToken');
       localStorage.removeItem('loginTime');
       setIsLoggedIn(false);
       navigate('/login', { replace: true });

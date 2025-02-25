@@ -66,6 +66,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* delete these after */
 .test-data {
   width: 100%;
   max-width: 400px;

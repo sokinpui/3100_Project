@@ -6,9 +6,8 @@ import DefaultDashboardView from './DefaultDashboardView';
 import Sidebar from '../common/Sidebar';
 
 export default function ModuleRouter({ modules }) {
-  const token = localStorage.getItem('authToken');
   const loginTime = localStorage.getItem('loginTime');
-  const isAuthenticated = token && loginTime;
+  const isAuthenticated = loginTime;
 
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? <Sidebar>{children}</Sidebar> : <Navigate to="/login" replace />;

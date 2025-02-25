@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import "./Login.css";
+import { user } from './testData';  // Importing user data from testData SHOULD DELETE AFTER HAVING API
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,17 +12,6 @@ export default function Login() {
     password: ''
   });
 
-  // DEMO HARD-CODED USER DATA HERE:
-  const user = [
-    {
-      username: 'admin',
-      password: 'admin'
-    },
-   {
-      username: 'user',
-      password: 'user'
-   }
-  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,7 +33,6 @@ export default function Login() {
         });
         return;
       }
-      localStorage.setItem('authToken', 'token');
       localStorage.setItem('loginTime', new Date().getTime().toString());
       
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -91,6 +80,9 @@ export default function Login() {
                 Login
               </button>
             </form>
+            <div className="signup-link">
+              <a href="/signup">Don't have an account? Sign up here</a>
+            </div>
             {/* Delete this after */}
             <div className="test-data">
               <b>testing user data for now:</b>
