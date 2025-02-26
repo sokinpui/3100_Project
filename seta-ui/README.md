@@ -18,6 +18,8 @@ cd seta-ui
 npm start
 ```
 
+# UML Diagram
+https://www.plantuml.com/plantuml/png/TPIzRjim481tFWNX3cs7f42xPGXYE7MNj0YiReM7itYLYKWyWZznYiBl7f87oh8X6nxkxhl_8_JW0xWGXrvyb4turslJ2V-YZGK7Wsnfi6JGX8nG9hUl4sgXVO4EcJbi0vYknud3BZbqZg9HA-h9oSDUXoa7v-Z0wCEtyXEfZLKjwWLNGBbOEp81ZPAVDWXj-BoG_uMKVvRMRYLu2TPczH7yVaVWL36ggcNqarJiSKCne2lK5J6ZHYlS0LizooLt3FiViIRh8YTA_x6fx84cw1Q29iCjfS0dwhGfGNsMsDZepaJBDOgOpCUBVDoZ7nDzVxDeF2uLju2idh4DMdB1yqGipoHkqBtgTf9vQVMperUjaCS6gqUmofj-2smVrPciwKu3cScv9Xi0fKtNM6qCSWNFClFd5F-BmZg_Z48DXRzPALME-H5ii2zRzNjjlG1hvStDFLz1tideyMJaEpDmQ1GwBqPRyU1RrpZMCgZd7WEdaA-NK36T4RxW7Af7ccFrGBEiRk041TTFi2wl3i3bvqYjVebEwMvlxoTNJR0bu-DmodhTeIQ_xb47lEuXaZbrTu4jlqMV3_y80UIwfuDGITf1AhXueXRw9f233XVbDR7C7u4os6yzu3Pht2NwhJXELrWZxkJ1wRnUVahdo26eSSuvzeM3nGCQ5OV-7G00
 
 # file structure
 ```bash
@@ -64,57 +66,40 @@ seta-ui/
 ├── public/
 │   └── index.html
 ├── src/
-│   ├── App.jsx
-│   ├── index.js
-│   ├── services/
-│   │   ├── ApiProvider.jsx
-│   │   ├── ApiContext.jsx
-│   │   └── useApi.js
+│   ├── App.jsx                 # Main application component
+│   ├── index.js               # Application entry point
+│   ├── services/              # API and service-related files
+│   │   ├── ApiContext.jsx     # API context creation
+│   │   ├── ApiProvider.jsx    # API context provider
+│   │   └── useApi.js         # Custom hook for API access
 │   ├── contexts/
-│   │   └── ModuleContext.jsx
+│   │   └── ModuleContext.jsx  # Module routing configuration
 │   ├── components/
 │   │   ├── common/
-│   │   │   ├── LoadingSpinner.jsx
-│   │   │   └── ErrorBoundary.jsx
-│   │   ├── Dashboard/
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── ModuleGrid.jsx
-│   │   │   ├── ModuleRouter.jsx
-│   │   │   └── DefaultDashboardView.jsx
+│   │   │   ├── LoadingSpinner.jsx  # Loading indicator
+│   │   │   ├── PageNotFound.jsx    # 404 page
+│   │   │   └── Sidebar.jsx         # Navigation sidebar
+│   │   └── Dashboard/
+│   │       ├── Dashboard.jsx        # Main dashboard layout
+│   │       ├── DefaultDashboardView.jsx  # Default landing page
+│   │       ├── ModuleGrid.jsx      # Module navigation grid
+│   │       └── ModuleRouter.jsx    # Module routing logic
+│   ├── login/                 # Authentication related components
+│   │   ├── Login.jsx         # Login page
+│   │   ├── Login.css         # Login styles
+│   │   ├── Signup.jsx        # Signup page
+│   │   ├── AuthGuard.jsx     # Session management
+│   │   └── testData.js       # Temporary user data (dev only)
 │   ├── modules/
 │   │   ├── ExpenseAdd/
-│   │   │   ├── ExpenseAdd.jsx
-│   │   │   ├── ExpenseForm.jsx
-│   │   │   ├── ExpenseAdd.test.jsx
-│   │   │   ├── ExpenseAdd.stories.jsx
-│   │   │   └── styles.module.css
-│   │   ├── ExpenseReports/
-│   │   │   ├── ExpenseReports.jsx
-│   │   │   ├── ReportChart.jsx
-│   │   │   ├── ReportFilters.jsx
-│   │   │   ├── ExpenseReports.test.jsx
-│   │   │   ├── ExpenseReports.stories.jsx
-│   │   │   └── styles.module.css
-│   │   └── UserProfile/
-│   │       ├── UserProfile.jsx
-│   │       ├── ProfileForm.jsx
-│   │       ├── UserProfile.test.jsx
-│   │       ├── UserProfile.stories.jsx
-│   │       └── styles.module.css
-│   ├── assets/
-│   │   ├── images/
-│   │   └── styles/
-│   │       ├── global.css
-│   │       ├── theme.css
-│   │       └── variables.css
-│   └── utils/
-│       ├── validators.js
-│       ├── formatters.js
-│       └── apiHelpers.js
-├── .env
+│   │   │   └── ExpenseAdd.jsx      # Expense creation form
+│   │   └── ExpenseReports/
+│   │       └── ExpenseReports.jsx   # Reports display
+│   └── assets/
+│       └── styles/
+│           └── global.css     # Global styles
 ├── package.json
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
 ### Key Directories and Files:
@@ -151,14 +136,14 @@ seta-ui/
      - Storybook stories
      - Module-specific styles
 
-5. **assets/**
-   - **images/**: Static images and icons
-   - **styles/**: Global styles
+5. **assets**
+   - **images**: Static images and icons
+   - **styles**: Global styles
      - `global.css`: Global CSS rules
      - `theme.css`: Theme variables
      - `variables.css`: CSS custom properties
 
-6. **utils/**
+6. **utils**
    - Shared utility functions
      - `validators.js`: Validation functions
      - `formatters.js`: Data formatting utilities
