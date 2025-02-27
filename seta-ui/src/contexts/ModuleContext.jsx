@@ -17,14 +17,14 @@ export const ModuleProvider = ({ children }) => {
       id: 'expense-add',
       name: 'Add Expense',
       path: '/add-expense',
-      component: React.lazy(() => import('../modules/ExpenseAdd/ExpenseAdd.jsx')),
+      component: React.lazy(() => import('../modules/ExpenseManage.jsx')),
       isProtected: true,
     },
     {
       id: 'expense-report',
       name: 'View Reports',
       path: '/reports',
-      component: React.lazy(() => import('../modules/ExpenseReports/ExpenseReports.jsx')),
+      component: React.lazy(() => import('../modules/ExpenseReports.jsx')),
       isProtected: true,
     },
     {

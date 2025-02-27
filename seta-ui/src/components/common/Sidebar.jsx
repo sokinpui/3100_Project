@@ -45,7 +45,7 @@ const menuItems = [
     path: '/'  // Route path for navigation
   },
   { 
-    text: 'Add Expense', 
+    text: 'Expense Manager', 
     icon: <AddCardIcon />, 
     path: '/add-expense' 
   },

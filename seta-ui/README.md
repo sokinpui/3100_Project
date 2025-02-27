@@ -28,34 +28,41 @@ seta-ui/
 ├── package-lock.json
 ├── package.json
 ├── public
-│   └── index.html
+│   └── index.html
 └── src
-    ├── App.jsx
+    ├── App.jsx                 # Main application component
+    ├── index.js                # Application entry point
     ├── assets
-    │   ├── images
-    │   └── styles
-    │       └── global.css
+    │   └── styles
+    │       ├── GlobalStyles.js # Styled-components global styles
+    │       ├── global.css      # CSS global styles
+    │       └── theme.js        # Theme configuration
     ├── components
-    │   ├── Dashboard
-    │   │   ├── Dashboard.jsx
-    │   │   ├── DefaultDashboardView.jsx
-    │   │   ├── ModuleGrid.jsx
-    │   │   └── ModuleRouter.jsx
-    │   └── common
-    │       └── LoadingSpinner.jsx
+    │   ├── Dashboard
+    │   │   ├── Dashboard.jsx        # Main dashboard layout
+    │   │   ├── DefaultDashboardView.jsx  # Default landing page
+    │   │   ├── ModuleGrid.jsx      # Module navigation grid
+    │   │   └── ModuleRouter.jsx    # Module routing logic
+    │   └── common
+    │       ├── LoadingSpinner.jsx  # Loading indicator
+    │       ├── PageNotFound.jsx    # 404 page component
+    │       └── Sidebar.jsx         # Navigation sidebar
     ├── contexts
-    │   └── ModuleContext.jsx
-    ├── index.js
+    │   └── ModuleContext.jsx  # Module routing configuration
+    ├── login
+    │   ├── AuthGuard.jsx     # Session management
+    │   ├── Login.jsx         # Login page
+    │   ├── Login.css         # Login styles
+    │   ├── Signup.jsx        # Signup page
+    │   └── testData.js       # Temporary user data (dev only)
     ├── modules
-    │   ├── ExpenseAdd
-    │   │   └── ExpenseAdd.jsx
-    │   └── ExpenseReports
-    │       └── ExpenseReports.jsx
-    ├── services
-    │   ├── ApiContext.jsx
-    │   ├── ApiProvider.jsx
-    │   └── useApi.js
-    └── utils
+    │   ├── ExpenseManage.jsx      # Expense entry form and table
+    │   ├── ExpenseReports.jsx     # Reports display
+    │   └── Settings.jsx           # User settings page
+    └── services
+        ├── ApiContext.jsx     # API context creation
+        ├── ApiProvider.jsx    # API context provider
+        └── useApi.js         # Custom hook for API access
 
 
 ```

@@ -24,7 +24,6 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  Divider,
   Chip
 } from '@mui/material';
 
@@ -55,7 +54,7 @@ const expenseCategories = [
   'Utilities',
   'Travel',
   'Personal Care',
-  'Other'
+  'Others'
 ];
 
 // Main component function
@@ -146,22 +145,7 @@ export default function ExpenseAdd() {
 
   // Component rendering
   return (
-    <Container maxWidth="lg">
-      {/* Page title */}
-      <Typography 
-        variant="h4" 
-        component="h1" 
-        sx={{ 
-          mt: 4, 
-          mb: 3, 
-          fontWeight: 'bold',
-          color: '#1976d2',
-          textAlign: 'center'
-        }}
-      >
-        Expense Tracker
-      </Typography>
-      
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* Summary cards row */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         {/* Total Expenses Card */}
@@ -247,11 +231,12 @@ export default function ExpenseAdd() {
         <CardHeader 
           title="Add New Expense" 
           sx={{ 
-            backgroundColor: 'primary.light', 
+            backgroundColor: '#5e35b1', 
             color: 'primary.contrastText',
-            py: 2,
-            borderRadius: '5px 5px 0 0'
+            py: 1.5,
+            borderRadius: '5px 5px 0 0',
           }} 
+          slotProps={{ title: { fontWeight: 500 } }} 
         />
         <CardContent sx={{ p: 3 }}>
           <form onSubmit={handleSubmit}>
@@ -280,48 +265,48 @@ export default function ExpenseAdd() {
                   </Select>
                 </FormControl>
               </Grid>
-              
               {/* Date picker */}
               <Grid size={4}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="Date"
-                    value={formData.date ? dayjs(formData.date) : null}
-                    onChange={handleDateChange}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                        InputProps: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <DateRangeIcon fontSize="small" />
-                            </InputAdornment>
-                          ),
-                        }
-                      }
-                    }}
-                  />
+                <DatePicker
+                  disableFuture
+                  label="Date"
+                  value={formData.date ? dayjs(formData.date) : null}
+                  format='YYYY-MM-DD'
+                  onChange={handleDateChange}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                    },
+                    inputAdornment: {
+                      position: 'start',
+                      children: <DateRangeIcon fontSize="small" />
+                    },
+                  }}
+                />
                 </LocalizationProvider>
               </Grid>
               
               {/* Amount field */}
               <Grid size={4}>
-                <TextField
-                  fullWidth
-                  label="Amount"
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
-                  InputProps={{
+              <TextField
+                fullWidth
+                label="Amount"
+                name="amount"
+                value={formData.amount}
+                onChange={handleChange}
+                required
+                slotProps={{
+                  input: {
                     startAdornment: (
                       <InputAdornment position="start">
                         <AttachMoneyIcon fontSize="small" />
                       </InputAdornment>
                     ),
-                  }}
-                />
+                  },
+                }}
+              />
               </Grid>
               
               {/* Second row: Description field */}
@@ -345,11 +330,11 @@ export default function ExpenseAdd() {
                   color="primary"
                   startIcon={<AddCircleOutlineIcon />}
                   sx={{
-                    py: 1.5,
-                    px: 3,
+                    py: 1.25,
+                    px: 2.5,
                     borderRadius: 2,
                     textTransform: 'none',
-                    fontSize: '1rem',
+                    fontSize: '1.2rem',
                     fontWeight: 'medium',
                     boxShadow: '0 4px 10px rgba(25, 118, 210, 0.3)',
                     transition: 'all 0.2s',
@@ -374,8 +359,9 @@ export default function ExpenseAdd() {
           sx={{ 
             backgroundColor: 'secondary.light', 
             color: 'secondary.contrastText',
-            py: 2
+            py: 1.5,
           }} 
+          slotProps={{ title: { fontWeight: 500 } }} 
         />
         <CardContent sx={{ p: 0 }}>
           <TableContainer>
@@ -529,8 +515,8 @@ export default function ExpenseAdd() {
         </CardContent>
       </Card>
       
-      {/* Summary section */}
-      <Card 
+      {/* Summary section, this part should be reserved for the purpose of dashboard. */}
+      {/* <Card 
         sx={{ 
           mb: 6, 
           borderRadius: 2,
@@ -576,7 +562,7 @@ export default function ExpenseAdd() {
             </Box>
           </Box>
         </CardContent>
-      </Card>
+      </Card> */}
     </Container>
   );
 }

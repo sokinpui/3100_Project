@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Grid from '@mui/material/Grid2';
 import {
   Container,
-  Typography,
   Card,
   CardContent,
   CardHeader,
@@ -18,11 +17,10 @@ import {
 } from '@mui/material';
 
 // Import icons
-import SettingsIcon from '@mui/icons-material/Settings';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import SaveIcon from '@mui/icons-material/Save';
 import PersonIcon from '@mui/icons-material/Person';
-import LanguageIcon from '@mui/icons-material/Language';
+// import LanguageIcon from '@mui/icons-material/Language';
 
 export default function Settings() {
   // Default settings state
@@ -104,25 +102,66 @@ export default function Settings() {
   ];
 
   return (
-    <Container maxWidth="lg">
-      {/* Page title */}
-      <Typography 
-        variant="h4" 
-        component="h1" 
+    <Container maxWidth="lg" sx={{ mt: 12 }}>
+
+      {/* Profile Settings Card */}
+      <Card 
+        elevation={3} 
         sx={{ 
-          mt: 4, 
-          mb: 3, 
-          fontWeight: 'bold',
-          color: '#1976d2',
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          mb: 4, 
+          borderRadius: 2,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
         }}
       >
-        <SettingsIcon sx={{ mr: 1, fontSize: 35 }} />
-        Settings
-      </Typography>
+        <CardHeader 
+          title={
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <PersonIcon sx={{ mr: 1 }} />
+              Profile Settings
+            </Box>
+          }
+          sx={{ 
+            backgroundColor: 'secondary.light', 
+            color: 'secondary.contrastText',
+            py: 1.5
+          }} 
+          slotProps={{ title: { fontWeight: 500 } }} 
+        />
+        <CardContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            <Grid size={6}>
+              <TextField
+                fullWidth
+                label="Full Name"
+                value={settings.profile.name}
+                onChange={(e) => handleSettingChange('profile', 'name', e.target.value)}
+              />
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                type="email"
+                value={settings.profile.email}
+                onChange={(e) => handleSettingChange('profile', 'email', e.target.value)}
+              />
+            </Grid>
+            <Grid size={12}>
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                sx={{ 
+                  mt: 1,
+                  borderRadius: 2,
+                  textTransform: 'none'
+                }}
+              >
+                Change Password
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Theme and Appearance Card */}
       <Card 
@@ -143,8 +182,9 @@ export default function Settings() {
           sx={{ 
             backgroundColor: 'primary.light', 
             color: 'primary.contrastText',
-            py: 2
+            py: 1.5
           }} 
+          slotProps={{ title: { fontWeight: 500 } }} 
         />
         <CardContent sx={{ p: 3 }}>
           <Grid container spacing={3}>
@@ -199,64 +239,6 @@ export default function Settings() {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Profile Settings Card */}
-      <Card 
-        elevation={3} 
-        sx={{ 
-          mb: 4, 
-          borderRadius: 2,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-        }}
-      >
-        <CardHeader 
-          title={
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <PersonIcon sx={{ mr: 1 }} />
-              Profile Settings
-            </Box>
-          }
-          sx={{ 
-            backgroundColor: 'secondary.light', 
-            color: 'secondary.contrastText',
-            py: 2
-          }} 
-        />
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={3}>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                value={settings.profile.name}
-                onChange={(e) => handleSettingChange('profile', 'name', e.target.value)}
-              />
-            </Grid>
-            <Grid size={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={settings.profile.email}
-                onChange={(e) => handleSettingChange('profile', 'email', e.target.value)}
-              />
-            </Grid>
-            <Grid size={12}>
-              <Button 
-                variant="outlined" 
-                color="primary" 
-                sx={{ 
-                  mt: 1,
-                  borderRadius: 2,
-                  textTransform: 'none'
-                }}
-              >
-                Change Password
-              </Button>
             </Grid>
           </Grid>
         </CardContent>
