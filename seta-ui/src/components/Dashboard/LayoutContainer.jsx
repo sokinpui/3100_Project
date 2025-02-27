@@ -1,7 +1,7 @@
 import { useModules } from '../../contexts/ModuleContext';
 import ModuleRouter from './ModuleRouter';
 
-export default function Dashboard() {
+export default function LayoutContainer() {
   const { modules } = useModules();
 
   return (
