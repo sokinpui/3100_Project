@@ -385,7 +385,6 @@ export default function Sidebar({ children }) {
           flexGrow: 1, // Takes up remaining space
           p: 3, // Padding of 24px (3 * 8px theme spacing)
           width: `calc(100% - ${drawerWidth}px)`, // Full width minus drawer width
-          ml: `${drawerWidth}px`, // Left margin equal to drawer width
         }}
       >
         {children} {/* Renders the child components passed to Sidebar */} 

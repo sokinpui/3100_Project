@@ -39,6 +39,12 @@ export const ModuleProvider = ({ children }) => {
       path: '/signup',
       component: React.lazy(() => import('../login/Signup')),
       isPublic: true,
+    },
+    {
+      id: 'settings',
+      name: 'Settings',
+      path: '/settings',
+      component: React.lazy(() => import('../modules/Settings.jsx')),
     }
   ];
 

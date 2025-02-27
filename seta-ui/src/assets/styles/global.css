@@ -43,7 +43,7 @@ body {
 .module-container {
   flex: 1;
   padding: 20px;
-  margin-right: 180px;            /* added margin to align things to the center */
+  /* margin-right: 180px;            added margin to align things to the center */
 }
 
 .loading-spinner {
