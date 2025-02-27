@@ -84,6 +84,9 @@ export default function Sidebar({ children }) {
   const handleLogoutConfirm = () => {
     // Remove authentication data from browser storage
     localStorage.removeItem('loginTime');
+    localStorage.removeItem('username');
+    localStorage.removeItem('expenses');
+    localStorage.removeItem('userSettings');
     
     // Close the dialog by updating state
     setLogoutDialogOpen(false);
@@ -277,7 +280,7 @@ export default function Sidebar({ children }) {
                 fontWeight: 'bold'
               }}
             >
-              User Name
+              {localStorage.getItem('username')}
             </Typography>
             {/* Email with muted styling */}
             <Typography 

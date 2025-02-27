@@ -87,21 +87,20 @@ seta-ui/
 │   │   │   ├── PageNotFound.jsx    # 404 page
 │   │   │   └── Sidebar.jsx         # Navigation sidebar
 │   │   └── Dashboard/
-│   │       ├── Dashboard.jsx        # Main dashboard layout
-│   │       ├── DefaultDashboardView.jsx  # Default landing page
+│   │       ├── LayoutContainer.jsx # Container of dashboard
 │   │       ├── ModuleGrid.jsx      # Module navigation grid
 │   │       └── ModuleRouter.jsx    # Module routing logic
 │   ├── login/                 # Authentication related components
 │   │   ├── Login.jsx         # Login page
-│   │   ├── Login.css         # Login styles
+│   │   ├── Login.css         # Login styles (Not used now)
 │   │   ├── Signup.jsx        # Signup page
 │   │   ├── AuthGuard.jsx     # Session management
 │   │   └── testData.js       # Temporary user data (dev only)
 │   ├── modules/
-│   │   ├── ExpenseAdd/
-│   │   │   └── ExpenseAdd.jsx      # Expense creation form
-│   │   └── ExpenseReports/
-│   │       └── ExpenseReports.jsx   # Reports display
+│   │   ├── ExpenseAdd.jsx      # Expense creation form
+│   │   ├── Dashboard.jsx       # Dashboard
+│   │   ├── ExpenseReports.jsx  # Reports display
+|   |   └── Settings.jsx        # Setting page
 │   └── assets/
 │       └── styles/
 │           └── global.css     # Global styles

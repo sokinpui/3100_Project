@@ -17,7 +17,7 @@ export default function App() {
     <Router>
       <ApiProvider baseUrl="https://api.setapp.com">
         <ModuleProvider>
-          <AuthGuard isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+          <AuthGuard setIsLoggedIn={setIsLoggedIn} />
           <LayoutContainer />
         </ModuleProvider>
       </ApiProvider>

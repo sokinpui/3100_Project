@@ -61,6 +61,7 @@ export default function Login() {
       }
       
       localStorage.setItem('loginTime', new Date().getTime().toString());
+      localStorage.setItem('username', formData.username);
       navigate('/', { replace: true });
       
     } catch (error) {

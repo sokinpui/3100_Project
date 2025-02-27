@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
+export default function AuthGuard({ setIsLoggedIn }) {
   const navigate = useNavigate();
   const location = useLocation();
   const SESSION_DURATION = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
@@ -27,7 +27,9 @@ export default function AuthGuard({ isLoggedIn, setIsLoggedIn }) {
       // Session expired
       // localStorage.removeItem('authToken');
       localStorage.removeItem('loginTime');
-      setIsLoggedIn(false);
+      localStorage.removeItem('username');
+      localStorage.removeItem('expenses');
+      localStorage.removeItem('userSettings');
       navigate('/login', { replace: true });
     } else {
       // Session is still valid
