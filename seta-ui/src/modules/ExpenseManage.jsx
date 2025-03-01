@@ -24,7 +24,12 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  Chip
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 
 // Import icons
@@ -54,7 +59,7 @@ const expenseCategories = [
   'Utilities',
   'Travel',
   'Personal Care',
-  'Others'
+  'Others (Specify)'
 ];
 
 // Main component function
@@ -70,6 +75,12 @@ export default function ExpenseAdd() {
     description: ''
   });
 
+  // Add state for controlling the confirmation dialog
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+
+  // Add state for controlling the custom category field
+  const [showOtherCategoryField, setShowOtherCategoryField] = useState(false);
+
   // Load existing expenses from localStorage when component mounts
   useEffect(() => {
     const savedExpenses = localStorage.getItem('expenses');
@@ -78,14 +89,38 @@ export default function ExpenseAdd() {
     }
   }, []);
 
-  // Handler for form submission
-  const handleSubmit = async (e) => {
+  // Function to open the confirmation dialog
+  const handleOpenConfirmDialog = (e) => {
     e.preventDefault();
+    
+    // Basic form validation
+    if (!formData.amount || !formData.category || !formData.date) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    // Open the confirmation dialog
+    setConfirmDialogOpen(true);
+  };
+  
+  // Function to close the dialog
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialogOpen(false);
+  };
+  
+  // Confirmation handler
+  const handleConfirmAddExpense = async () => {
     try {
+      // Create updated expenses array with new expense
       const newExpenses = [...expenses, formData];
+      
+      // Update state with new expenses
       setExpenses(newExpenses);
+      
+      // Save to localStorage
       localStorage.setItem('expenses', JSON.stringify(newExpenses));
       
+      // Reset form fields after submission
       setFormData({
         amount: '',
         category: '',
@@ -93,19 +128,39 @@ export default function ExpenseAdd() {
         description: ''
       });
       
+      // Close the confirmation dialog and the custom category field
+      setConfirmDialogOpen(false);
+      setShowOtherCategoryField(false);
+      
       alert('Expense added successfully!');
     } catch (error) {
       console.error('Error adding expense:', error);
       alert('Failed to add expense.');
+      setConfirmDialogOpen(false);
     }
   };
 
   // Handler for input field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Check if category is "Others"
+    if (name === 'category') {
+      setShowOtherCategoryField(value === 'Others (Specify)');
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  // Add a handler for custom category input
+  const handleCustomCategoryChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      // Update both the category field and the custom field
+      category: e.target.value
     }));
   };
 
@@ -136,12 +191,6 @@ export default function ExpenseAdd() {
       return sum + (parseFloat(expense.amount) || 0);
     }, 0).toFixed(2);
   };
-
-  // Get today's date for analysis
-  const today = dayjs().format('YYYY-MM-DD');
-  
-  // Count expenses added today
-  const expensesAddedToday = expenses.filter(expense => expense.date === today).length;
 
   // Component rendering
   return (
@@ -193,29 +242,6 @@ export default function ExpenseAdd() {
             </Box>
           </CardContent>
         </Card>
-        
-        {/* Today's Entries Card */}
-        <Card sx={{ 
-          flexGrow: 1, 
-          minWidth: 240,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': { 
-            transform: 'translateY(-4px)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
-          }}}>
-          <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
-            <DateRangeIcon sx={{ fontSize: 40, mr: 2, color: 'success.main' }} />
-            <Box>
-              <Typography color="textSecondary" variant="body2">
-                Added Today
-              </Typography>
-              <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                {expensesAddedToday}
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
       </Box>
       
       {/* Add Expense Form Card */}
@@ -239,7 +265,7 @@ export default function ExpenseAdd() {
           slotProps={{ title: { fontWeight: 500 } }} 
         />
         <CardContent sx={{ p: 3 }}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleOpenConfirmDialog}>
             {/* Grid container for responsive layout */}
             <Grid container spacing={3}>
               {/* First row: Category, Date, Amount */}
@@ -258,12 +284,30 @@ export default function ExpenseAdd() {
                       </InputAdornment>
                     }
                   >
-                    {/* Map through categories array to create dropdown options */}
                     {expenseCategories.map(category => (
                       <MenuItem key={category} value={category}>{category}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
+                {showOtherCategoryField && (
+                  <TextField
+                    fullWidth
+                    label="Specify Category"
+                    value={formData.category === 'Others (Specify)' ? '' : formData.category}
+                    onChange={handleCustomCategoryChange}
+                    placeholder="Enter custom category"
+                    sx={{ mt: 2 }}
+                    slotProps={{          // DO NOT USE INPUTPROPS, DEPRECATED
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CategoryIcon fontSize="small" />
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                )}
               </Grid>
               {/* Date picker */}
               <Grid size={4}>
@@ -304,6 +348,7 @@ export default function ExpenseAdd() {
                         <AttachMoneyIcon fontSize="small" />
                       </InputAdornment>
                     ),
+                    type: 'number',
                   },
                 }}
               />
@@ -459,7 +504,7 @@ export default function ExpenseAdd() {
                         <Typography 
                           sx={{ 
                             fontWeight: 'medium',
-                            color: parseFloat(expense.amount) > 100 ? 'error.main' : 'success.main'
+                            color: 'success.main'
                           }}
                         >
                           ${parseFloat(expense.amount).toFixed(2)}
@@ -515,54 +560,85 @@ export default function ExpenseAdd() {
         </CardContent>
       </Card>
       
-      {/* Summary section, this part should be reserved for the purpose of dashboard. */}
-      {/* <Card 
-        sx={{ 
-          mb: 6, 
-          borderRadius: 2,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-          border: '1px solid',
-          borderColor: 'primary.light'
+      {/* Confirmation Dialog Component */}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={handleCloseConfirmDialog}
+        aria-labelledby="expense-confirmation-dialog"
+        aria-describedby="expense-confirmation-description"
+        // Add subtle animation and styling
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-              <SummarizeIcon sx={{ mr: 1 }} />
-              Expense Summary
+        {/* Dialog Title */}
+        <DialogTitle id="expense-confirmation-dialog" sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white',
+          py: 1.5
+        }}>
+          Confirm 
+        </DialogTitle>
+        
+        {/* Dialog Content */}
+        <DialogContent sx={{ mt: 2, px: 3 }}>
+          <DialogContentText id="expense-confirmation-description">
+            Are you sure you want to add this expense?
+          </DialogContentText>
+          
+          {/* Display expense summary for verification */}
+          <Box sx={{ mt: 2, bgcolor: 'rgba(0,0,0,0.03)', p: 2, borderRadius: 1 }}>
+            <Typography variant="body2" component="div" sx={{ mb: 1 }}>
+              <strong>Date:</strong> {formData.date}
             </Typography>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 'bold', 
-                color: parseFloat(calculateTotalExpenses()) > 1000 ? 'error.main' : 'success.main',
-                display: 'flex',
-                alignItems: 'center'
-              }}
-            >
-              <AttachMoneyIcon sx={{ mr: 0.5 }} />
-              {calculateTotalExpenses()}
+            <Typography variant="body2" component="div" sx={{ mb: 1 }}>
+              <strong>Category:</strong> {formData.category}
             </Typography>
-          </Box>
-          <Divider sx={{ my: 2 }} />
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="body2" color="textSecondary">Total Entries</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>{expenses.length}</Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="body2" color="textSecondary">Added Today</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>{expensesAddedToday}</Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Typography variant="body2" color="textSecondary">Avg. Amount</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
-                ${expenses.length > 0 ? (calculateTotalExpenses() / expenses.length).toFixed(2) : '0.00'}
+            <Typography variant="body2" component="div" sx={{ mb: 1 }}>
+              <strong>Amount:</strong> ${parseFloat(formData.amount || 0).toFixed(2)}
+            </Typography>
+            {formData.description && (
+              <Typography variant="body2" component="div">
+                <strong>Description:</strong> {formData.description}
               </Typography>
-            </Box>
+            )}
           </Box>
-        </CardContent>
-      </Card> */}
+        </DialogContent>
+        
+        {/* Dialog Actions */}
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          {/* Cancel Button */}
+          <Button 
+            onClick={handleCloseConfirmDialog}
+            variant="outlined" 
+            sx={{ 
+              borderRadius: 1,
+              textTransform: 'none',
+              px: 2
+            }}
+          >
+            Cancel
+          </Button>
+          
+          {/* Confirm Button */}
+          <Button 
+            onClick={handleConfirmAddExpense}
+            variant="contained"
+            color="primary"
+            sx={{ 
+              borderRadius: 1,
+              textTransform: 'none',
+              px: 2
+            }}
+            autoFocus
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
