@@ -1,0 +1,48 @@
+/* src/modules/Dashboard/dashboard.css */
+
+.dashboard {
+  padding: 16px;
+}
+
+.dashboard h2 {
+  margin-bottom: 16px;
+}
+
+.widget-card {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.widget-card h6 {
+  margin-bottom: 16px;
+}
+
+.time-period-selector select,
+.time-period-selector button {
+  margin-right: 8px;
+}
+
+.quick-actions button {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.customizable-widgets .visibility-toggle {
+  margin-bottom: 8px;
+}
+
+.customizable-widgets .draggable-widget {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.customizable-widgets .draggable-widget h6 {
+  margin-bottom: 8px;
+}

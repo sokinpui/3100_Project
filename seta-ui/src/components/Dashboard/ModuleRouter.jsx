@@ -2,7 +2,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense } from 'react';
 import LoadingSpinner from '../common/LoadingSpinner';
-import Dashboard from '../../modules/Dashboard';
+import Dashboard from '../../modules/Dashboard/Dashboard';
 import Sidebar from '../common/Sidebar';
 
 export default function ModuleRouter({ modules }) {
@@ -24,8 +24,8 @@ export default function ModuleRouter({ modules }) {
               <Route
                 key={module.id}
                 path={module.path}
-                element={                 
-                  isAuthenticated ? (       
+                element={
+                  isAuthenticated ? (
                     <Navigate to="/" replace />
                   ) : (
                     <module.component />
