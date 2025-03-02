@@ -29,7 +29,10 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  CircularProgress,
+  Alert,
+  Snackbar
 } from '@mui/material';
 
 // Import icons
@@ -46,6 +49,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+
+// Import axios for API calls
+import axios from 'axios';
+
+// API base URL 
+const API_URL = 'http://localhost:8000';
 
 // Predefined expense categories to choose from
 const expenseCategories = [
@@ -64,38 +73,82 @@ const expenseCategories = [
 
 // Main component function
 export default function ExpenseAdd() {
-  // State for storing the list of expenses - MUST be at top level of component
+  // State for storing the list of expenses
   const [expenses, setExpenses] = useState([]);
+  // State for loading indicators
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // State for API error handling
+  const [apiError, setApiError] = useState(null);
+  // State for success notification
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // State for storing form input values
   const [formData, setFormData] = useState({
     amount: '',
-    category: '',
+    category_name: '', // Changed from 'category' to match API model
     date: '',
     description: ''
   });
 
-  // Add state for controlling the confirmation dialog
+  // State for controlling the confirmation dialog
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  // Add state for controlling the custom category field
+  // State for controlling the custom category field
   const [showOtherCategoryField, setShowOtherCategoryField] = useState(false);
 
-  // Load existing expenses from localStorage when component mounts
+  // State for controlling the expense delete dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
+
+  // Get userId from localStorage (set during login)
+  const userId = localStorage.getItem('userId');
+
+  // Function to show notifications
+  const showNotification = (message, severity = 'success') => {
+    setNotification({
+      open: true,
+      message,
+      severity
+    });
+  };
+
+  // Function to close notifications
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  // Load expenses from API when component mounts, this function has some weird warnings (Can ignore for now, idk why yet)
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-      setExpenses(JSON.parse(savedExpenses));
+    // Only fetch if userId exists (user is logged in)
+    if (userId) {
+      fetchExpenses();
     }
-  }, []);
+  }, [userId]);
+
+  // Fetch expenses from API
+  const fetchExpenses = async () => {
+    setIsLoading(true);
+    setApiError(null);
+
+    try {
+      const response = await axios.get(`${API_URL}/expenses/${userId}`);
+      setExpenses(response.data);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      setApiError('Failed to load expenses. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Function to open the confirmation dialog
   const handleOpenConfirmDialog = (e) => {
     e.preventDefault();
     
     // Basic form validation
-    if (!formData.amount || !formData.category || !formData.date) {
-      alert('Please fill in all required fields');
+    if (!formData.amount || !formData.category_name || !formData.date) {
+      showNotification('Please fill in all required fields', 'error');
       return;
     }
     
@@ -103,27 +156,36 @@ export default function ExpenseAdd() {
     setConfirmDialogOpen(true);
   };
   
-  // Function to close the dialog
-  const handleCloseConfirmDialog = () => {
+  // Function to close the Add Expense dialog
+  const handleCloseConfirmAddExpenseDialog = () => {
     setConfirmDialogOpen(false);
   };
   
-  // Confirmation handler
+  // Add Expense Confirmation handler - Add expense via API
   const handleConfirmAddExpense = async () => {
+    setIsSubmitting(true);
+    
     try {
-      // Create updated expenses array with new expense
-      const newExpenses = [...expenses, formData];
+      // Create expense object for API
+      const expenseData = {
+        user_id: parseInt(userId),
+        amount: parseFloat(formData.amount),
+        category_name: formData.category_name,
+        date: formData.date,
+        description: formData.description || ""
+      };
       
-      // Update state with new expenses
-      setExpenses(newExpenses);
+      // Send POST request to API
+      const response = await axios.post(`${API_URL}/expenses`, expenseData);
       
-      // Save to localStorage
-      localStorage.setItem('expenses', JSON.stringify(newExpenses));
+      // Add the new expense to state with the ID from the response
+      const newExpense = response.data;
+      setExpenses(prevExpenses => [...prevExpenses, newExpense]);
       
       // Reset form fields after submission
       setFormData({
         amount: '',
-        category: '',
+        category_name: '',
         date: '',
         description: ''
       });
@@ -132,11 +194,13 @@ export default function ExpenseAdd() {
       setConfirmDialogOpen(false);
       setShowOtherCategoryField(false);
       
-      alert('Expense added successfully!');
+      // Show success notification
+      showNotification('Expense added successfully!');
     } catch (error) {
       console.error('Error adding expense:', error);
-      alert('Failed to add expense.');
-      setConfirmDialogOpen(false);
+      showNotification('Failed to add expense. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -145,7 +209,7 @@ export default function ExpenseAdd() {
     const { name, value } = e.target;
     
     // Check if category is "Others"
-    if (name === 'category') {
+    if (name === 'category_name') {
       setShowOtherCategoryField(value === 'Others (Specify)');
     }
     
@@ -159,8 +223,8 @@ export default function ExpenseAdd() {
   const handleCustomCategoryChange = (e) => {
     setFormData(prev => ({
       ...prev,
-      // Update both the category field and the custom field
-      category: e.target.value
+      // Update the category_name field
+      category_name: e.target.value
     }));
   };
 
@@ -172,16 +236,42 @@ export default function ExpenseAdd() {
     }));
   };
 
-  // Handler for deleting an expense
-  const handleDelete = (indexToDelete) => {
+  // Handler for opening the delete dialog
+  const handleOpenDeleteDialog = (expenseId) => {
+    // Set the expense ID to be deleted
+    setExpenseToDelete(expenseId);
+    // Open the confirmation dialog
+    setDeleteDialogOpen(true);
+  };
+
+  // Handler for closing the delete dialog
+  const handleCancelDelete = () => {
+    // Close the dialog and clear the selected expense
+    setDeleteDialogOpen(false);
+    setExpenseToDelete(null);
+  };
+
+  // Function to confirm and execute the expense deletion
+  const handleConfirmDelete = async () => {
+    // Validate that we have an expense ID
+    if (!expenseToDelete) return;
+    
     try {
-      const updatedExpenses = expenses.filter((_, index) => index !== indexToDelete);
-      setExpenses(updatedExpenses);
-      localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
-      alert('Expense deleted successfully!');
+      // Call API to delete the expense
+      await axios.delete(`${API_URL}/expenses/${expenseToDelete}`);
+      
+      // Update local state by filtering out the deleted expense
+      setExpenses(prev => prev.filter(expense => expense.id !== expenseToDelete));
+      
+      // Show success notification
+      showNotification('Expense deleted successfully!');
     } catch (error) {
       console.error('Error deleting expense:', error);
-      alert('Failed to delete expense.');
+      showNotification('Failed to delete expense. Please try again.', 'error');
+    } finally {
+      // Close the dialog and clear the selected expense
+      setDeleteDialogOpen(false);
+      setExpenseToDelete(null);
     }
   };
 
@@ -195,6 +285,29 @@ export default function ExpenseAdd() {
   // Component rendering
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
+      {/* API Error Alert */}
+      {apiError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {apiError}
+        </Alert>
+      )}
+      
+      {/* Success/Error Notification */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+      
       {/* Summary cards row */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         {/* Total Expenses Card */}
@@ -274,8 +387,8 @@ export default function ExpenseAdd() {
                   <InputLabel id="category-label">Category</InputLabel>
                   <Select
                     labelId="category-label"
-                    name="category"
-                    value={formData.category}
+                    name="category_name" // Changed from 'category' to match API model
+                    value={formData.category_name}
                     onChange={handleChange}
                     label="Category"
                     startAdornment={
@@ -293,11 +406,11 @@ export default function ExpenseAdd() {
                   <TextField
                     fullWidth
                     label="Specify Category"
-                    value={formData.category === 'Others (Specify)' ? '' : formData.category}
+                    value={formData.category_name === 'Others (Specify)' ? '' : formData.category_name}
                     onChange={handleCustomCategoryChange}
                     placeholder="Enter custom category"
                     sx={{ mt: 2 }}
-                    slotProps={{          // DO NOT USE INPUTPROPS, DEPRECATED
+                    slotProps={{
                       input: {
                         startAdornment: (
                           <InputAdornment position="start">
@@ -409,161 +522,170 @@ export default function ExpenseAdd() {
           slotProps={{ title: { fontWeight: 500 } }} 
         />
         <CardContent sx={{ p: 0 }}>
-          <TableContainer>
-            <Table>
-              {/* Table header */}
-              <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableRow>
-                  {/* Date column */}
-                  <TableCell width="15%" sx={{ fontWeight: 'bold' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
-                      Date
-                    </Box>
-                  </TableCell>
-                  {/* Category column */}
-                  <TableCell width="20%" sx={{ fontWeight: 'bold' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
-                      Category
-                    </Box>
-                  </TableCell>
-                  {/* Amount column */}
-                  <TableCell width="15%" align="left" sx={{ fontWeight: 'bold' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
-                      Amount
-                    </Box>
-                  </TableCell>
-                  {/* Description column */}
-                  <TableCell sx={{ maxWidth: '40%', fontWeight: 'bold' }} align="left">
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
-                      Description
-                    </Box>
-                  </TableCell>
-                  {/* Actions column */}
-                  <TableCell width="10%" align="center" sx={{ fontWeight: 'bold' }}>
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              
-              {/* Table body */}
-              <TableBody>
-                {/* Conditional rendering based on whether expenses exist */}
-                {expenses.length === 0 ? (
-                  // If no expenses, show a message
+          {/* Show loading spinner while fetching data */}
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table>
+                {/* Table header */}
+                <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                      <Typography variant="body1" color="textSecondary">
-                        No expenses added yet
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                        Use the form above to add your first expense
-                      </Typography>
+                    {/* Date column */}
+                    <TableCell width="15%" sx={{ fontWeight: 'bold' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
+                        Date
+                      </Box>
+                    </TableCell>
+                    {/* Category column */}
+                    <TableCell width="20%" sx={{ fontWeight: 'bold' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
+                        Category
+                      </Box>
+                    </TableCell>
+                    {/* Amount column */}
+                    <TableCell width="15%" align="left" sx={{ fontWeight: 'bold' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
+                        Amount
+                      </Box>
+                    </TableCell>
+                    {/* Description column */}
+                    <TableCell sx={{ maxWidth: '40%', fontWeight: 'bold' }} align="left">
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
+                        Description
+                      </Box>
+                    </TableCell>
+                    {/* Actions column */}
+                    <TableCell width="10%" align="center" sx={{ fontWeight: 'bold' }}>
+                      Actions
                     </TableCell>
                   </TableRow>
-                ) : (
-                  // If expenses exist, map through them to create table rows
-                  expenses.map((expense, index) => (
-                    // Each row needs a unique key for React to efficiently update the DOM
-                    <TableRow 
-                      key={index}
-                      sx={{ 
-                        '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
-                        transition: 'background-color 0.2s',
-                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
-                      }}
-                    >
-                      {/* Date cell */}
-                      <TableCell width="15%">{expense.date}</TableCell>
-                      
-                      {/* Category cell with tooltip for overflow */}
-                      <TableCell 
-                        sx={{ 
-                          maxWidth: '200px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        <Tooltip title={expense.category} arrow placement="top">
-                          <Chip 
-                            label={expense.category} 
-                            size="small" 
-                            variant="outlined" 
-                            color="primary"
-                            sx={{ maxWidth: '100%' }}
-                          />
-                        </Tooltip>
-                      </TableCell>
-                      
-                      {/* Amount cell */}
-                      <TableCell width="15%" align="left">
-                        <Typography 
-                          sx={{ 
-                            fontWeight: 'medium',
-                            color: 'success.main'
-                          }}
-                        >
-                          ${parseFloat(expense.amount).toFixed(2)}
+                </TableHead>
+                
+                {/* Table body */}
+                <TableBody>
+                  {/* Conditional rendering based on whether expenses exist */}
+                  {expenses.length === 0 ? (
+                    // If no expenses, show a message
+                    <TableRow>
+                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body1" color="textSecondary">
+                          No expenses added yet
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                          Use the form above to add your first expense
                         </Typography>
                       </TableCell>
-                      
-                      {/* Description cell with tooltip for overflow */}
-                      <TableCell 
+                    </TableRow>
+                  ) : (
+                    // If expenses exist, map through them to create table rows
+                    expenses.map((expense) => (
+                      // Each row needs a unique key for React to efficiently update the DOM
+                      <TableRow 
+                        key={expense.id}
                         sx={{ 
-                          maxWidth: '300px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                          '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
+                          transition: 'background-color 0.2s',
+                          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
                         }}
                       >
-                        {expense.description ? (
-                          <Tooltip title={expense.description} arrow placement="top">
-                            <span>{expense.description}</span>
+                        {/* Date cell */}
+                        <TableCell width="15%">
+                          {new Date(expense.date).toLocaleDateString()}
+                        </TableCell>
+                        
+                        {/* Category cell with tooltip for overflow */}
+                        <TableCell 
+                          sx={{ 
+                            maxWidth: '200px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          <Tooltip title={expense.category_name} arrow placement="top">
+                            <Chip 
+                              label={expense.category_name} 
+                              size="small" 
+                              variant="outlined" 
+                              color="primary"
+                              sx={{ maxWidth: '100%' }}
+                            />
                           </Tooltip>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                            No description
-                          </Typography>
-                        )}
-                      </TableCell>
-                      
-                      {/* Actions cell with delete button */}
-                      <TableCell width="5%" align="center">
-                        <Tooltip title="Delete expense" arrow>
-                          <IconButton 
-                            aria-label="delete expense"
-                            onClick={() => handleDelete(index)}
-                            color="error"
-                            size="small"
-                            sx={{
-                              transition: 'transform 0.2s, background-color 0.2s',
-                              '&:hover': {
-                                backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                                transform: 'scale(1.1)'
-                              }
+                        </TableCell>
+                        
+                        {/* Amount cell */}
+                        <TableCell width="15%" align="left">
+                          <Typography 
+                            sx={{ 
+                              fontWeight: 'medium',
+                              color: 'success.main'
                             }}
                           >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                            ${parseFloat(expense.amount).toFixed(2)}
+                          </Typography>
+                        </TableCell>
+                        
+                        {/* Description cell with tooltip for overflow */}
+                        <TableCell 
+                          sx={{ 
+                            maxWidth: '300px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {expense.description ? (
+                            <Tooltip title={expense.description} arrow placement="top">
+                              <span>{expense.description}</span>
+                            </Tooltip>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                              No description
+                            </Typography>
+                          )}
+                        </TableCell>
+                        
+                        {/* Actions cell with delete button */}
+                        <TableCell width="5%" align="center">
+                          <Tooltip title="Delete expense" arrow>
+                            <IconButton 
+                              aria-label="delete expense"
+                              onClick={() => handleOpenDeleteDialog(expense.id)}
+                              color="error"
+                              size="small"
+                              sx={{
+                                transition: 'transform 0.2s, background-color 0.2s',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                                  transform: 'scale(1.1)'
+                                }
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </CardContent>
       </Card>
       
       {/* Confirmation Dialog Component */}
       <Dialog
         open={confirmDialogOpen}
-        onClose={handleCloseConfirmDialog}
+        onClose={handleCloseConfirmAddExpenseDialog}
         aria-labelledby="expense-confirmation-dialog"
         aria-describedby="expense-confirmation-description"
         // Add subtle animation and styling
@@ -595,7 +717,7 @@ export default function ExpenseAdd() {
               <strong>Date:</strong> {formData.date}
             </Typography>
             <Typography variant="body2" component="div" sx={{ mb: 1 }}>
-              <strong>Category:</strong> {formData.category}
+              <strong>Category:</strong> {formData.category_name}
             </Typography>
             <Typography variant="body2" component="div" sx={{ mb: 1 }}>
               <strong>Amount:</strong> ${parseFloat(formData.amount || 0).toFixed(2)}
@@ -612,13 +734,14 @@ export default function ExpenseAdd() {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           {/* Cancel Button */}
           <Button 
-            onClick={handleCloseConfirmDialog}
+            onClick={handleCloseConfirmAddExpenseDialog}
             variant="outlined" 
             sx={{ 
               borderRadius: 1,
               textTransform: 'none',
               px: 2
             }}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -633,9 +756,74 @@ export default function ExpenseAdd() {
               textTransform: 'none',
               px: 2
             }}
+            disabled={isSubmitting}
             autoFocus
           >
-            Confirm
+            {isSubmitting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Confirm'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Dialog Component */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        // Add subtle animation and styling
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }
+        }}
+      >
+        {/* Dialog Title */}
+        <DialogTitle id="expense-delete-dialog" sx={{ 
+          bgcolor: 'error.main', 
+          color: 'white',
+          py: 1.5
+        }}>
+          Delete Expense
+        </DialogTitle>
+        
+        {/* Dialog Content */}
+        <DialogContent sx={{ mt: 2, px: 3 }}>
+          <DialogContentText id="expense-delete-description">
+            Are you sure you want to delete this expense?
+          </DialogContentText>
+        </DialogContent>
+        
+        {/* Dialog Actions */}
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          {/* Cancel Button */}
+          <Button 
+            onClick={handleCancelDelete}
+            variant="outlined" 
+            sx={{ 
+              borderRadius: 1,
+              textTransform: 'none',
+              px: 2
+            }}
+          >
+            Cancel
+          </Button>
+          
+          {/* Confirm Button */}
+          <Button 
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            sx={{ 
+              borderRadius: 1,
+              textTransform: 'none',
+              px: 2
+            }}
+            autoFocus
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
