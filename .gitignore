@@ -1,1 +1,3 @@
 seta-ui/node_modules/
+seta-api/app/__pycache__/
+seta-api/venv/

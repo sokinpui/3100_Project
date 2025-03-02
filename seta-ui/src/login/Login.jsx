@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   Box, 
   Paper, 
@@ -21,18 +22,24 @@ import {
   VisibilityOff,
   Login as LoginIcon
 } from '@mui/icons-material';
-import { user } from './testData';  // Importing user data from testData SHOULD DELETE AFTER HAVING API
 
+// Backend API URL for authentication endpoints, currently hardcoded
+const API_URL = 'http://localhost:8000';
 export default function Login() {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const navigate = useNavigate(); // For navigation after login
+  const [isLoading, setIsLoading] = useState(false); // Controls loading state during API calls
+  const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
+  const [error, setError] = useState(""); // For displaying authentication errors
   const [formData, setFormData] = useState({
+    // Form fields for login
     username: '',
     password: ''
   });
 
+  /**
+   * Updates form data state when input values change
+   * Also clears any error messages when user starts typing
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -40,43 +47,79 @@ export default function Login() {
       [name]: value
     }));
     
-    // Clear error when typing
+    // Clear error message when user starts typing
     if (error) {
       setError("");
     }
   };
 
+  /**
+   * Handles the login form submission
+   * 1. Prevents default form submission
+   * 2. Submits credentials to the API
+   * 3. Stores user data in localStorage on success
+   * 4. Handles error responses with meaningful messages
+   */
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Start loading state
+    
     try {
-      setIsLoading(true);
+      // Send POST request to login endpoint
+      const response = await axios.post(`${API_URL}/login`, {
+        username: formData.username,
+        password: formData.password
+      });
       
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Extract user data from successful response
+      const userData = response.data;
       
-      if (!user.find(u => u.username === formData.username && u.password === formData.password)) {
-        setError("Invalid username or password");
-        setIsLoading(false);
-        return;
-      }
+      // Store essential user info in localStorage for session management
+      localStorage.setItem('loginTime', new Date().getTime().toString()); // For session timeout
+      localStorage.setItem('username', userData.username); // For displaying username
+      localStorage.setItem('userId', userData.id); // For API calls that need user ID
       
-      localStorage.setItem('loginTime', new Date().getTime().toString());
-      localStorage.setItem('username', formData.username);
+      // Navigate to dashboard on successful login
       navigate('/', { replace: true });
-      
     } catch (error) {
       console.error('Login failed:', error);
-      setError("An error occurred during login");
+      
+      // Comprehensive error handling based on API response
+      if (error.response) {
+        // API responded with an error status code
+        switch (error.response.status) {
+          case 401: // Invalid credentials
+            setError("Invalid username or password");
+            break;
+          case 404: // User not found
+            setError("User not found");
+            break;
+          case 400: // disabled account
+            setError("Account is disabled");
+            break;
+          default: // Other API errors
+            setError("Login failed. Please try again.");
+        }
+      } else if (error.request) {
+        // Request was made but no response (network issues)
+        setError("Server not responding. Please try again later.");
+      } else {
+        // Error in request setup
+        setError("An error occurred during login");
+      }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // End loading state regardless of outcome
     }
   };
 
+  // Toggles password visibility in the password field (that eye icon)
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
   };
 
+  // Component rendering - UI for login form
   return (
+    // Container wraps the entire form with proper spacing and centering
     <Container maxWidth="xs" sx={{ 
       my: 8,
       display: 'flex',
@@ -85,6 +128,7 @@ export default function Login() {
       justifyContent: 'center',
       margin: '0 auto'
     }}>
+      {/* Paper component gives the form a card-like appearance */}
       <Paper 
         elevation={3}
         sx={{
@@ -95,6 +139,7 @@ export default function Login() {
           backgroundColor: '#f8f9fa'
         }}
       >
+        {/* Header section with icon and title */}
         <Box sx={{ 
           display: 'flex',
           flexDirection: 'column',
@@ -131,6 +176,7 @@ export default function Login() {
           </Typography>
         </Box>
 
+        {/* Error alert - displays authentication errors */}
         {error && (
           <Alert 
             severity="error" 
@@ -140,8 +186,10 @@ export default function Login() {
           </Alert>
         )}
 
+        {/* Main login form */}
         <Box component="form" onSubmit={handleLogin} noValidate>
           <Grid container spacing={2}>
+            {/* Username field */}
             <Grid size={12}>
               <TextField
                 required
@@ -151,8 +199,8 @@ export default function Login() {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                autoComplete="username"
-                autoFocus
+                autoComplete="username" // Helps browsers autofill
+                autoFocus // Focus on this field when form loads
                 slotProps={{
                   input: {
                     startAdornment: (
@@ -164,6 +212,8 @@ export default function Login() {
                 }}
               />
             </Grid>
+            
+            {/* Password field with toggle visibility */}
             <Grid size={12}>
               <TextField
                 required
@@ -174,7 +224,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleInputChange}
-                autoComplete="current-password"
+                autoComplete="current-password" // Helps browsers autofill
                 slotProps={{
                   input: {
                     startAdornment: (
@@ -198,6 +248,8 @@ export default function Login() {
               />
             </Grid>
           </Grid>
+          
+          {/* Login button - shows spinner during API call */}
           <Button
             type="submit"
             fullWidth
@@ -219,6 +271,8 @@ export default function Login() {
               'Sign In'
             )}
           </Button>
+          
+          {/* Link to signup page for new users */}
           <Button
             fullWidth
             variant="text"
@@ -231,32 +285,18 @@ export default function Login() {
           </Button>
         </Box>
         
-        {/* DEV MODE: Display test users - Remove in production */}
-        {process.env.NODE_ENV !== 'production' && (
-          <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-              Test Users (Development Only)
-            </Typography>
-            <Box sx={{ 
-              mt: 1,
-              p: 1.5, 
-              borderRadius: 1, 
-              bgcolor: 'rgba(0,0,0,0.03)',
-              fontSize: '0.75rem'
-            }}>
-              {user.map((data, index) => (
-                <Box key={index} sx={{ mb: index !== user.length - 1 ? 1 : 0 }}>
-                  <Typography variant="caption" display="block" sx={{ fontWeight: 'medium' }}>
-                    Username: {data.username}
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    Password: {data.password}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
+        {/* Development-only section for test users - commented out for production */}
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Login Info (Currently only has 1 account to login): <br />
+            <strong>Username:</strong> test <br />
+            <strong>Password:</strong> Password123.
+            <br/><br/>
+            <strong style={{color: "red"}}>Note: Make sure python backend is running before logging in!</strong>
+            <br></br>
+            <strong style={{color: "red"}}>Additional Note: Please include the newly registered user credentials above for development purposes</strong>
+          </Typography>
+        </Box>
       </Paper>
     </Container>
   );
