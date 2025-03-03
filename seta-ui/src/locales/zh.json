@@ -1,0 +1,27 @@
+{
+    "settings": {
+      "profile": "个人资料设置",
+      "firstName": "名字",
+      "lastName": "姓氏",
+      "username": "用户名",
+      "contactNumber": "联系电话",
+      "email": "电子邮件",
+      "changePassword": "更改密码",
+      "theme": "主题与外观",
+      "themeLabel": "主题",
+      "lightMode": "亮色模式",
+      "darkMode": "暗色模式",
+      "systemDefault": "系统默认",
+      "language": "语言",
+      "saveSettings": "保存设置",
+      "passwordDialog": {
+        "title": "更改密码",
+        "description": "要更改密码，请输入您的当前密码和新密码。",
+        "currentPassword": "当前密码",
+        "newPassword": "新密码",
+        "confirmPassword": "确认新密码",
+        "cancel": "取消",
+        "change": "更改密码"
+      }
+    }
+  }

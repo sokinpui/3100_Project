@@ -72,7 +72,7 @@ export default function Signup() {
         try {
             // Prepare payload for API - matches the UserCreate Pydantic model
             const userData = {
-                username: formData.username,
+                username: formData.username.toLowerCase(),
                 email: formData.email,
                 password: formData.password,
                 first_name: formData.first_name,

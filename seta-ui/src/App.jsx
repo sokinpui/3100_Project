@@ -4,6 +4,7 @@ import LayoutContainer from './components/Dashboard/LayoutContainer.jsx';
 import { ModuleProvider } from './contexts/ModuleContext';
 import ApiProvider from './services/ApiProvider';
 import AuthGuard from './login/AuthGuard';
+// import './locales/i18n';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

@@ -74,7 +74,8 @@ export default function Sidebar({ children }) {
     localStorage.removeItem('username');
     localStorage.removeItem('expenses');
     localStorage.removeItem('userSettings');
-    
+    localStorage.removeItem('email');
+    localStorage.removeItem('userId');    
     setLogoutDialogOpen(false);
     navigate('/login', { replace: true });
   };

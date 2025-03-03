@@ -67,7 +67,7 @@ export default function Login() {
     try {
       // Send POST request to login endpoint
       const response = await axios.post(`${API_URL}/login`, {
-        username: formData.username,
+        username: formData.username.toLowerCase(),
         password: formData.password
       });
       
@@ -79,12 +79,12 @@ export default function Login() {
       localStorage.setItem('username', userData.username); // For displaying username
       localStorage.setItem('userId', userData.id); // For API calls that need user ID
       localStorage.setItem('email', userData.email); // For displaying email
-      localStorage.setItem('token', userData.token); // For API authentication
+      // localStorage.setItem('token', userData.token); // For API authentication
       
       // Navigate to dashboard on successful login
       navigate('/', { replace: true });
     } catch (error) {
-      console.error('Login failed:', error);
+      // console.error('Login failed:', error);
       
       // Comprehensive error handling based on API response
       if (error.response) {

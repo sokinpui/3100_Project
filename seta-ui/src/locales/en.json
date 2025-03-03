@@ -1,0 +1,27 @@
+{
+    "settings": {
+      "profile": "Profile Settings",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "username": "Username",
+      "contactNumber": "Contact Number",
+      "email": "Email",
+      "changePassword": "Change Password",
+      "theme": "Theme & Appearance",
+      "themeLabel": "Theme",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode",
+      "systemDefault": "System Default",
+      "language": "Language",
+      "saveSettings": "Save Settings",
+      "passwordDialog": {
+        "title": "Change Password",
+        "description": "To change your password, please enter your current password and your new password.",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "cancel": "Cancel",
+        "change": "Change Password"
+      }
+    }
+  }

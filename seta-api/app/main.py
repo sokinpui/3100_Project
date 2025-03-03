@@ -77,6 +77,19 @@ class UserSettings(BaseModel):
     language: str = "english"
     currency: str = "USD"
 
+class UserUpdate(BaseModel):
+    """Model for updating user data"""
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    contact_number: str
+
+class PasswordChange(BaseModel):
+    """Model for password change requests."""
+    current_password: str
+    new_password: str
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -240,6 +253,53 @@ async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
         )
     
     return user
+
+@app.put("/users/{user_id}", response_model=UserResponse)
+async def update_user_profile(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db)):
+    """Update user profile."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update user data
+    user.username = user_data.username
+    user.email = user_data.email
+    user.first_name = user_data.first_name
+    user.last_name = user_data.last_name
+    user.contact_number = user_data.contact_number
+    
+    db.commit()
+    db.refresh(user)
+    
+    return user
+
+@app.put("/users/{user_id}/password", status_code=status.HTTP_200_OK)
+async def change_user_password(user_id: int, password_data: PasswordChange, db: Session = Depends(get_db)):
+    """Change user password."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Verify current password
+    if not verify_password(password_data.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect"
+        )
+    
+    # Update password
+    user.password_hash = hash_password(password_data.new_password)
+    db.commit()
+    
+    return {"message": "Password changed successfully"}
 
 # --------- Statistics Endpoints ---------
 
