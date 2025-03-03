@@ -78,6 +78,8 @@ export default function Login() {
       localStorage.setItem('loginTime', new Date().getTime().toString()); // For session timeout
       localStorage.setItem('username', userData.username); // For displaying username
       localStorage.setItem('userId', userData.id); // For API calls that need user ID
+      localStorage.setItem('email', userData.email); // For displaying email
+      localStorage.setItem('token', userData.token); // For API authentication
       
       // Navigate to dashboard on successful login
       navigate('/', { replace: true });

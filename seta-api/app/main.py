@@ -46,9 +46,6 @@ class ExpenseResponse(ExpenseBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        orm_mode = True
 
 class UserBase(BaseModel):
     """Base user model with common attributes."""
@@ -73,9 +70,6 @@ class UserResponse(UserBase):
     is_active: bool
     email_verified: bool
     last_login: Optional[datetime] = None
-    
-    class Config:
-        orm_mode = True
 
 class UserSettings(BaseModel):
     """Model for user settings."""
