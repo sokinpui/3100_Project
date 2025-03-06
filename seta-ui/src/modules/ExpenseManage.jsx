@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
-// Material-UI Grid system for responsive layouts
 import Grid from '@mui/material/Grid2';
-// Material-UI components for building the UI
+import { DataGrid } from '@mui/x-data-grid';
 import {
   IconButton,
   Tooltip,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Container,
   TextField,
   Box,
@@ -24,7 +17,6 @@ import {
   Select,
   MenuItem,
   InputAdornment,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -284,7 +276,7 @@ export default function ExpenseAdd() {
 
   // Component rendering
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg">
       {/* API Error Alert */}
       {apiError && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -453,7 +445,6 @@ export default function ExpenseAdd() {
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
-                required
                 slotProps={{
                   input: {
                     startAdornment: (
@@ -518,166 +509,147 @@ export default function ExpenseAdd() {
             backgroundColor: 'secondary.light', 
             color: 'secondary.contrastText',
             py: 1.5,
+            '& .MuiDataGrid-filler': {
+              display: 'none'
+            }
           }} 
           slotProps={{ title: { fontWeight: 500 } }} 
         />
         <CardContent sx={{ p: 0 }}>
-          {/* Show loading spinner while fetching data */}
+          {/* CircularProgress (Not the one we wrote, it's the one from MUI) shows a loading spinner while fetching data */}
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress />
             </Box>
           ) : (
-            <TableContainer>
-              <Table>
-                {/* Table header */}
-                <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableRow>
-                    {/* Date column */}
-                    <TableCell width="15%" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ width: '100%' }}>
+              {/* DataGrid component to display expenses, now has basic sorting, filtering function */}
+              <DataGrid
+                rows={expenses}       // Rows of data
+                columns={[            // Columns of the table, defined one by one with renderHeader
+                  { 
+                    field: 'date', 
+                    headerName: 'Date', 
+                    width: 150,
+                    renderHeader: () => (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
                         Date
                       </Box>
-                    </TableCell>
-                    {/* Category column */}
-                    <TableCell width="20%" sx={{ fontWeight: 'bold' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
-                        Category
-                      </Box>
-                    </TableCell>
-                    {/* Amount column */}
-                    <TableCell width="15%" align="left" sx={{ fontWeight: 'bold' }}>
+                    ),
+                  },
+                  { 
+                    field: 'amount', 
+                    headerName: 'Amount', 
+                    width: 150,
+                    renderHeader: () => (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
                         Amount
                       </Box>
-                    </TableCell>
-                    {/* Description column */}
-                    <TableCell sx={{ maxWidth: '40%', fontWeight: 'bold' }} align="left">
+                    ),
+                    renderCell: (params) => (
+                      <Box sx={{ display: 'flex', justifyContent: 'left', alignItems: 'center', height: '100%' }}>
+                        <Typography sx={{ fontWeight: 'medium', color: 'success.main' }}>
+                          ${parseFloat(params.value).toFixed(2)}
+                        </Typography>
+                      </Box>
+                    )
+                  },
+                  { 
+                    field: 'description', 
+                    headerName: 'Description', 
+                    flex: 1,
+                    minWidth: 200,
+                    renderHeader: () => (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
                         Description
                       </Box>
-                    </TableCell>
-                    {/* Actions column */}
-                    <TableCell width="10%" align="center" sx={{ fontWeight: 'bold' }}>
-                      Actions
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                
-                {/* Table body */}
-                <TableBody>
-                  {/* Conditional rendering based on whether expenses exist */}
-                  {expenses.length === 0 ? (
-                    // If no expenses, show a message
-                    <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body1" color="textSecondary">
-                          No expenses added yet
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                          Use the form above to add your first expense
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    // If expenses exist, map through them to create table rows
-                    expenses.map((expense) => (
-                      // Each row needs a unique key for React to efficiently update the DOM
-                      <TableRow 
-                        key={expense.id}
-                        sx={{ 
-                          '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
-                          transition: 'background-color 0.2s',
-                          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
-                        }}
-                      >
-                        {/* Date cell */}
-                        <TableCell width="15%">
-                          {new Date(expense.date).toLocaleDateString()}
-                        </TableCell>
-                        
-                        {/* Category cell with tooltip for overflow */}
-                        <TableCell 
-                          sx={{ 
-                            maxWidth: '200px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          <Tooltip title={expense.category_name} arrow placement="top">
-                            <Chip 
-                              label={expense.category_name} 
-                              size="small" 
-                              variant="outlined" 
-                              color="primary"
-                              sx={{ maxWidth: '100%' }}
-                            />
-                          </Tooltip>
-                        </TableCell>
-                        
-                        {/* Amount cell */}
-                        <TableCell width="15%" align="left">
-                          <Typography 
-                            sx={{ 
-                              fontWeight: 'medium',
-                              color: 'success.main'
-                            }}
-                          >
-                            ${parseFloat(expense.amount).toFixed(2)}
-                          </Typography>
-                        </TableCell>
-                        
-                        {/* Description cell with tooltip for overflow */}
-                        <TableCell 
-                          sx={{ 
-                            maxWidth: '300px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {expense.description ? (
-                            <Tooltip title={expense.description} arrow placement="top">
-                              <span>{expense.description}</span>
-                            </Tooltip>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                              No description
+                    ),
+                    renderCell: (params) => (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                        {params.value ? (
+                          <Tooltip title={params.value} arrow placement="top">
+                            <Typography sx={{ 
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              width: '100%'
+                            }}>
+                              {params.value}
                             </Typography>
-                          )}
-                        </TableCell>
-                        
-                        {/* Actions cell with delete button */}
-                        <TableCell width="5%" align="center">
-                          <Tooltip title="Delete expense" arrow>
-                            <IconButton 
-                              aria-label="delete expense"
-                              onClick={() => handleOpenDeleteDialog(expense.id)}
-                              color="error"
-                              size="small"
-                              sx={{
-                                transition: 'transform 0.2s, background-color 0.2s',
-                                '&:hover': {
-                                  backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                                  transform: 'scale(1.1)'
-                                }
-                              }}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
                           </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                            No description
+                          </Typography>
+                        )}
+                      </Box>
+                    )
+                  },
+                  { 
+                    field: 'actions', 
+                    headerName: 'Actions', 
+                    width: 100,
+                    sortable: false,
+                    filterable: false,
+                    renderCell: (params) => (
+                      <Tooltip title="Delete expense" arrow>
+                        <IconButton 
+                          aria-label="delete expense"
+                          onClick={() => handleOpenDeleteDialog(params.row.id)}
+                          color="error"
+                          size="small"
+                          sx={{
+                            transition: 'transform 0.2s, background-color 0.2s',
+                            '&:hover': {
+                              backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                              transform: 'scale(1.1)'
+                            },
+                            ml: 1
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }
+                ]}
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 5 }
+                  },
+                }}
+                pageSizeOptions={[5, 10, 25]}       // This can be changed to show more/less rows, customizable
+                disableRowSelectionOnClick
+                sx={{
+                  '& .MuiDataGrid-columnHeaders': {
+                    backgroundColor: '#f5f5f5'
+                  },
+                  '& .MuiDataGrid-row:nth-of-type(odd)': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                  },
+                  '& .MuiDataGrid-row:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  },
+                  border: 'none'
+                }}
+                components={{
+                  // Custom display when there are no rows
+                  NoRowsOverlay: () => (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="body1" color="textSecondary">
+                        No expenses added yet
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                        Use the form above to add your first expense
+                      </Typography>
+                    </Box>
+                  )
+                }}
+              />
+            </Box>
           )}
         </CardContent>
       </Card>

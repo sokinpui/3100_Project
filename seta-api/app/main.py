@@ -217,6 +217,30 @@ async def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     
     return None
 
+# Modify an expense, for future use
+@app.put("/expenses/{expense_id}", response_model=ExpenseResponse)
+async def update_expense(expense_id: int, expense_data: CreateExpense, db: Session = Depends(get_db)):
+    """Update an expense."""
+    expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
+    
+    if not expense:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Expense not found"
+        )
+    
+    # Update expense data
+    expense.amount = expense_data.amount
+    expense.category_name = expense_data.category_name
+    expense.date = expense_data.date
+    expense.description = expense_data.description
+    expense.updated_at = func.now()
+    
+    db.commit()
+    db.refresh(expense)
+    
+    return expense
+
 # --------- User Settings Endpoints ---------
 
 @app.get("/users/{user_id}/settings", response_model=UserSettings)
