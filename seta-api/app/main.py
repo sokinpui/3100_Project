@@ -241,6 +241,37 @@ async def update_expense(expense_id: int, expense_data: CreateExpense, db: Sessi
     
     return expense
 
+@app.get("/expenses/{user_id}/report")
+async def generate_expense_report(user_id: int, db: Session = Depends(get_db)):
+    """Generate a detailed expense report for a user."""
+    # Verify user exists
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Get all expenses for the user, ordered by date
+    expenses = db.query(models.Expense)\
+        .filter(models.Expense.user_id == user_id)\
+        .order_by(models.Expense.date.desc())\
+        .all()
+    
+    # Calculate some summary statistics
+    total_amount = sum(float(expense.amount) for expense in expenses)
+    expense_count = len(expenses)
+    
+    return {
+        "expenses": expenses,
+        "summary": {
+            "total_amount": total_amount,
+            "expense_count": expense_count,
+            "generated_at": datetime.now(),
+            "user_name": f"{user.first_name} {user.last_name}"
+        }
+    }
+
 # --------- User Settings Endpoints ---------
 
 @app.get("/users/{user_id}/settings", response_model=UserSettings)
