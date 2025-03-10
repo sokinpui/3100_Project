@@ -6,6 +6,10 @@ import RecentTransactions from './widgets/RecentTransactions';
 import BudgetAlertsGoals from './widgets/BudgetAlertsGoals';
 import QuickActions from './widgets/QuickActions';
 import TimePeriodSelector from './widgets/TimePeriodSelector';
+import ExpenseTrendAnalytics from './widgets/ExpenseTrendAnalytics';
+import RecurringExpenses from './widgets/RecurringExpenses';
+import MonthlyComparison from './widgets/MonthlyComparison';
+import SpendingForecast from './widgets/SpendingForecast';
 import { getUserExpenses, getTotalExpenses } from '../../services/apiService';
 import '../../assets/styles/dashboard.css';
 
@@ -122,6 +126,18 @@ export default function Dashboard() {
           <RecentTransactions
             transactions={expenses.slice(0, 5)}
           />
+        </Grid>
+        <Grid item xs={12}>
+          <ExpenseTrendAnalytics expenses={expenses} />
+        </Grid>
+        <Grid item xs={12}>
+          <SpendingForecast expenses={expenses} />
+        </Grid>
+        <Grid item xs={12}>
+          <RecurringExpenses expenses={expenses} />
+        </Grid>
+        <Grid item xs={12}>
+          <MonthlyComparison expenses={expenses} />
         </Grid>
         <Grid item xs={12}>
           <BudgetAlertsGoals
