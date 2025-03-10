@@ -1,3 +1,4 @@
 seta-ui/node_modules/
 seta-api/app/__pycache__/
+seta-api/app/test_user_info.json
 seta-api/venv/
