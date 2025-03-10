@@ -45,7 +45,7 @@ import dayjs from 'dayjs';
 // Import axios for API calls
 import axios from 'axios';
 
-// API base URL 
+// API base URL
 const API_URL = 'http://localhost:8000';
 
 // Predefined expense categories to choose from
@@ -137,26 +137,26 @@ export default function ExpenseAdd() {
   // Function to open the confirmation dialog
   const handleOpenConfirmDialog = (e) => {
     e.preventDefault();
-    
+
     // Basic form validation
     if (!formData.amount || !formData.category_name || !formData.date) {
       showNotification('Please fill in all required fields', 'error');
       return;
     }
-    
+
     // Open the confirmation dialog
     setConfirmDialogOpen(true);
   };
-  
+
   // Function to close the Add Expense dialog
   const handleCloseConfirmAddExpenseDialog = () => {
     setConfirmDialogOpen(false);
   };
-  
+
   // Add Expense Confirmation handler - Add expense via API
   const handleConfirmAddExpense = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Create expense object for API
       const expenseData = {
@@ -166,14 +166,14 @@ export default function ExpenseAdd() {
         date: formData.date,
         description: formData.description || ""
       };
-      
+
       // Send POST request to API
       const response = await axios.post(`${API_URL}/expenses`, expenseData);
-      
+
       // Add the new expense to state with the ID from the response
       const newExpense = response.data;
       setExpenses(prevExpenses => [...prevExpenses, newExpense]);
-      
+
       // Reset form fields after submission
       setFormData({
         amount: '',
@@ -181,11 +181,11 @@ export default function ExpenseAdd() {
         date: '',
         description: ''
       });
-      
+
       // Close the confirmation dialog and the custom category field
       setConfirmDialogOpen(false);
       setShowOtherCategoryField(false);
-      
+
       // Show success notification
       showNotification('Expense added successfully!');
     } catch (error) {
@@ -199,12 +199,12 @@ export default function ExpenseAdd() {
   // Handler for input field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Check if category is "Others"
     if (name === 'category_name') {
       setShowOtherCategoryField(value === 'Others (Specify)');
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -247,14 +247,14 @@ export default function ExpenseAdd() {
   const handleConfirmDelete = async () => {
     // Validate that we have an expense ID
     if (!expenseToDelete) return;
-    
+
     try {
       // Call API to delete the expense
       await axios.delete(`${API_URL}/expenses/${expenseToDelete}`);
-      
+
       // Update local state by filtering out the deleted expense
       setExpenses(prev => prev.filter(expense => expense.id !== expenseToDelete));
-      
+
       // Show success notification
       showNotification('Expense deleted successfully!');
     } catch (error) {
@@ -283,7 +283,7 @@ export default function ExpenseAdd() {
           {apiError}
         </Alert>
       )}
-      
+
       {/* Success/Error Notification */}
       <Snackbar
         open={notification.open}
@@ -291,24 +291,24 @@ export default function ExpenseAdd() {
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={handleCloseNotification} 
+        <Alert
+          onClose={handleCloseNotification}
           severity={notification.severity}
           sx={{ width: '100%' }}
         >
           {notification.message}
         </Alert>
       </Snackbar>
-      
+
       {/* Summary cards row */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         {/* Total Expenses Card */}
-        <Card sx={{ 
-          flexGrow: 1, 
+        <Card sx={{
+          flexGrow: 1,
           minWidth: 240,
           boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
           transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': { 
+          '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
           }}}>
@@ -324,14 +324,14 @@ export default function ExpenseAdd() {
             </Box>
           </CardContent>
         </Card>
-        
+
         {/* Total Entries Card */}
-        <Card sx={{ 
-          flexGrow: 1, 
+        <Card sx={{
+          flexGrow: 1,
           minWidth: 240,
           boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
           transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': { 
+          '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
           }}}>
@@ -348,26 +348,26 @@ export default function ExpenseAdd() {
           </CardContent>
         </Card>
       </Box>
-      
+
       {/* Add Expense Form Card */}
-      <Card 
-        elevation={3} 
-        sx={{ 
-          mb: 4, 
+      <Card
+        elevation={3}
+        sx={{
+          mb: 4,
           overflow: 'visible',
           borderRadius: 2,
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
         }}
       >
-        <CardHeader 
-          title="Add New Expense" 
-          sx={{ 
-            backgroundColor: '#5e35b1', 
+        <CardHeader
+          title="Add New Expense"
+          sx={{
+            backgroundColor: '#5e35b1',
             color: 'primary.contrastText',
             py: 1.5,
             borderRadius: '5px 5px 0 0',
-          }} 
-          slotProps={{ title: { fontWeight: 500 } }} 
+          }}
+          slotProps={{ title: { fontWeight: 500 } }}
         />
         <CardContent sx={{ p: 3 }}>
           <form onSubmit={handleOpenConfirmDialog}>
@@ -436,7 +436,7 @@ export default function ExpenseAdd() {
                 />
                 </LocalizationProvider>
               </Grid>
-              
+
               {/* Amount field */}
               <Grid size={4}>
               <TextField
@@ -457,7 +457,7 @@ export default function ExpenseAdd() {
                 }}
               />
               </Grid>
-              
+
               {/* Second row: Description field */}
               <Grid size={12}>
                 <TextField
@@ -470,11 +470,11 @@ export default function ExpenseAdd() {
                   onChange={handleChange}
                 />
               </Grid>
-              
+
               {/* Third row: Submit button */}
               <Grid size={12} sx={{ display: 'flex', justifyContent: 'end'}}>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   variant="contained"
                   color="primary"
                   startIcon={<AddCircleOutlineIcon />}
@@ -503,17 +503,17 @@ export default function ExpenseAdd() {
 
       {/* Expenses Table Card */}
       <Card elevation={3} sx={{ mb: 4, borderRadius: 2 }}>
-        <CardHeader 
-          title="Expense History" 
-          sx={{ 
-            backgroundColor: 'secondary.light', 
+        <CardHeader
+          title="Expense History"
+          sx={{
+            backgroundColor: 'secondary.light',
             color: 'secondary.contrastText',
             py: 1.5,
             '& .MuiDataGrid-filler': {
               display: 'none'
             }
-          }} 
-          slotProps={{ title: { fontWeight: 500 } }} 
+          }}
+          slotProps={{ title: { fontWeight: 500 } }}
         />
         <CardContent sx={{ p: 0 }}>
           {/* CircularProgress (Not the one we wrote, it's the one from MUI) shows a loading spinner while fetching data */}
@@ -525,135 +525,135 @@ export default function ExpenseAdd() {
             <Box sx={{ width: '100%' }}>
               {/* DataGrid component to display expenses, now has basic sorting, filtering function */}
               <DataGrid
-                rows={expenses}       // Rows of data
-                columns={[            // Columns of the table, defined one by one with renderHeader
-                  { 
-                    field: 'date', 
-                    headerName: 'Date', 
-                    width: 150,
-                    renderHeader: () => (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
-                        Date
-                      </Box>
-                    ),
+              rows={expenses}       // Rows of data
+              columns={[            // Columns of the table, defined one by one with renderHeader
+                  {
+                      field: 'date',
+                          headerName: 'Date',
+                          width: 150,
+                          renderHeader: () => (
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
+                              Date
+                              </Box>
+                          ),
                   },
-                  { 
-                    field: 'amount', 
-                    headerName: 'Amount', 
-                    width: 150,
-                    renderHeader: () => (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
-                        Amount
-                      </Box>
-                    ),
-                    renderCell: (params) => (
-                      <Box sx={{ display: 'flex', justifyContent: 'left', alignItems: 'center', height: '100%' }}>
-                        <Typography sx={{ fontWeight: 'medium', color: 'success.main' }}>
+                  {
+                      field: 'amount',
+                      headerName: 'Amount',
+                      width: 150,
+                      renderHeader: () => (
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
+                          Amount
+                          </Box>
+                      ),
+                      renderCell: (params) => (
+                          <Box sx={{ display: 'flex', justifyContent: 'left', alignItems: 'center', height: '100%' }}>
+                          <Typography sx={{ fontWeight: 'medium', color: 'success.main' }}>
                           ${parseFloat(params.value).toFixed(2)}
-                        </Typography>
-                      </Box>
-                    )
-                  },
-                  { 
-                    field: 'description', 
-                    headerName: 'Description', 
-                    flex: 1,
-                    minWidth: 200,
-                    renderHeader: () => (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
-                        Description
-                      </Box>
-                    ),
-                    renderCell: (params) => (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                        {params.value ? (
-                          <Tooltip title={params.value} arrow placement="top">
-                            <Typography sx={{ 
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              width: '100%'
-                            }}>
-                              {params.value}
-                            </Typography>
-                          </Tooltip>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                            No description
                           </Typography>
-                        )}
-                      </Box>
-                    )
+                          </Box>
+                      )
                   },
-                  { 
-                    field: 'actions', 
-                    headerName: 'Actions', 
-                    width: 100,
-                    sortable: false,
-                    filterable: false,
-                    renderCell: (params) => (
-                      <Tooltip title="Delete expense" arrow>
-                        <IconButton 
+                  {
+                      field: 'description',
+                      headerName: 'Description',
+                      flex: 1,
+                      minWidth: 200,
+                      renderHeader: () => (
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
+                          Description
+                          </Box>
+                      ),
+                      renderCell: (params) => (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                          {params.value ? (
+                              <Tooltip title={params.value} arrow placement="top">
+                              <Typography sx={{
+                                  overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      width: '100%'
+                              }}>
+                              {params.value}
+                              </Typography>
+                              </Tooltip>
+                          ) : (
+                              <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                              No description
+                              </Typography>
+                          )}
+                          </Box>
+                      )
+                  },
+                  {
+                      field: 'actions',
+                      headerName: 'Actions',
+                      width: 100,
+                      sortable: false,
+                      filterable: false,
+                      renderCell: (params) => (
+                          <Tooltip title="Delete expense" arrow>
+                          <IconButton
                           aria-label="delete expense"
                           onClick={() => handleOpenDeleteDialog(params.row.id)}
                           color="error"
                           size="small"
                           sx={{
-                            transition: 'transform 0.2s, background-color 0.2s',
-                            '&:hover': {
-                              backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                              transform: 'scale(1.1)'
-                            },
-                            ml: 1
+                              transition: 'transform 0.2s, background-color 0.2s',
+                                  '&:hover': {
+                                      backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                                      transform: 'scale(1.1)'
+                                  },
+                                  ml: 1
                           }}
-                        >
+                          >
                           <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )
+                          </IconButton>
+                          </Tooltip>
+                      )
                   }
-                ]}
-                initialState={{
+              ]}
+              initialState={{
                   pagination: {
-                    paginationModel: { pageSize: 5 }
+                      paginationModel: { pageSize: 5 }
                   },
-                }}
-                pageSizeOptions={[5, 10, 25]}       // This can be changed to show more/less rows, customizable
-                disableRowSelectionOnClick
-                sx={{
+              }}
+              pageSizeOptions={[5, 10, 25, 50, 100]}
+              disableRowSelectionOnClick
+              sx={{
                   '& .MuiDataGrid-columnHeaders': {
-                    backgroundColor: '#f5f5f5'
+                      backgroundColor: '#f5f5f5'
                   },
-                  '& .MuiDataGrid-row:nth-of-type(odd)': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                  },
-                  '& .MuiDataGrid-row:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                  },
-                  border: 'none'
-                }}
-                components={{
+                      '& .MuiDataGrid-row:nth-of-type(odd)': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                      },
+                      '& .MuiDataGrid-row:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                      },
+                      border: 'none'
+              }}
+              components={{
                   // Custom display when there are no rows
                   NoRowsOverlay: () => (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                       <Typography variant="body1" color="textSecondary">
-                        No expenses added yet
+                      No expenses added yet
                       </Typography>
                       <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                        Use the form above to add your first expense
+                      Use the form above to add your first expense
                       </Typography>
-                    </Box>
+                      </Box>
                   )
-                }}
+              }}
               />
             </Box>
           )}
         </CardContent>
       </Card>
-      
+
       {/* Confirmation Dialog Component */}
       <Dialog
         open={confirmDialogOpen}
@@ -669,20 +669,20 @@ export default function ExpenseAdd() {
         }}
       >
         {/* Dialog Title */}
-        <DialogTitle id="expense-confirmation-dialog" sx={{ 
-          bgcolor: 'primary.main', 
+        <DialogTitle id="expense-confirmation-dialog" sx={{
+          bgcolor: 'primary.main',
           color: 'white',
           py: 1.5
         }}>
-          Confirm 
+          Confirm
         </DialogTitle>
-        
+
         {/* Dialog Content */}
         <DialogContent sx={{ mt: 2, px: 3 }}>
           <DialogContentText id="expense-confirmation-description">
             Are you sure you want to add this expense?
           </DialogContentText>
-          
+
           {/* Display expense summary for verification */}
           <Box sx={{ mt: 2, bgcolor: 'rgba(0,0,0,0.03)', p: 2, borderRadius: 1 }}>
             <Typography variant="body2" component="div" sx={{ mb: 1 }}>
@@ -701,14 +701,14 @@ export default function ExpenseAdd() {
             )}
           </Box>
         </DialogContent>
-        
+
         {/* Dialog Actions */}
         <DialogActions sx={{ px: 3, pb: 2 }}>
           {/* Cancel Button */}
-          <Button 
+          <Button
             onClick={handleCloseConfirmAddExpenseDialog}
-            variant="outlined" 
-            sx={{ 
+            variant="outlined"
+            sx={{
               borderRadius: 1,
               textTransform: 'none',
               px: 2
@@ -717,13 +717,13 @@ export default function ExpenseAdd() {
           >
             Cancel
           </Button>
-          
+
           {/* Confirm Button */}
-          <Button 
+          <Button
             onClick={handleConfirmAddExpense}
             variant="contained"
             color="primary"
-            sx={{ 
+            sx={{
               borderRadius: 1,
               textTransform: 'none',
               px: 2
@@ -753,28 +753,28 @@ export default function ExpenseAdd() {
         }}
       >
         {/* Dialog Title */}
-        <DialogTitle id="expense-delete-dialog" sx={{ 
-          bgcolor: 'error.main', 
+        <DialogTitle id="expense-delete-dialog" sx={{
+          bgcolor: 'error.main',
           color: 'white',
           py: 1.5
         }}>
           Delete Expense
         </DialogTitle>
-        
+
         {/* Dialog Content */}
         <DialogContent sx={{ mt: 2, px: 3 }}>
           <DialogContentText id="expense-delete-description">
             Are you sure you want to delete this expense?
           </DialogContentText>
         </DialogContent>
-        
+
         {/* Dialog Actions */}
         <DialogActions sx={{ px: 3, pb: 2 }}>
           {/* Cancel Button */}
-          <Button 
+          <Button
             onClick={handleCancelDelete}
-            variant="outlined" 
-            sx={{ 
+            variant="outlined"
+            sx={{
               borderRadius: 1,
               textTransform: 'none',
               px: 2
@@ -782,13 +782,13 @@ export default function ExpenseAdd() {
           >
             Cancel
           </Button>
-          
+
           {/* Confirm Button */}
-          <Button 
+          <Button
             onClick={handleConfirmDelete}
             variant="contained"
             color="error"
-            sx={{ 
+            sx={{
               borderRadius: 1,
               textTransform: 'none',
               px: 2
