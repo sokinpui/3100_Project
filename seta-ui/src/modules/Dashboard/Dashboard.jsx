@@ -18,6 +18,11 @@ export default function Dashboard() {
   const [totalExpense, setTotalExpense] = useState(0);
   const [loading, setLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState('month');
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [customRange, setCustomRange] = useState({
+    startDate: null,
+    endDate: null,
+  });
   const [error, setError] = useState(null);
   const userId = localStorage.getItem('userId') || 1; // Default to 1 for testing
 
@@ -29,7 +34,7 @@ export default function Dashboard() {
         const total = await getTotalExpenses(userId);
 
         // Filter expenses based on selected time period
-        const filteredExpenses = filterExpensesByTimePeriod(expensesData, timePeriod);
+        const filteredExpenses = filterExpensesByTimePeriod(expensesData, timePeriod, customRange);
 
         setExpenses(filteredExpenses);
         setTotalExpense(total);
@@ -43,48 +48,62 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, [userId, timePeriod]);
+  }, [userId, timePeriod, customRange]);
 
-    const filterExpensesByTimePeriod = (expenses, period) => {
-      const now = new Date();
-      const filteredExpenses = expenses.filter(expense => {
-        const expenseDate = new Date(expense.date);
+  const filterExpensesByTimePeriod = (expenses, period, customRange) => {
+    const now = new Date();
+    const filteredExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
 
-        switch (period) {
-          case 'week':
-            const weekStart = new Date(now);
-            weekStart.setDate(now.getDate() - 6); // Align with getTimeRange
-            return expenseDate >= weekStart && expenseDate <= now;
+      switch (period) {
+        case 'week':
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - 6);
+          return expenseDate >= weekStart && expenseDate <= now;
 
-          case 'month':
-            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            return expenseDate >= monthStart && expenseDate <= monthEnd;
+        case 'month':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          return expenseDate >= monthStart && expenseDate <= monthEnd;
 
-          case 'quarter':
-            const currentQuarter = Math.floor(now.getMonth() / 3);
-            const quarterStart = new Date(now.getFullYear(), currentQuarter * 3, 1);
-            const quarterEnd = new Date(now.getFullYear(), (currentQuarter + 1) * 3, 0);
-            return expenseDate >= quarterStart && expenseDate <= quarterEnd;
+        case 'quarter':
+          const currentQuarter = Math.floor(now.getMonth() / 3);
+          const quarterStart = new Date(now.getFullYear(), currentQuarter * 3, 1);
+          const quarterEnd = new Date(now.getFullYear(), (currentQuarter + 1) * 3, 0);
+          return expenseDate >= quarterStart && expenseDate <= quarterEnd;
 
-          case 'year':
-            const yearStart = new Date(now.getFullYear(), 0, 1);
-            const yearEnd = new Date(now.getFullYear(), 11, 31);
-            return expenseDate >= yearStart && expenseDate <= yearEnd;
+        case 'year':
+          const yearStart = new Date(now.getFullYear(), 0, 1);
+          const yearEnd = new Date(now.getFullYear(), 11, 31);
+          return expenseDate >= yearStart && expenseDate <= yearEnd;
 
-          case 'custom':
-            return true; // Placeholder
+        case 'custom':
+          if (customRange.startDate && customRange.endDate) {
+            return expenseDate >= customRange.startDate && expenseDate <= customRange.endDate;
+          }
+          return true;
 
-          default:
-            return true;
-        }
+        default:
+          return true;
+      }
+    });
+
+    return filteredExpenses;
+  };
+
+  const handlePeriodChange = (periodData) => {
+    if (typeof periodData === 'string') {
+      setSelectedPeriod(periodData);
+      setTimePeriod(periodData);
+      setCustomRange({ startDate: null, endDate: null });
+    } else if (periodData.period === 'custom') {
+      setSelectedPeriod('custom');
+      setTimePeriod('custom');
+      setCustomRange({
+        startDate: periodData.startDate,
+        endDate: periodData.endDate,
       });
-
-      return filteredExpenses;
-    };
-
-  const handleTimePeriodChange = (period) => {
-    setTimePeriod(period);
+    }
   };
 
   if (loading) {
@@ -108,7 +127,7 @@ export default function Dashboard() {
     <div className="dashboard">
       <TimePeriodSelector
         selectedPeriod={timePeriod}
-        onChange={handleTimePeriodChange}
+        onChange={handlePeriodChange}
       />
       <Grid container spacing={2} direction="column">
         <Grid item xs={12}>
