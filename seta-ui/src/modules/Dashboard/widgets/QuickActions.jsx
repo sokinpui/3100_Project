@@ -19,7 +19,7 @@ export default function QuickActions() {
               variant="contained"
               color="primary"
               component={Link}
-              to="/add-expense"
+              to="/manage-expenses"
               startIcon={<AddIcon />}
             >
               Add Expense
