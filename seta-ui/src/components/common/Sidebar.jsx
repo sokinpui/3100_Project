@@ -49,6 +49,11 @@ const menuItems = [
     icon: <AddCardIcon />,
     path: '/add-expense'
   },
+    {
+        text: 'New Expenses Manager',  // New entry for modular version
+        icon: <AddCardIcon />,
+        path: '/manage-expenses'
+    },
   {
     text: 'Reports',
     icon: <AssessmentIcon />,

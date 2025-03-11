@@ -20,6 +20,13 @@ export const ModuleProvider = ({ children }) => {
       component: React.lazy(() => import('../modules/ExpenseManage.jsx')),
       isProtected: true,
     },
+      {
+          id: 'manage-expenses',
+          name: 'New Expenses',
+          path: '/manage-expenses',
+          component: React.lazy(() => import('../modules/ExpenseManager/ExpenseManager.jsx')),
+          isProtected: true,
+      },
     {
       id: 'expense-report',
       name: 'View Reports',
