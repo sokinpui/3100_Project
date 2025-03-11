@@ -204,10 +204,10 @@ def main():
     print(f"Generating expenses for user ID: {user_id}")
 
     # Configure the number of data to generate
-    num_random_expenses = 1000  # Change this to the desired number of random expenses
+    num_random_expenses = 100  # Change this to the desired number of random expenses
     num_months_for_recurring = 12  # Change this to the desired number of months for recurring expenses
     num_months_for_comparison = 12  # Change this to the desired number of months for comparison data
-    expenses_per_month = 50  # Change this to the desired number of expenses per month
+    expenses_per_month = 10  # Change this to the desired number of expenses per month
 
     # Generate random expenses
     expenses = generate_expenses(user_id, count=num_random_expenses)

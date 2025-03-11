@@ -90,6 +90,10 @@ class PasswordChange(BaseModel):
     current_password: str
     new_password: str
 
+class BulkDeleteRequest(BaseModel):
+    """Model for bulk delete requests."""
+    expense_ids: List[int]
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -110,32 +114,32 @@ def get_user_by_username(db: Session, username: str):
 async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
     """Login a user and return user information."""
     user = get_user_by_username(db, user_data.username)     # Obtain the metadata of the user from the database
-    
+
     # First check if user exists
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
     # Then check if account is active
     elif not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is disabled"
         )
-    
+
     # Finally check password
     elif not verify_password(user_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
         )
-    
+
     # Update last login time
     user.last_login = func.now()
     db.commit()
-    
+
     return user
 
 @app.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -147,10 +151,10 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
-    
+
     # Hash the password
     password_hash = hash_password(user_data.password)
-    
+
     # Create new user
     db_user = models.User(
         username=user_data.username,
@@ -160,11 +164,11 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         last_name=user_data.last_name,
         contact_number=user_data.contact_number
     )
-    
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
+
     return db_user
 
 # --------- Expense Endpoints ---------
@@ -178,15 +182,13 @@ async def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
 @app.post("/expenses", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
 async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_db)):
     """Create a new expense."""
-    # Check if user exists
     user = db.query(models.User).filter(models.User.id == expense_data.user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Create new expense
+
     db_expense = models.Expense(
         user_id=expense_data.user_id,
         amount=expense_data.amount,
@@ -194,74 +196,82 @@ async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_
         category_name=expense_data.category_name,
         description=expense_data.description
     )
-    
+
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
-    
+
     return db_expense
 
 @app.delete("/expenses/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     """Delete an expense."""
     expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-    
+
     if not expense:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Expense not found"
         )
-    
+
     db.delete(expense)
     db.commit()
-    
+
     return None
 
-# Modify an expense, for future use
+@app.post("/expenses/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bulk_expenses(request: BulkDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple expenses by their IDs."""
+    expenses_to_delete = db.query(models.Expense).filter(models.Expense.id.in_(request.expense_ids)).all()
+    if not expenses_to_delete:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No expenses found to delete")
+    if len(expenses_to_delete) != len(request.expense_ids):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Some expenses not found")
+    for expense in expenses_to_delete:
+        db.delete(expense)
+    db.commit()
+    return None
+
 @app.put("/expenses/{expense_id}", response_model=ExpenseResponse)
 async def update_expense(expense_id: int, expense_data: CreateExpense, db: Session = Depends(get_db)):
     """Update an expense."""
     expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-    
+
     if not expense:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Expense not found"
         )
-    
-    # Update expense data
+
     expense.amount = expense_data.amount
     expense.category_name = expense_data.category_name
     expense.date = expense_data.date
     expense.description = expense_data.description
     expense.updated_at = func.now()
-    
+
     db.commit()
     db.refresh(expense)
-    
+
     return expense
 
 @app.get("/expenses/{user_id}/report")
 async def generate_expense_report(user_id: int, db: Session = Depends(get_db)):
     """Generate a detailed expense report for a user."""
-    # Verify user exists
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Get all expenses for the user, ordered by date
+
     expenses = db.query(models.Expense)\
         .filter(models.Expense.user_id == user_id)\
         .order_by(models.Expense.date.desc())\
         .all()
-    
-    # Calculate some summary statistics
+
     total_amount = sum(float(expense.amount) for expense in expenses)
     expense_count = len(expenses)
-    
+
     return {
         "expenses": expenses,
         "summary": {
@@ -277,83 +287,75 @@ async def generate_expense_report(user_id: int, db: Session = Depends(get_db)):
 @app.get("/users/{user_id}/settings", response_model=UserSettings)
 async def get_user_settings(user_id: int, db: Session = Depends(get_db)):
     """Get user settings."""
-    # In a real app, you would store settings in a database
-    # For now, return default settings
     return UserSettings()
 
 @app.put("/users/{user_id}/settings", response_model=UserSettings)
 async def update_user_settings(user_id: int, settings: UserSettings, db: Session = Depends(get_db)):
     """Update user settings."""
-    # Check if user exists
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # In a real app, you would update settings in a database
-    # For now, just return the settings object
+
     return settings
 
 @app.get("/users/{user_id}", response_model=UserResponse)
 async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
     """Get user profile."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
     return user
 
 @app.put("/users/{user_id}", response_model=UserResponse)
 async def update_user_profile(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db)):
     """Update user profile."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Update user data
+
     user.username = user_data.username
     user.email = user_data.email
     user.first_name = user_data.first_name
     user.last_name = user_data.last_name
     user.contact_number = user_data.contact_number
-    
+
     db.commit()
     db.refresh(user)
-    
+
     return user
 
 @app.put("/users/{user_id}/password", status_code=status.HTTP_200_OK)
 async def change_user_password(user_id: int, password_data: PasswordChange, db: Session = Depends(get_db)):
     """Change user password."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Verify current password
+
     if not verify_password(password_data.current_password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Current password is incorrect"
         )
-    
-    # Update password
+
     user.password_hash = hash_password(password_data.new_password)
     db.commit()
-    
+
     return {"message": "Password changed successfully"}
 
 # --------- Statistics Endpoints ---------

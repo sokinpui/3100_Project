@@ -1,0 +1,16 @@
+{
+  "user": {
+    "username": "test",
+    "email": "test@gmail.com",
+    "first_name": "test",
+    "last_name": "test",
+    "contact_number": "12345678",
+    "id": 2,
+    "is_active": true,
+    "email_verified": false,
+    "last_login": "2025-03-11T06:43:18.829494Z"
+  },
+  "expense_count": 1000,
+  "recurring_expense_count": 60,
+  "monthly_expense_count": 600
+}

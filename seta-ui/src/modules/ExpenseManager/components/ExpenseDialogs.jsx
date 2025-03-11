@@ -1,4 +1,3 @@
-// No major deprecated items found - just minor cleanup
 import React from 'react';
 import {
   Dialog,
@@ -15,10 +14,12 @@ import {
 export default function ExpenseDialogs({
   confirmDialogOpen,
   deleteDialogOpen,
+  bulkDeleteDialogOpen,
   handleCloseConfirm,
   handleConfirmAdd,
   handleCancelDelete,
   handleConfirmDelete,
+  handleConfirmBulkDelete,
   formData,
   isSubmitting,
 }) {
@@ -66,6 +67,27 @@ export default function ExpenseDialogs({
             Cancel
           </Button>
           <Button onClick={handleConfirmDelete} variant="contained" color="error" sx={{ borderRadius: 1, textTransform: 'none', px: 2 }} autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={bulkDeleteDialogOpen}
+        onClose={handleCancelDelete}
+        sx={{ '& .MuiDialog-paper': { borderRadius: 2, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' } }}
+      >
+        <DialogTitle sx={{ bgcolor: 'error.main', color: 'white', py: 1.5 }}>
+          Delete Multiple Expenses
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2, px: 3 }}>
+          <DialogContentText>Are you sure you want to delete the selected expenses? This action cannot be undone.</DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCancelDelete} variant="outlined" sx={{ borderRadius: 1, textTransform: 'none', px: 2 }}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmBulkDelete} variant="contained" color="error" sx={{ borderRadius: 1, textTransform: 'none', px: 2 }} autoFocus>
             Delete
           </Button>
         </DialogActions>

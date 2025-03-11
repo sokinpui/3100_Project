@@ -7,6 +7,7 @@ import {
   Typography,
   Tooltip,
   IconButton,
+  Button,
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
@@ -16,11 +17,10 @@ import {
   Description as DescriptionIcon,
 } from '@mui/icons-material';
 
-export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog }) {
+export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
   const [pageSize] = useState(5);
-  const [sortModel, setSortModel] = useState([]); // State for sorting model
+  const [sortModel, setSortModel] = useState([]);
 
-  // Define columns with initial visibility state
   const columns: GridColDef[] = [
     {
       field: 'date',
@@ -114,16 +114,15 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
         </Typography>
       ),
       sortable: true,
-      hideable: true, // Allow this column to be shown/hidden via "Manage columns"
-      hide: true, // Hide by default
+      hideable: true,
+      hide: true,
     },
   ];
 
-  // Initial column visibility model to ensure "Created At" is hidden
   const initialState = {
     columns: {
       columnVisibilityModel: {
-        created_at: false, // Explicitly hide "Created At" by default
+        created_at: false,
       },
     },
     pagination: { paginationModel: { pageSize, page: 0 } },
@@ -142,31 +141,48 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
             <Typography>Loading...</Typography>
           </Box>
         ) : (
-          <Box sx={{ width: '100%' }}>
-            <DataGrid
-              rows={expenses}
-              columns={columns}
-              initialState={initialState}
-              pageSizeOptions={[5, 10, 25, 50, 100]}
-              disableRowSelectionOnClick
-              sortModel={sortModel}
-              onSortModelChange={(newSortModel) => setSortModel(newSortModel)}
-              sx={{
-                '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5' },
-                '& .MuiDataGrid-row:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
-                '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
-                border: 'none',
-              }}
-              slots={{
-                noRowsOverlay: () => (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    <Typography variant="body1" color="textSecondary">No expenses added yet</Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>Use the form above to add your first expense</Typography>
-                  </Box>
-                ),
-              }}
-            />
-          </Box>
+          <>
+            {selectedExpenseIds.length > 0 && (
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => handleBulkDelete(selectedExpenseIds)}
+                  startIcon={<DeleteIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Delete Selected ({selectedExpenseIds.length})
+                </Button>
+              </Box>
+            )}
+            <Box sx={{ width: '100%' }}>
+              <DataGrid
+                rows={expenses}
+                columns={columns}
+                initialState={initialState}
+                pageSizeOptions={[5, 10, 25, 50, 100]}
+                checkboxSelection
+                onRowSelectionModelChange={(newSelection) => onSelectionChange(newSelection)}
+                rowSelectionModel={selectedExpenseIds}
+                sortModel={sortModel}
+                onSortModelChange={(newSortModel) => setSortModel(newSortModel)}
+                sx={{
+                  '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5' },
+                  '& .MuiDataGrid-row:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
+                  '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                  border: 'none',
+                }}
+                slots={{
+                  noRowsOverlay: () => (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="body1" color="textSecondary">No expenses added yet</Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>Use the form above to add your first expense</Typography>
+                    </Box>
+                  ),
+                }}
+              />
+            </Box>
+          </>
         )}
       </CardContent>
     </Card>
