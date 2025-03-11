@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Make sure axios is installed
+import axios from "axios";
 import Grid from "@mui/material/Grid2";
 import {
   Container,
@@ -26,14 +26,17 @@ import {
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SaveIcon from "@mui/icons-material/Save";
 import PersonIcon from "@mui/icons-material/Person";
-// import LanguageIcon from '@mui/icons-material/Language';
+
+// Import the theme hook
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function Settings() {
   const API_URL = "http://localhost:8000";
+  const { themeMode, updateTheme } = useTheme(); // Use the theme context
 
   // Default settings state
   const defaultSettings = {
-    theme: "light",
+    theme: themeMode, // Initialize with current theme
     language: "english",
     profile: {
       firstName: "",
@@ -85,7 +88,7 @@ export default function Settings() {
 
     try {
       // Replace with your actual API URL
-      const response = await axios.get(`http://localhost:8000/users/${userId}`);
+      const response = await axios.get(`${API_URL}/users/${userId}`);
 
       // Update the profile settings with data from API
       setSettings((prevSettings) => ({
@@ -182,6 +185,9 @@ export default function Settings() {
         })
       );
 
+      // Update the theme in the context
+      updateTheme(settings.theme);
+
       // Save profile data to backend
       const userId = localStorage.getItem("userId") || 1;
       await axios.put(`${API_URL}/users/${userId}`, {
@@ -202,6 +208,8 @@ export default function Settings() {
       setSnackbarOpen(true);
     }
   };
+
+  // Rest of your component code remains the same...
 
   // Handle closing snackbar
   const handleCloseSnackbar = () => {

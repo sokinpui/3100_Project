@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 
 import {
   Box,
@@ -70,6 +71,8 @@ export default function Sidebar({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(true);
+  const { themeMode } = useTheme(); // Add this to get current theme
+  const isDarkMode = themeMode === 'dark';
 
   // Logout Dialog State
   const [logoutDialogOpen, setLogoutDialogOpen] = React.useState(false);
@@ -117,8 +120,8 @@ export default function Sidebar({ children }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-          background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+          borderBottom: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
+          background: isDarkMode ? 'linear-gradient(45deg, #1565C0 30%, #0D47A1 90%)' : 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
           color: 'white',
           mb: 2,
           px: 2
@@ -151,7 +154,13 @@ export default function Sidebar({ children }) {
         {open && (
           <Typography
             variant="overline"
-            sx={{ pl: 2, opacity: 0.7, fontWeight: 'bold', letterSpacing: 1 }}
+            sx={{
+              pl: 2,
+              opacity: 0.7,
+              fontWeight: 'bold',
+              letterSpacing: 1,
+              color: isDarkMode ? 'text.primary' : 'inherit'
+            }}
           >
             Main Menu
           </Typography>
@@ -166,16 +175,20 @@ export default function Sidebar({ children }) {
                 sx={{
                   justifyContent: open ? 'initial' : 'center',
                   borderRadius: '8px',
-                  backgroundColor: isActive(item.path) ? 'rgba(25, 118, 210, 0.12)' : 'transparent',
+                  backgroundColor: isActive(item.path)
+                    ? isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.12)'
+                    : 'transparent',
                   '&:hover': {
-                    backgroundColor: isActive(item.path) ? 'rgba(25, 118, 210, 0.18)' : 'rgba(0, 0, 0, 0.04)',
+                    backgroundColor: isActive(item.path)
+                      ? isDarkMode ? 'rgba(25, 118, 210, 0.25)' : 'rgba(25, 118, 210, 0.18)'
+                      : isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                   },
                   transition: 'background-color 0.2s',
                   py: open ? 1 : 1.5
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive(item.path) ? 'primary.main' : 'text.secondary',
+                  color: isActive(item.path) ? 'primary.main' : isDarkMode ? 'text.primary' : 'text.secondary',
                   minWidth: open ? '40px' : '0px',
                   mr: open ? 'auto' : 'auto',
                   justifyContent: 'center'
@@ -190,6 +203,7 @@ export default function Sidebar({ children }) {
                       primary: {
                         sx: {
                           fontWeight: isActive(item.path) ? 'medium' : 'normal',
+                          color: isDarkMode ? 'text.primary' : 'inherit',
                         }
                       }
                     }}
@@ -201,16 +215,25 @@ export default function Sidebar({ children }) {
         ))}
 
         {/* Divider(a horizontal line) for separating Account section */}
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{
+          my: 2,
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'
+        }} />
 
-        {open && (
+      {open && (
           <Typography
-            variant="overline"
-            sx={{ pl: 2, opacity: 0.7, fontWeight: 'bold', letterSpacing: 1 }}
+          variant="overline"
+          sx={{
+              pl: 2,
+                  opacity: 0.7,
+                  fontWeight: 'bold',
+                  letterSpacing: 1,
+                  color: isDarkMode ? 'text.primary' : 'inherit'
+          }}
           >
-            Account
+          Account
           </Typography>
-        )}
+      )}
 
         {/* Logout Button div and its icon*/}
         <ListItem disablePadding sx={{ mt: 0.5 }}>
@@ -221,7 +244,7 @@ export default function Sidebar({ children }) {
                 justifyContent: open ? 'initial' : 'center',
                 borderRadius: '8px',
                 '&:hover': {
-                  backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                  backgroundColor: isDarkMode ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.08)',
                 },
                 transition: 'background-color 0.2s',
                 py: open ? 1 : 1.5
@@ -235,7 +258,7 @@ export default function Sidebar({ children }) {
               }}>
                 <LogoutIcon />
               </ListItemIcon>
-              {open && <ListItemText primary="Logout" />}
+              {open && <ListItemText primary="Logout" sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />}
             </ListItemButton>
           </Tooltip>
         </ListItem>
@@ -247,7 +270,7 @@ export default function Sidebar({ children }) {
           {/* Profile Section with Avatar, Username and Email */}
           <Box
             sx={{
-              borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+              borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
               px: 2,
               py: 2,
               display: 'flex',
@@ -257,7 +280,7 @@ export default function Sidebar({ children }) {
               minWidth: 0,
               cursor: 'pointer',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
               },
               transition: 'background-color 0.2s'
             }}
@@ -274,10 +297,17 @@ export default function Sidebar({ children }) {
             </Avatar>
 
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-              <Typography variant="body2" noWrap sx={{ fontWeight: 'bold' }}>
+              <Typography variant="body2" noWrap sx={{
+                fontWeight: 'bold',
+                color: isDarkMode ? 'text.primary' : 'inherit'
+              }}>
                 {localStorage.getItem('username')}
               </Typography>
-              <Typography variant="caption" noWrap sx={{ opacity: 0.7, display: 'block' }}>
+              <Typography variant="caption" noWrap sx={{
+                opacity: 0.7,
+                display: 'block',
+                color: isDarkMode ? 'text.secondary' : 'inherit'
+              }}>
                 {localStorage.getItem('email')}
               </Typography>
             </Box>
@@ -287,13 +317,13 @@ export default function Sidebar({ children }) {
         <Tooltip title="View Profile" arrow placement="right">
           <Box
             sx={{
-              borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+              borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
               py: 2,
               display: 'flex',
               justifyContent: 'center',
               cursor: 'pointer',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
               }
             }}
             onClick={() => navigate('/profile')}
@@ -309,6 +339,7 @@ export default function Sidebar({ children }) {
           </Box>
         </Tooltip>
       )}
+
 
       {/* Logout Confirmation Dialog */}
       <Dialog
@@ -368,7 +399,7 @@ export default function Sidebar({ children }) {
     </Box>
   );
 
-  return (
+    return (
     <Box sx={{ display: 'flex' }}>
       <Drawer
         variant="permanent"
@@ -379,9 +410,9 @@ export default function Sidebar({ children }) {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: open ? drawerWidth : collapsedWidth,
-            backgroundColor: '#f8f9fa',
-            borderRight: '1px solid rgba(0, 0, 0, 0.08)',
-            boxShadow: '0px 1px 3px rgba(0,0,0,0.08)',
+            backgroundColor: isDarkMode ? 'background.paper' : '#f8f9fa',
+            borderRight: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}`,
+            boxShadow: isDarkMode ? '0px 1px 3px rgba(0,0,0,0.2)' : '0px 1px 3px rgba(0,0,0,0.08)',
             transition: 'width 0.2s ease-in-out',
             overflowX: 'hidden'
           },

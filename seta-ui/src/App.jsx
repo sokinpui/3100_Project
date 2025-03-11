@@ -5,6 +5,11 @@ import { ModuleProvider } from './contexts/ModuleContext';
 import ApiProvider from './services/ApiProvider';
 import AuthGuard from './login/AuthGuard';
 // import './locales/i18n';
+//
+import { ThemeProvider } from "./contexts/ThemeContext";
+import ModuleRouter from "./components/Dashboard/ModuleRouter";
+// In App.jsx or index.js
+import './assets/styles/global.css';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,13 +20,15 @@ export default function App() {
   }, []);
 
   return (
-    <Router>
+    <ThemeProvider>
       <ApiProvider>
-        <ModuleProvider>
-          <AuthGuard setIsLoggedIn={setIsLoggedIn} />
-          <LayoutContainer />
-        </ModuleProvider>
+        <Router>
+          <ModuleProvider>
+            <AuthGuard setIsLoggedIn={setIsLoggedIn} />
+            <LayoutContainer />
+          </ModuleProvider>
+        </Router>
       </ApiProvider>
-    </Router>
+    </ThemeProvider>
   );
 }

@@ -50,3 +50,34 @@ body {
   text-align: center;
   padding: 20px;
 }
+
+/* global.css */
+/* Light theme (default) */
+body {
+  background-color: #f5f5f5;
+  color: rgba(0, 0, 0, 0.87);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark theme */
+body.dark-theme {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Add styles for non-MUI components */
+.dark-theme .dashboard-container,
+.dark-theme .module-container,
+.dark-theme .app-header,
+.dark-theme .module-nav,
+.dark-theme .module-grid,
+.dark-theme .module-card {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+.dark-theme a {
+  color: #90caf9;
+}
+
+/* Add more selectors for your custom components as needed */
