@@ -17,6 +17,7 @@ CATEGORIES = [
     "Food", "Transport", "Entertainment", "Housing", "Utilities",
     "Healthcare", "Shopping", "Travel", "Education", "Subscriptions"
 ]
+
 DESCRIPTIONS = {
     "Food": ["Grocery shopping", "Restaurant dinner", "Lunch with colleagues", "Coffee", "Take-out food"],
     "Transport": ["Fuel", "Public transport", "Taxi", "Car maintenance", "Parking fees"],
@@ -29,6 +30,7 @@ DESCRIPTIONS = {
     "Education": ["Tuition fees", "Textbooks", "Online courses", "School supplies", "Tutoring"],
     "Subscriptions": ["Netflix", "Spotify", "Gym membership", "Magazine subscription", "Software licenses"]
 }
+
 RECURRING_EXPENSES = [
     {"category": "Housing", "description": "Rent payment", "amount": 1200, "day_of_month": 1},
     {"category": "Utilities", "description": "Electricity bill", "amount": 85, "day_of_month": 15},
@@ -44,22 +46,19 @@ TEST_PASSWORD = "Password123."
 created_expenses = []
 created_recurring_expenses = []
 created_monthly_expenses = []
+user_info = None
 
-# Thread-safe locks for data collection
-expense_lock = threading.Lock()
-recurring_lock = threading.Lock()
-monthly_lock = threading.Lock()
+# Thread-safe locks for shared data
+expenses_lock = threading.Lock()
+recurring_expenses_lock = threading.Lock()
+monthly_expenses_lock = threading.Lock()
+
+# Flag to indicate if the script should stop
+stop_flag = False
 
 # Get the directory of the current script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 JSON_FILE = os.path.join(SCRIPT_DIR, "test_user_info.json")
-
-interrupt_flag = False
-
-def signal_handler(sig, frame):
-    global interrupt_flag
-    print("\nInterrupt received. Preparing to save data...")
-    interrupt_flag = True
 
 def login():
     login_data = {"username": TEST_USERNAME, "password": TEST_PASSWORD}
@@ -72,10 +71,12 @@ def login():
         return None
 
 def generate_expenses(user_id, start, end):
-    local_expenses = []
+    global stop_flag
     end_date = datetime.date.today()
     start_date = end_date - relativedelta(months=6)
     for i in range(start, end):
+        if stop_flag:
+            break
         random_days = random.randint(0, (end_date - start_date).days)
         expense_date = start_date + datetime.timedelta(days=random_days)
         category = random.choice(CATEGORIES)
@@ -88,18 +89,21 @@ def generate_expenses(user_id, start, end):
         response = requests.post(f"{BASE_URL}/expenses", json=expense_data)
         if response.status_code == 201:
             print(f"Created expense {i+1}/{end}: {amount} - {category} - {expense_date}")
-            local_expenses.append(response.json())
+            with expenses_lock:
+                created_expenses.append(response.json())
         else:
             print(f"Failed to create expense {i+1}/{end}: {response.text}")
-    return local_expenses
+    return created_expenses
 
 def generate_recurring_expenses(user_id, start, end):
-    local_recurring_expenses = []
+    global stop_flag
     today = datetime.date.today()
     total_recurring = len(RECURRING_EXPENSES) * (end - start)
     current = 0
     for recurring in RECURRING_EXPENSES:
         for month_offset in range(start, end):
+            if stop_flag:
+                break
             current += 1
             expense_date = today.replace(day=1) - relativedelta(months=month_offset)
             day = min(recurring["day_of_month"], 28 if expense_date.month == 2 else 30)
@@ -114,17 +118,20 @@ def generate_recurring_expenses(user_id, start, end):
             response = requests.post(f"{BASE_URL}/expenses", json=expense_data)
             if response.status_code == 201:
                 print(f"Created recurring expense {current}/{total_recurring}: {amount} - {recurring['category']} - {expense_date}")
-                local_recurring_expenses.append(response.json())
+                with recurring_expenses_lock:
+                    created_recurring_expenses.append(response.json())
             else:
                 print(f"Failed to create recurring expense {current}/{total_recurring}: {response.text}")
-    return local_recurring_expenses
+    return created_recurring_expenses
 
 def generate_monthly_comparison_data(user_id, start, end, expenses_per_month=20):
-    local_monthly_expenses = []
+    global stop_flag
     today = datetime.date.today()
     total_expenses = (end - start) * expenses_per_month
     current = 0
     for month_offset in range(start, end):
+        if stop_flag:
+            break
         month_date = today.replace(day=1) - relativedelta(months=month_offset)
         month_end = (month_date + relativedelta(months=1) - datetime.timedelta(days=1))
         monthly_total = 2000 + (month_offset * 200)
@@ -134,6 +141,8 @@ def generate_monthly_comparison_data(user_id, start, end, expenses_per_month=20)
         scaling_factor = monthly_total / total_amount
         amounts = [round(amount * scaling_factor, 2) for amount in amounts]
         for amount in amounts:
+            if stop_flag:
+                break
             current += 1
             category = random.choice(CATEGORIES)
             description = random.choice(DESCRIPTIONS[category])
@@ -145,91 +154,93 @@ def generate_monthly_comparison_data(user_id, start, end, expenses_per_month=20)
             response = requests.post(f"{BASE_URL}/expenses", json=expense_data)
             if response.status_code == 201:
                 print(f"Created monthly expense {current}/{total_expenses}: {amount} - {category} - {expense_date}")
-                local_monthly_expenses.append(response.json())
+                with monthly_expenses_lock:
+                    created_monthly_expenses.append(response.json())
             else:
                 print(f"Failed to create monthly expense {current}/{total_expenses}: {response.text}")
-    return local_monthly_expenses
+    return created_monthly_expenses
 
 def save_to_json():
-    global created_expenses, created_recurring_expenses, created_monthly_expenses
-    data = {
-        "expense_count": len(created_expenses),
-        "recurring_expense_count": len(created_recurring_expenses),
-        "monthly_expense_count": len(created_monthly_expenses),
-        "expenses": created_expenses,
-        "recurring_expenses": created_recurring_expenses,
-        "monthly_expenses": created_monthly_expenses
-    }
-    with open(JSON_FILE, "w") as f:
-        json.dump(data, f, indent=2)
-    print(f"Data saved to {JSON_FILE}")
+    global user_info, created_expenses, created_recurring_expenses, created_monthly_expenses
+    if user_info:
+        data = {
+            "user": user_info,
+            "expense_count": len(created_expenses),
+            "recurring_expense_count": len(created_recurring_expenses),
+            "monthly_expense_count": len(created_monthly_expenses)
+        }
+        with open(JSON_FILE, "w") as f:
+            json.dump(data, f, indent=2)
+        print(f"User info saved to {JSON_FILE} with counts: {len(created_expenses)} random, "
+              f"{len(created_recurring_expenses)} recurring, {len(created_monthly_expenses)} monthly")
+
+def signal_handler(sig, frame):
+    global stop_flag
+    print("\nInterrupt received, stopping all threads and saving data...")
+    stop_flag = True  # Set the flag to stop all threads
+    save_to_json()  # Save the data
+    sys.exit(0)
 
 def main():
-    global interrupt_flag, created_expenses, created_recurring_expenses, created_monthly_expenses
+    global user_info, stop_flag
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     user = login()
     if not user:
         print("Failed to log in. Exiting.")
         return
-    user_id = user["id"]
 
-    executor = concurrent.futures.ThreadPoolExecutor()
-    future_to_type = {}
+    user_id = user["id"]
+    user_info = user
+    print(f"Generating expenses for user ID: {user_id}")
+
+    print("You can interrupt the script at any time to save the current state.")
+
+    num_random_expenses = 100
+    num_months_for_recurring = 12
+    num_months_for_comparison = 12
+    expenses_per_month = 10
 
     try:
-        # Submit tasks for random expenses
-        num_random_expenses = 100
-        chunk_size = num_random_expenses // 4
-        for i in range(0, num_random_expenses, chunk_size):
-            start = i
-            end = min(i + chunk_size, num_random_expenses)
-            future = executor.submit(generate_expenses, user_id, start, end)
-            future_to_type[future] = 'random'
+        # Parallelize random expense generation
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            chunk_size = num_random_expenses // 4
+            for i in range(0, num_random_expenses, chunk_size):
+                start = i
+                end = min(i + chunk_size, num_random_expenses)
+                futures.append(executor.submit(generate_expenses, user_id, start, end))
+            concurrent.futures.wait(futures)
 
-        # Submit tasks for recurring expenses
-        num_months_for_recurring = 12
-        chunk_size = num_months_for_recurring // 4
-        for i in range(0, num_months_for_recurring, chunk_size):
-            start = i
-            end = min(i + chunk_size, num_months_for_recurring)
-            future = executor.submit(generate_recurring_expenses, user_id, start, end)
-            future_to_type[future] = 'recurring'
+        # Parallelize recurring expense generation
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            chunk_size = num_months_for_recurring // 4
+            for i in range(0, num_months_for_recurring, chunk_size):
+                start = i
+                end = min(i + chunk_size, num_months_for_recurring)
+                futures.append(executor.submit(generate_recurring_expenses, user_id, start, end))
+            concurrent.futures.wait(futures)
 
-        # Submit tasks for monthly comparison data
-        num_months_for_comparison = 12
-        expenses_per_month = 10
-        chunk_size = num_months_for_comparison // 4
-        for i in range(0, num_months_for_comparison, chunk_size):
-            start = i
-            end = min(i + chunk_size, num_months_for_comparison)
-            future = executor.submit(generate_monthly_comparison_data, user_id, start, end, expenses_per_month)
-            future_to_type[future] = 'monthly'
+        # Parallelize monthly comparison data generation
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            chunk_size = num_months_for_comparison // 4
+            for i in range(0, num_months_for_comparison, chunk_size):
+                start = i
+                end = min(i + chunk_size, num_months_for_comparison)
+                futures.append(executor.submit(generate_monthly_comparison_data, user_id, start, end, expenses_per_month))
+            concurrent.futures.wait(futures)
 
-        # Process results as they complete
-        for future in concurrent.futures.as_completed(future_to_type):
-            if interrupt_flag:
-                executor.shutdown(wait=False, cancel_futures=True)
-                break
-            try:
-                result = future.result()
-                task_type = future_to_type[future]
-                if task_type == 'random':
-                    with expense_lock:
-                        created_expenses.extend(result)
-                elif task_type == 'recurring':
-                    with recurring_lock:
-                        created_recurring_expenses.extend(result)
-                elif task_type == 'monthly':
-                    with monthly_lock:
-                        created_monthly_expenses.extend(result)
-            except Exception as e:
-                print(f"Error processing future: {e}")
-
-    except KeyboardInterrupt:
-        print("Interrupt caught. Shutting down...")
+    except Exception as e:
+        print(f"An error occurred: {e}")
     finally:
         save_to_json()
-        executor.shutdown(wait=False, cancel_futures=True)
+
+    print(f"Generated {len(created_expenses)} random expenses for user ID: {user_id}")
+    print(f"Generated {len(created_recurring_expenses)} recurring expenses for user ID: {user_id}")
+    print(f"Generated {len(created_monthly_expenses)} monthly comparison expenses for user ID: {user_id}")
 
 if __name__ == "__main__":
     main()
