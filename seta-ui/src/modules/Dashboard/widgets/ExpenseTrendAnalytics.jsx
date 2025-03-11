@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function ExpenseTrendAnalytics({ expenses }) {
   const [trendData, setTrendData] = useState([]);
+  const theme = useTheme(); // Access MUI theme for dark mode
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
-      // Group expenses by date and calculate daily totals
       const expensesByDate = expenses.reduce((acc, expense) => {
         const date = expense.date.split('T')[0]; // Handle ISO date format
         if (!acc[date]) {
@@ -17,17 +17,50 @@ export default function ExpenseTrendAnalytics({ expenses }) {
         return acc;
       }, {});
 
-      // Convert to array format for LineChart
       const chartData = Object.keys(expensesByDate)
-        .sort() // Sort dates chronologically
-        .map(date => ({
-          date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          amount: expensesByDate[date]
-        }));
+        .sort()
+        .map(date => {
+          const fullDate = new Date(date);
+          return {
+            date: fullDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'} ),
+            amount: expensesByDate[date],
+            fullDate: fullDate // Store full date for tooltip
+          };
+        });
 
       setTrendData(chartData);
     }
   }, [expenses]);
+
+  // Custom Tooltip component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <Box
+          sx={{
+            backgroundColor: theme.palette.background.paper,
+            border: `1px solid ${theme.palette.divider}`,
+            padding: '8px',
+            borderRadius: '4px',
+            color: theme.palette.text.primary,
+          }}
+        >
+          <Typography variant="body2">
+            {data.fullDate.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })}
+          </Typography>
+          <Typography variant="body2">
+            Amount: ${data.amount.toFixed(2)}
+          </Typography>
+        </Box>
+      );
+    }
+    return null;
+  };
 
   return (
     <Card variant="outlined" sx={{ m: 2 }}>
@@ -40,21 +73,19 @@ export default function ExpenseTrendAnalytics({ expenses }) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={trendData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5
-                }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Amount']} />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                <XAxis
+                  dataKey="date"
+                  stroke={theme.palette.text.secondary}
+                />
+                <YAxis stroke={theme.palette.text.secondary} />
+                <Tooltip content={<CustomTooltip />} />
                 <Line
                   type="monotone"
                   dataKey="amount"
-                  stroke="#8884d8"
+                  stroke={theme.palette.primary.main}
                   activeDot={{ r: 8 }}
                 />
               </LineChart>

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function MonthlyComparison({ expenses }) {
   const [monthlyData, setMonthlyData] = useState([]);
+  const theme = useTheme();
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
-      // Group expenses by month and category
       const monthCategories = {};
 
       expenses.forEach(expense => {
@@ -18,7 +18,7 @@ export default function MonthlyComparison({ expenses }) {
         const category = expense.category_name;
 
         if (!monthCategories[monthYear]) {
-          monthCategories[monthYear] = {};
+          monthCategories[monthYear] = { fullDate: date };
         }
 
         if (!monthCategories[monthYear][category]) {
@@ -28,34 +28,28 @@ export default function MonthlyComparison({ expenses }) {
         monthCategories[monthYear][category] += parseFloat(expense.amount);
       });
 
-      // Convert to array format for BarChart
       const chartData = Object.keys(monthCategories).map(monthYear => {
-        const dataPoint = { month: monthYear };
+        const dataPoint = { month: monthYear, fullDate: monthCategories[monthYear].fullDate };
         Object.keys(monthCategories[monthYear]).forEach(category => {
-          dataPoint[category] = monthCategories[monthYear][category];
+          if (category !== 'fullDate') {
+            dataPoint[category] = monthCategories[monthYear][category];
+          }
         });
         return dataPoint;
       });
 
-      // Sort by date
       chartData.sort((a, b) => {
-        const [monthA, yearA] = a.month.split(' ');
-        const [monthB, yearB] = b.month.split(' ');
-        const dateA = new Date(`${monthA} 1, ${yearA}`);
-        const dateB = new Date(`${monthB} 1, ${yearB}`);
-        return dateA - dateB;
+        return a.fullDate - b.fullDate;
       });
 
       setMonthlyData(chartData);
     }
   }, [expenses]);
 
-  // Dynamically get all unique categories
   const allCategories = monthlyData.length > 0
-    ? Array.from(new Set(monthlyData.flatMap(data => Object.keys(data).filter(key => key !== 'month'))))
+    ? Array.from(new Set(monthlyData.flatMap(data => Object.keys(data).filter(key => key !== 'month' && key !== 'fullDate'))))
     : [];
 
-  // Define colors for each category
   const categoryColors = {
     'Food': '#FF8042',
     'Transportation': '#0088FE',
@@ -69,6 +63,36 @@ export default function MonthlyComparison({ expenses }) {
     'Other': '#8dd1e1'
   };
 
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = monthlyData.find(item => item.month === label);
+      return (
+        <Box
+          sx={{
+            backgroundColor: theme.palette.background.paper,
+            border: `1px solid ${theme.palette.divider}`,
+            padding: '8px',
+            borderRadius: '4px',
+            color: theme.palette.text.primary,
+          }}
+        >
+          <Typography variant="body2">
+            {data.fullDate.toLocaleDateString('en-US', {
+              month: 'short',
+              year: 'numeric'
+            })}
+          </Typography>
+          {payload.map((entry, index) => (
+            <Typography key={index} variant="body2">
+              {entry.name}: ${entry.value.toFixed(2)}
+            </Typography>
+          ))}
+        </Box>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card variant="outlined" sx={{ m: 2 }}>
       <CardContent>
@@ -80,17 +104,12 @@ export default function MonthlyComparison({ expenses }) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={monthlyData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5
-                }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toFixed(2)}`]} />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                <XAxis dataKey="month" stroke={theme.palette.text.secondary} />
+                <YAxis stroke={theme.palette.text.secondary} />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 {allCategories.map((category, index) => (
                   <Bar
