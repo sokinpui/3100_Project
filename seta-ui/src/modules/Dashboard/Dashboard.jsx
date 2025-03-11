@@ -45,41 +45,43 @@ export default function Dashboard() {
     fetchData();
   }, [userId, timePeriod]);
 
-  const filterExpensesByTimePeriod = (expenses, period) => {
-    const now = new Date();
-    const filteredExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
+    const filterExpensesByTimePeriod = (expenses, period) => {
+      const now = new Date();
+      const filteredExpenses = expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
 
-      switch(period) {
-        case 'week':
-          // Last 7 days
-          const weekAgo = new Date();
-          weekAgo.setDate(now.getDate() - 7);
-          return expenseDate >= weekAgo;
+        switch (period) {
+          case 'week':
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - 6); // Align with getTimeRange
+            return expenseDate >= weekStart && expenseDate <= now;
 
-        case 'month':
-          // Current month
-          return (
-            expenseDate.getMonth() === now.getMonth() &&
-            expenseDate.getFullYear() === now.getFullYear()
-          );
+          case 'month':
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            return expenseDate >= monthStart && expenseDate <= monthEnd;
 
-        case 'quarter':
-          // Current quarter
-          const currentQuarter = Math.floor(now.getMonth() / 3);
-          const expenseQuarter = Math.floor(expenseDate.getMonth() / 3);
-          return (
-            expenseQuarter === currentQuarter &&
-            expenseDate.getFullYear() === now.getFullYear()
-          );
+          case 'quarter':
+            const currentQuarter = Math.floor(now.getMonth() / 3);
+            const quarterStart = new Date(now.getFullYear(), currentQuarter * 3, 1);
+            const quarterEnd = new Date(now.getFullYear(), (currentQuarter + 1) * 3, 0);
+            return expenseDate >= quarterStart && expenseDate <= quarterEnd;
 
-        default:
-          return true; // Return all expenses if period is not recognized
-      }
-    });
+          case 'year':
+            const yearStart = new Date(now.getFullYear(), 0, 1);
+            const yearEnd = new Date(now.getFullYear(), 11, 31);
+            return expenseDate >= yearStart && expenseDate <= yearEnd;
 
-    return filteredExpenses;
-  };
+          case 'custom':
+            return true; // Placeholder
+
+          default:
+            return true;
+        }
+      });
+
+      return filteredExpenses;
+    };
 
   const handleTimePeriodChange = (period) => {
     setTimePeriod(period);
@@ -104,9 +106,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
-      <Typography variant="h4" component="h2" gutterBottom>
-        Dashboard
-      </Typography>
       <TimePeriodSelector
         selectedPeriod={timePeriod}
         onChange={handleTimePeriodChange}
