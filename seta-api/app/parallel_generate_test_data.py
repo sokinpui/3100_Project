@@ -108,6 +108,11 @@ def generate_recurring_expenses(user_id, start, end):
             expense_date = today.replace(day=1) - relativedelta(months=month_offset)
             day = min(recurring["day_of_month"], 28 if expense_date.month == 2 else 30)
             expense_date = expense_date.replace(day=day)
+
+            # Cap date at today's date
+            if expense_date > today:
+                expense_date = today
+
             amount = recurring["amount"]
             if random.random() < 0.3:
                 amount = round(amount * random.uniform(0.95, 1.05), 2)
@@ -134,6 +139,11 @@ def generate_monthly_comparison_data(user_id, start, end, expenses_per_month=20)
             break
         month_date = today.replace(day=1) - relativedelta(months=month_offset)
         month_end = (month_date + relativedelta(months=1) - datetime.timedelta(days=1))
+
+        # Cap month_end at today's date if it's the current month
+        if month_date.month == today.month and month_date.year == today.year:
+            month_end = today
+
         monthly_total = 2000 + (month_offset * 200)
         expense_count = expenses_per_month
         amounts = [round(random.uniform(1, 500), 2) for _ in range(expense_count)]
@@ -146,7 +156,13 @@ def generate_monthly_comparison_data(user_id, start, end, expenses_per_month=20)
             current += 1
             category = random.choice(CATEGORIES)
             description = random.choice(DESCRIPTIONS[category])
-            expense_date = month_date + datetime.timedelta(days=random.randint(0, (month_end - month_date).days))
+            days_delta = random.randint(0, (month_end - month_date).days)
+            expense_date = month_date + datetime.timedelta(days=days_delta)
+
+            # Cap date at today's date
+            if expense_date > today:
+                expense_date = today
+
             expense_data = {
                 "user_id": user_id, "amount": amount, "date": expense_date.isoformat(),
                 "category_name": category, "description": description
