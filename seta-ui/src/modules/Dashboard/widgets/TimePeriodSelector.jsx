@@ -1,47 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Select, MenuItem, Box } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
-export default function TimePeriodSelector({ selectedPeriod, onChange }) {
-  const [customRange, setCustomRange] = useState({
-    startDate: null,
-    endDate: null,
+export default function TimePeriodSelector({ selectedPeriod, onChange, customRange: parentCustomRange }) {
+  const [localCustomRange, setLocalCustomRange] = useState({
+    startDate: parentCustomRange?.startDate || null,
+    endDate: parentCustomRange?.endDate || null,
   });
-  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(selectedPeriod === 'custom');
 
-    const handlePeriodChange = (event) => {
-        const value = event.target.value;
-        if (value === 'custom') {
-            setShowCustomPicker(true);
-        } else {
-            setShowCustomPicker(false);
-            setCustomRange({ startDate: null, endDate: null });
-            onChange(value); // Notify parent of period change
-        }
-    };
+  // Sync local state with parent customRange prop
+  useEffect(() => {
+    setLocalCustomRange({
+      startDate: parentCustomRange?.startDate || null,
+      endDate: parentCustomRange?.endDate || null,
+    });
+    setShowCustomPicker(selectedPeriod === 'custom');
+  }, [parentCustomRange, selectedPeriod]);
 
-    const handleCustomDateChange = (type) => (date) => {
-        setCustomRange((prev) => {
-            const newRange = { ...prev, [type]: date };
-            if (newRange.startDate && newRange.endDate) {
-                onChange({
-                    period: 'custom',
-                    startDate: newRange.startDate,
-                    endDate: newRange.endDate,
-                });
-            }
-            return newRange;
+  const handlePeriodChange = (event) => {
+    const value = event.target.value;
+    if (value === 'custom') {
+      setShowCustomPicker(true);
+      // Reset custom range when switching to custom
+      setLocalCustomRange({ startDate: null, endDate: null });
+      onChange('custom'); // Notify parent of period change
+    } else {
+      setShowCustomPicker(false);
+      setLocalCustomRange({ startDate: null, endDate: null });
+      onChange(value);
+    }
+  };
+
+  const handleCustomDateChange = (type) => (date) => {
+    setLocalCustomRange((prev) => {
+      const newRange = { ...prev, [type]: date };
+      if (newRange.startDate && newRange.endDate) {
+        onChange({
+          period: 'custom',
+          startDate: newRange.startDate,
+          endDate: newRange.endDate,
         });
-    };
+      }
+      return newRange;
+    });
+  };
 
   const getTimeRange = () => {
-    if (selectedPeriod === 'custom' && customRange.startDate && customRange.endDate) {
-      const options = { month: 'short', day: 'numeric', year: 'numeric' };
-      return `${customRange.startDate.toLocaleDateString('en-US', options)} - ${customRange.endDate.toLocaleDateString('en-US', options)}`;
+    // Handle custom period explicitly
+    if (selectedPeriod === 'custom') {
+      if (localCustomRange.startDate && localCustomRange.endDate) {
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        return `${localCustomRange.startDate.toLocaleDateString('en-US', options)} - ${localCustomRange.endDate.toLocaleDateString('en-US', options)}`;
+      }
+      return 'Select custom dates'; // Placeholder when custom dates are not fully selected
     }
 
+    // Handle predefined periods
     const now = new Date();
     let startDate, endDate;
 
@@ -96,16 +113,16 @@ export default function TimePeriodSelector({ selectedPeriod, onChange }) {
                 <Box sx={{ mt: 2 }}>
                   <DatePicker
                     label="Start Date"
-                    value={customRange.startDate}
+                    value={localCustomRange.startDate}
                     onChange={handleCustomDateChange('startDate')}
-                    maxDate={customRange.endDate || new Date()}
+                    maxDate={localCustomRange.endDate || new Date()}
                     sx={{ mr: 2 }}
                   />
                   <DatePicker
                     label="End Date"
-                    value={customRange.endDate}
+                    value={localCustomRange.endDate}
                     onChange={handleCustomDateChange('endDate')}
-                    minDate={customRange.startDate}
+                    minDate={localCustomRange.startDate}
                     maxDate={new Date()}
                   />
                 </Box>

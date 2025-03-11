@@ -126,8 +126,9 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <TimePeriodSelector
-        selectedPeriod={timePeriod}
-        onChange={handlePeriodChange}
+          selectedPeriod={timePeriod}
+          onChange={handlePeriodChange}
+          customRange={customRange}
       />
       <Grid container spacing={2} direction="column">
         <Grid item xs={12}>
