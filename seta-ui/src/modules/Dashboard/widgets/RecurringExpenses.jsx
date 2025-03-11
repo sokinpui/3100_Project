@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton, Box } from '@mui/material';
 import RepeatIcon from '@mui/icons-material/Repeat';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 export default function RecurringExpenses({ expenses }) {
   const [recurringItems, setRecurringItems] = useState([]);
+  const [showFullList, setShowFullList] = useState(false);
+  const widgetRef = useRef(null); // Create a ref to reference the widget container
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
-      // This is a simplified algorithm to detect recurring expenses
-      // A more sophisticated implementation would analyze patterns over longer periods
-
       // Group expenses by description and category
       const expenseGroups = expenses.reduce((acc, expense) => {
         const key = `${expense.category_name}-${expense.description}`;
@@ -42,7 +43,7 @@ export default function RecurringExpenses({ expenses }) {
             amount: avgAmount,
             frequency,
             occurrences: group.length,
-            lastDate: new Date(mostRecent.date)
+            lastDate: new Date(mostRecent.date),
           };
         });
 
@@ -74,8 +75,27 @@ export default function RecurringExpenses({ expenses }) {
     return 'Yearly';
   };
 
+  // Toggle full list visibility and maintain scroll position
+  const handleToggleFullList = () => {
+    const isExpanding = !showFullList; // Check if we're expanding or collapsing
+    setShowFullList(!showFullList); // Toggle the state
+
+    // If collapsing (going back to 5 rows), maintain the scroll position
+    if (isExpanding === false) {
+      // Use setTimeout to ensure the DOM updates before adjusting the scroll
+      setTimeout(() => {
+        if (widgetRef.current) {
+          widgetRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 0);
+    }
+  };
+
+  // Determine the number of items to display
+  const displayedItems = showFullList ? recurringItems : recurringItems.slice(0, 5);
+
   return (
-    <Card variant="outlined" sx={{ m: 2 }}>
+    <Card variant="outlined" sx={{ m: 2 }} ref={widgetRef}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
           <RepeatIcon sx={{ mr: 1 }} />
@@ -83,42 +103,55 @@ export default function RecurringExpenses({ expenses }) {
         </Typography>
 
         {recurringItems.length > 0 ? (
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Expense</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell align="right">Amount</TableCell>
-                  <TableCell align="center">Frequency</TableCell>
-                  <TableCell align="right">Last Paid</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {recurringItems.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell align="right">${item.amount.toFixed(2)}</TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={item.frequency}
-                        size="small"
-                        color={
-                          item.frequency === 'Weekly' ? 'error' :
-                          item.frequency === 'Monthly' ? 'primary' :
-                          item.frequency === 'Quarterly' ? 'success' : 'default'
-                        }
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      {item.lastDate.toLocaleDateString()}
-                    </TableCell>
+          <>
+            <TableContainer component={Paper} variant="outlined">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Expense</TableCell>
+                    <TableCell>Category</TableCell>
+                    <TableCell align="right">Amount</TableCell>
+                    <TableCell align="center">Frequency</TableCell>
+                    <TableCell align="right">Last Paid</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {displayedItems.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.description}</TableCell>
+                      <TableCell>{item.category}</TableCell>
+                      <TableCell align="right">${item.amount.toFixed(2)}</TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={item.frequency}
+                          size="small"
+                          color={
+                            item.frequency === 'Weekly' ? 'error' :
+                            item.frequency === 'Monthly' ? 'primary' :
+                            item.frequency === 'Quarterly' ? 'success' : 'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        {item.lastDate.toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {recurringItems.length > 5 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <IconButton
+                  onClick={handleToggleFullList}
+                  color="primary"
+                  aria-label={showFullList ? 'Collapse list' : 'Expand list'}
+                >
+                  {showFullList ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </IconButton>
+              </Box>
+            )}
+          </>
         ) : (
           <Typography variant="body2" color="text.secondary">
             No recurring expenses detected yet
