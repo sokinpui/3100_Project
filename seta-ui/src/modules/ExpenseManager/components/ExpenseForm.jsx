@@ -32,35 +32,45 @@ export default function ExpenseForm({
   handleCustomCategoryChange,
 }) {
   return (
-    <Card elevation={3} sx={{ mb: 4, borderRadius: 2 }}>
+    <Card 
+      elevation={3}
+      sx={{
+        mb: 4,
+        overflow: 'visible',
+        borderRadius: 2,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+    }}>
       <CardHeader
         title="Add New Expense"
-        sx={{ backgroundColor: '#5e35b1', color: 'white', py: 2, borderRadius: '8px 8px 0 0' }}
+        sx={{
+          backgroundColor: '#5e35b1',
+          color: 'primary.contrastText',
+          py: 1.5,
+          borderRadius: '5px 5px 0 0',
+        }}
+        slotProps={{ title: { fontWeight: 500 } }}
       />
       <CardContent>
         <form onSubmit={handleSubmit}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 4 }}>
+              {/* First row: Category, Date, Amount */}
+              <Grid size={4}>
                 <FormControl fullWidth required>
                   <InputLabel id="category-label">Category</InputLabel>
                   <Select
                     labelId="category-label"
-                    name="category_name"
+                    name="category_name" // Changed from 'category' to match API model
                     value={formData.category_name}
                     onChange={handleChange}
                     label="Category"
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CategoryIcon fontSize="small" />
-                          </InputAdornment>
-                        ),
-                      },
-                    }}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <CategoryIcon fontSize="small" />
+                      </InputAdornment>
+                    }
                   >
-                    {expenseCategories.map((category) => (
+                    {expenseCategories.map(category => (
                       <MenuItem key={category} value={category}>{category}</MenuItem>
                     ))}
                   </Select>
@@ -71,6 +81,7 @@ export default function ExpenseForm({
                     label="Specify Category"
                     value={formData.category_name === 'Others (Specify)' ? '' : formData.category_name}
                     onChange={handleCustomCategoryChange}
+                    placeholder="Enter custom category"
                     sx={{ mt: 2 }}
                     slotProps={{
                       input: {
@@ -84,12 +95,14 @@ export default function ExpenseForm({
                   />
                 )}
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
+              {/* Date picker */}
+              <Grid size={4}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   disableFuture
                   label="Date"
                   value={formData.date ? dayjs(formData.date) : null}
-                  format="YYYY-MM-DD"
+                  format='YYYY-MM-DD'
                   onChange={handleDateChange}
                   slotProps={{
                     textField: {
@@ -98,43 +111,46 @@ export default function ExpenseForm({
                     },
                     inputAdornment: {
                       position: 'start',
-                      children: <DateRangeIcon fontSize="small" />,
+                      children: <DateRangeIcon fontSize="small" />
                     },
                   }}
                 />
+                </LocalizationProvider>
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  label="Amount"
-                  name="amount"
-                  type="number"
-                  required
-                  value={formData.amount}
-                  onChange={handleChange}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <AttachMoneyIcon fontSize="small" />
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
+              {/* Amount field */}
+              <Grid size={4}>
+              <TextField
+                fullWidth
+                label="Amount"
+                name="amount"
+                value={formData.amount}
+                onChange={handleChange}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AttachMoneyIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    type: 'number',
+                  },
+                }}
+              />
               </Grid>
-              <Grid size={{ xs: 12 }}>
+              {/* Second row: Description field */}
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   multiline
-                  rows={4}
+                  rows={5}
                   label="Description (Optional)"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'end' }}>
+              {/* Third row: Submit button */}
+              <Grid size={12} sx={{ display: 'flex', justifyContent: 'end'}}>
                 <Button
                   type="submit"
                   variant="contained"
@@ -145,10 +161,14 @@ export default function ExpenseForm({
                     px: 2.5,
                     borderRadius: 2,
                     textTransform: 'none',
-                    fontSize: '1.1rem',
+                    fontSize: '1.2rem',
                     fontWeight: 'medium',
                     boxShadow: '0 4px 10px rgba(25, 118, 210, 0.3)',
-                    '&:hover': { boxShadow: '0 6px 15px rgba(25, 118, 210, 0.4)', transform: 'translateY(-2px)' },
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      boxShadow: '0 6px 15px rgba(25, 118, 210, 0.4)',
+                      transform: 'translateY(-2px)'
+                    }
                   }}
                 >
                   Add Expense

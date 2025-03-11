@@ -21,7 +21,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
   const [pageSize] = useState(5);
   const [sortModel, setSortModel] = useState([]);
 
-  const columns: GridColDef[] = [
+  const columns = [
     {
       field: 'date',
       headerName: 'Date',
