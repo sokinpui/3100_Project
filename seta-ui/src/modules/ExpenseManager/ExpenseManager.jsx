@@ -14,17 +14,8 @@ export default function ExpenseManager() {
   const [expenses, setExpenses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
-  const [formData, setFormData] = useState({
-    amount: '',
-    category_name: '',
-    date: '',
-    description: ''
-  });
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+  const [formData, setFormData] = useState({ amount: '', category_name: '', date: '', description: '' });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showOtherCategoryField, setShowOtherCategoryField] = useState(false);
@@ -32,11 +23,8 @@ export default function ExpenseManager() {
 
   const userId = localStorage.getItem('userId');
 
-  // Fetch expenses on mount
   useEffect(() => {
-    if (userId) {
-      fetchExpenses();
-    }
+    if (userId) fetchExpenses();
   }, [userId]);
 
   const fetchExpenses = async () => {
@@ -51,24 +39,16 @@ export default function ExpenseManager() {
     }
   };
 
-  // Input change handler
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'category_name') {
-      setShowOtherCategoryField(value === 'Others (Specify)');
-    }
+    if (name === 'category_name') setShowOtherCategoryField(value === 'Others (Specify)');
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Date change handler
   const handleDateChange = (newValue) => {
-    setFormData(prev => ({
-      ...prev,
-      date: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-    }));
+    setFormData(prev => ({ ...prev, date: newValue ? dayjs(newValue).format('YYYY-MM-DD') : '' }));
   };
 
-  // Form submission handler
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.amount || !formData.category_name || !formData.date) {
@@ -78,12 +58,10 @@ export default function ExpenseManager() {
     setConfirmDialogOpen(true);
   };
 
-  // Custom category handler
   const handleCustomCategoryChange = (e) => {
     setFormData(prev => ({ ...prev, category_name: e.target.value }));
   };
 
-  // Delete handlers
   const handleOpenDeleteDialog = (expenseId) => {
     setExpenseToDelete(expenseId);
     setDeleteDialogOpen(true);
@@ -107,7 +85,6 @@ export default function ExpenseManager() {
     }
   };
 
-  // Add expense confirmation
   const handleConfirmAddExpense = async () => {
     setIsSubmitting(true);
     try {
@@ -116,19 +93,11 @@ export default function ExpenseManager() {
         amount: parseFloat(formData.amount),
         category_name: formData.category_name,
         date: formData.date,
-        description: formData.description || ""
+        description: formData.description || "",
       };
-
       const response = await axios.post(`${API_URL}/expenses`, expenseData);
       setExpenses(prev => [...prev, response.data]);
-
-      setFormData({
-        amount: '',
-        category_name: '',
-        date: '',
-        description: ''
-      });
-
+      setFormData({ amount: '', category_name: '', date: '', description: '' });
       showNotification('Expense added successfully!');
     } catch (error) {
       showNotification('Failed to add expense', 'error');
@@ -139,7 +108,6 @@ export default function ExpenseManager() {
     }
   };
 
-  // Notification handler
   const showNotification = (message, severity = 'success') => {
     setNotification({ open: true, message, severity });
   };
@@ -150,13 +118,8 @@ export default function ExpenseManager() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <ExpenseNotifications
-        notification={notification}
-        handleCloseNotification={handleCloseNotification}
-      />
-
+      <ExpenseNotifications notification={notification} handleCloseNotification={handleCloseNotification} />
       <ExpenseSummaryCards expenses={expenses} />
-
       <ExpenseForm
         formData={formData}
         showOtherCategoryField={showOtherCategoryField}
@@ -165,19 +128,12 @@ export default function ExpenseManager() {
         handleSubmit={handleSubmit}
         handleCustomCategoryChange={handleCustomCategoryChange}
       />
-
-      <ExpenseList
-        expenses={expenses}
-        isLoading={isLoading}
-        handleOpenDeleteDialog={handleOpenDeleteDialog}
-      />
-
+      <ExpenseList expenses={expenses} isLoading={isLoading} handleOpenDeleteDialog={handleOpenDeleteDialog} />
       <ExpenseDialogs
         confirmDialogOpen={confirmDialogOpen}
         deleteDialogOpen={deleteDialogOpen}
         isSubmitting={isSubmitting}
         formData={formData}
-        expenseToDelete={expenseToDelete}
         handleCloseConfirm={() => setConfirmDialogOpen(false)}
         handleConfirmAdd={handleConfirmAddExpense}
         handleCancelDelete={handleCancelDelete}
