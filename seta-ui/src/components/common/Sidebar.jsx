@@ -71,7 +71,7 @@ export default function Sidebar({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(true);
-  const { themeMode } = useTheme(); // Add this to get current theme
+  const { themeMode, updateTheme } = useTheme(); // Add this to get current theme
   const isDarkMode = themeMode === 'dark';
 
   // Logout Dialog State
@@ -85,7 +85,11 @@ export default function Sidebar({ children }) {
     setLogoutDialogOpen(true);
   };
 
+  
+
   const handleLogoutConfirm = () => {
+    // Reset theme to light explicitly
+    updateTheme('light');
     // Remove auth data from storage after confirming logout
     localStorage.removeItem('loginTime');
     localStorage.removeItem('username');
