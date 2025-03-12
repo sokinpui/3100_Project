@@ -38,8 +38,7 @@ export default function Settings() {
 
   const { t } = useTranslation();
   const { language, updateLanguage } = useLanguage();
-  const { themeMode, updateTheme } = useTheme(); // Use the theme context
-
+  const { themeMode, updateTheme } = useTheme();
 
   // Default settings state
   const defaultSettings = {
@@ -66,7 +65,7 @@ export default function Settings() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Add these state variables near other state declarations
+  // State for password dialog
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -79,7 +78,7 @@ export default function Settings() {
     confirmPassword: "",
   });
 
-  // Add this after your other state declarations
+  // State for form errors
   const [formErrors, setFormErrors] = useState({
     username: "",
     email: "",
@@ -88,39 +87,39 @@ export default function Settings() {
     lastName: "",
   });
 
-    const fallbackTranslations = {
-        'settings.profile': 'Profile Settings',
-        'settings.firstName': 'First Name',
-        'settings.lastName': 'Last Name',
-        'settings.username': 'Username',
-        'settings.contactNumber': 'Contact Number',
-        'settings.email': 'Email',
-        'settings.changePassword': 'Change Password',
-        'settings.theme': 'Theme & Appearance',
-        'settings.themeLabel': 'Theme',
-        'settings.lightMode': 'Light Mode',
-        'settings.darkMode': 'Dark Mode',
-        'settings.systemDefault': 'System Default',
-        'settings.language': 'Language',
-        'settings.saveSettings': 'Save Settings',
-        'settings.passwordDialog.title': 'Change Password',
-        'settings.passwordDialog.description': 'To change your password, please enter your current password and your new password.',
-        'settings.passwordDialog.currentPassword': 'Current Password',
-        'settings.passwordDialog.newPassword': 'New Password',
-        'settings.passwordDialog.confirmPassword': 'Confirm New Password',
-        'settings.passwordDialog.cancel': 'Cancel',
-        'settings.passwordDialog.change': 'Change Password'
-    };
+  const fallbackTranslations = {
+    'settings.profile': 'Profile Settings',
+    'settings.firstName': 'First Name',
+    'settings.lastName': 'Last Name',
+    'settings.username': 'Username',
+    'settings.contactNumber': 'Contact Number',
+    'settings.email': 'Email',
+    'settings.changePassword': 'Change Password',
+    'settings.theme': 'Theme & Appearance',
+    'settings.themeLabel': 'Theme',
+    'settings.lightMode': 'Light Mode',
+    'settings.darkMode': 'Dark Mode',
+    'settings.systemDefault': 'System Default',
+    'settings.language': 'Language',
+    'settings.saveSettings': 'Save Settings',
+    'settings.passwordDialog.title': 'Change Password',
+    'settings.passwordDialog.description': 'To change your password, please enter your current password and your new password.',
+    'settings.passwordDialog.currentPassword': 'Current Password',
+    'settings.passwordDialog.newPassword': 'New Password',
+    'settings.passwordDialog.confirmPassword': 'Confirm New Password',
+    'settings.passwordDialog.cancel': 'Cancel',
+    'settings.passwordDialog.change': 'Change Password'
+  };
 
-    const translate = (key) => {
-        try {
-            const translation = t(key);
-            return translation !== key ? translation : fallbackTranslations[key] || key;
-        } catch (error) {
-            console.error(`Translation error for key "${key}":`, error);
-            return fallbackTranslations[key] || key;
-        }
-    };
+  const translate = (key) => {
+    try {
+      const translation = t(key);
+      return translation !== key ? translation : fallbackTranslations[key] || key;
+    } catch (error) {
+      console.error(`Translation error for key "${key}":`, error);
+      return fallbackTranslations[key] || key;
+    }
+  };
 
   // Function to load user profile from the API
   const loadUserProfile = async (userId) => {
@@ -128,10 +127,7 @@ export default function Settings() {
     setError(null);
 
     try {
-      // Replace with your actual API URL
       const response = await axios.get(`${API_URL}/users/${userId}`);
-
-      // Update the profile settings with data from API
       setSettings((prevSettings) => ({
         ...prevSettings,
         profile: {
@@ -142,14 +138,11 @@ export default function Settings() {
           contactNumber: response.data.contact_number || "",
         },
       }));
-
       setIsLoading(false);
     } catch (err) {
       console.error("Error loading user profile:", err);
       setError("Failed to load profile data. Please try again later.");
       setIsLoading(false);
-
-      // Show error message
       setSnackbarMessage("Failed to load profile data");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -160,7 +153,6 @@ export default function Settings() {
   useEffect(() => {
     const savedSettings = localStorage.getItem("userSettings");
     if (savedSettings) {
-      // Load theme and language preferences from localStorage
       const parsedSettings = JSON.parse(savedSettings);
       setSettings((prevSettings) => ({
         ...prevSettings,
@@ -169,13 +161,11 @@ export default function Settings() {
       }));
     }
 
-    // Load user profile from API
-    // For demo purposes, using user ID 1. In a real app, get this from authentication context
     const userId = localStorage.getItem("userId") || 1;
     loadUserProfile(userId);
   }, []);
 
-  // Handler for settings changes
+  // Handler for settings changes (nested profile fields)
   const handleSettingChange = (section, field, value) => {
     setSettings((prev) => ({
       ...prev,
@@ -185,7 +175,6 @@ export default function Settings() {
       },
     }));
 
-    // Clear error for the field being edited
     if (formErrors[field]) {
       setFormErrors((prev) => ({
         ...prev,
@@ -194,26 +183,19 @@ export default function Settings() {
     }
   };
 
-  // Handler for simple settings changes (top level)
-    const handleDirectSettingChange = (field, value) => {
-        setSettings((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-        if (field === 'language') {
-            updateLanguage(value); // Update context
-            changeLanguage(value); // Directly update i18n language for immediate effect
-        } else if (field === 'theme') {
-            updateTheme(value); // Update theme context
-        }
-    };
+  // Handler for direct settings changes (theme and language)
+  const handleDirectSettingChange = (field, value) => {
+    setSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    // Removed immediate updates to context here
+  };
 
   // Handle saving settings
   const saveSettings = async () => {
-    // Validate form data first
     const errors = validateProfileForm();
 
-    // If there are validation errors, show them and don't proceed
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       setSnackbarMessage("Please correct the errors in the form");
@@ -223,7 +205,6 @@ export default function Settings() {
     }
 
     try {
-      // Save theme and language to localStorage
       localStorage.setItem(
         "userSettings",
         JSON.stringify({
@@ -232,13 +213,11 @@ export default function Settings() {
         })
       );
 
-      // Update the theme in the context
+      // Apply theme and language changes only when saving
       updateTheme(settings.theme);
-
-      // Update the language in the context
       updateLanguage(settings.language);
+      changeLanguage(settings.language); // Update i18n language
 
-      // Save profile data to backend
       const userId = localStorage.getItem("userId") || 1;
       await axios.put(`${API_URL}/users/${userId}`, {
         username: settings.profile.username,
@@ -259,31 +238,6 @@ export default function Settings() {
     }
   };
 
-    // for debug use reset settings in setting pages
-    // const resetSettings = () => {
-    //     const defaultSettings = {
-    //         theme: 'light',
-    //         language: 'english'
-    //     };
-    //     localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
-    //     setSettings({
-    //         ...defaultSettings,
-    //         profile: {
-    //             firstName: "",
-    //             lastName: "",
-    //             email: "",
-    //             username: "",
-    //             contactNumber: "",
-    //         }
-    //     });
-    //     updateTheme('light');
-    //     updateLanguage('english');
-    //
-    //     setSnackbarMessage("Settings have been reset to defaults");
-    //     setSnackbarSeverity("info");
-    //     setSnackbarOpen(true);
-    // };
-
   // Handle closing snackbar
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
@@ -292,7 +246,7 @@ export default function Settings() {
   // Available languages
   const languages = ["English", "Chinese"];
 
-  // Replace the empty changePassword function with this implementation
+  // Password change handlers
   const changePassword = () => {
     setPasswordDialogOpen(true);
     setPasswordData({
@@ -317,7 +271,6 @@ export default function Settings() {
       [field]: value,
     }));
 
-    // Clear error for the field being edited
     if (passwordErrors[field]) {
       setPasswordErrors((prev) => ({
         ...prev,
@@ -327,7 +280,6 @@ export default function Settings() {
   };
 
   const submitPasswordChange = () => {
-    // Validate inputs
     const newErrors = {};
 
     if (!passwordData.currentPassword) {
@@ -346,29 +298,21 @@ export default function Settings() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    // If there are errors, display them and don't proceed
     if (Object.keys(newErrors).length > 0) {
       setPasswordErrors(newErrors);
       return;
     }
 
-    // In a real app, you would call an API to change the password
-    // For this demo, we'll simulate success
-
-    // Close dialog
     setPasswordDialogOpen(false);
-
-    // Show success message
     setSnackbarMessage("Password changed successfully!");
     setSnackbarSeverity("success");
     setSnackbarOpen(true);
   };
 
-  // Add this function to validate the form fields
+  // Validate profile form
   const validateProfileForm = () => {
     const errors = {};
 
-    // Username validation - no special characters allowed
     if (
       /[`~!@#$%^&*()_.|+\-=?;:'",<>\{\}\[\]\\\/]/g.test(
         settings.profile.username
@@ -377,13 +321,11 @@ export default function Settings() {
       errors.username = "Username should not contain special characters";
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(settings.profile.email)) {
       errors.email = "Please enter a valid email address";
     }
 
-    // Contact number validation - must be exactly 8 digits
     if (
       settings.profile.contactNumber &&
       settings.profile.contactNumber.search(/^[0-9]{8}$/) === -1
@@ -391,7 +333,6 @@ export default function Settings() {
       errors.contactNumber = "Contact number must be 8 digits";
     }
 
-    // Required field validations
     if (!settings.profile.firstName.trim()) {
       errors.firstName = "First name is required";
     }
@@ -411,301 +352,281 @@ export default function Settings() {
     return errors;
   };
 
-    return (
-      <Container maxWidth="lg" sx={{ mt: 12 }}>
-        {/* Profile Settings Card */}
-         <Card elevation={3} sx={{ mb: 4, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-            <CardHeader
-              title={
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <PersonIcon sx={{ mr: 1 }} />
-                  {translate('settings.profile')} {isLoading && "(Loading...)"}
-                </Box>
-              }
-            sx={{
-              backgroundColor: "secondary.light",
-              color: "secondary.contrastText",
-              py: 1.5,
-            }}
-            slotProps={{ title: { fontWeight: 500 } }}
-          />
-          <CardContent sx={{ p: 3 }}>
-            {error ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            ) : (
-              <Grid container spacing={3}>
-                {/* First Row */}
-                <Grid size={6}>
-                  <TextField
-                    fullWidth
-                    label={t('settings.firstName')}
-                    value={settings.profile.firstName}
-                    onChange={(e) =>
-                      handleSettingChange("profile", "firstName", e.target.value)
-                    }
-                    disabled={isLoading}
-                    error={!!formErrors.firstName}
-                    helperText={formErrors.firstName}
-                  />
-                </Grid>
-                <Grid size={6}>
-                  <TextField
-                    fullWidth
-                    label={t('settings.lastName')}
-                    value={settings.profile.lastName}
-                    onChange={(e) =>
-                      handleSettingChange("profile", "lastName", e.target.value)
-                    }
-                    error={!!formErrors.lastName}
-                    helperText={formErrors.lastName}
-                  />
-                </Grid>
-                {/* Second Row */}
-                <Grid size={6}>
-                  <TextField
-                    fullWidth
-                    label={t('settings.username')}
-                    value={settings.profile.username}
-                    onChange={(e) =>
-                      handleSettingChange("profile", "username", e.target.value)
-                    }
-                    error={!!formErrors.username}
-                    helperText={formErrors.username}
-                  />
-                </Grid>
-                <Grid size={6}>
-                  <TextField
-                    fullWidth
-                    label={t('settings.contactNumber')}
-                    value={settings.profile.contactNumber}
-                    onChange={(e) =>
-                      handleSettingChange(
-                        "profile",
-                        "contactNumber",
-                        e.target.value
-                      )
-                    }
-                    error={!!formErrors.contactNumber}
-                    helperText={formErrors.contactNumber}
-                  />
-                </Grid>
-                {/* Third Row */}
-                <Grid size={12}>
-                  <TextField
-                    fullWidth
-                    label={t('settings.email')}
-                    type="email"
-                    value={settings.profile.email}
-                    onChange={(e) =>
-                      handleSettingChange("profile", "email", e.target.value)
-                    }
-                    error={!!formErrors.email}
-                    helperText={formErrors.email}
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    sx={{
-                      mt: 1,
-                      borderRadius: 2,
-                      textTransform: "none",
-                    }}
-                    onClick={changePassword}
-                  >
-                    {t('settings.changePassword')}
-                  </Button>
-                </Grid>
-              </Grid>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Theme and Appearance Card */}
-        <Card
-          elevation={3}
+  return (
+    <Container maxWidth="lg" sx={{ mt: 12 }}>
+      {/* Profile Settings Card */}
+      <Card elevation={3} sx={{ mb: 4, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+        <CardHeader
+          title={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <PersonIcon sx={{ mr: 1 }} />
+              {translate('settings.profile')} {isLoading && "(Loading...)"}
+            </Box>
+          }
           sx={{
-            mb: 4,
-            borderRadius: 2,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+            backgroundColor: "secondary.light",
+            color: "secondary.contrastText",
+            py: 1.5,
           }}
-        >
-          <CardHeader
-            title={
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <ColorLensIcon sx={{ mr: 1 }} />
-                {t('settings.theme')}
-              </Box>
-            }
-            sx={{
-              backgroundColor: "primary.light",
-              color: "primary.contrastText",
-              py: 1.5,
-            }}
-            slotProps={{ title: { fontWeight: 500 } }}
-          />
-          <CardContent sx={{ p: 3 }}>
+          slotProps={{ title: { fontWeight: 500 } }}
+        />
+        <CardContent sx={{ p: 3 }}>
+          {error ? (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          ) : (
             <Grid container spacing={3}>
               <Grid size={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="theme-select-label">
-                    {t('settings.themeLabel')}
-                  </InputLabel>
-                  <Select
-                    labelId="theme-select-label"
-                    id="theme-select"
-                    value={settings.theme}
-                    label={t('settings.themeLabel')}
-                    onChange={(e) =>
-                      handleDirectSettingChange("theme", e.target.value)
-                    }
-                  >
-                    <MenuItem value="light">{t('settings.lightMode')}</MenuItem>
-                    <MenuItem value="dark">{t('settings.darkMode')}</MenuItem>
-                    <MenuItem value="system">{t('settings.systemDefault')}</MenuItem>
-                  </Select>
-                </FormControl>
+                <TextField
+                  fullWidth
+                  label={t('settings.firstName')}
+                  value={settings.profile.firstName}
+                  onChange={(e) =>
+                    handleSettingChange("profile", "firstName", e.target.value)
+                  }
+                  disabled={isLoading}
+                  error={!!formErrors.firstName}
+                  helperText={formErrors.firstName}
+                />
               </Grid>
-                <Grid size={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="language-select-label">
-                    {t('settings.language')}
-                  </InputLabel>
-                  <Select
-                    labelId="language-select-label"
-                    id="language-select"
-                    value={settings.language}
-                    label={t('settings.language')}
-                    onChange={(e) =>
-                      handleDirectSettingChange("language", e.target.value)
-                    }
-                  >
-                    <MenuItem value="english">English</MenuItem>
-                    <MenuItem value="zh">中文</MenuItem>
-                  </Select>
-                </FormControl>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  label={t('settings.lastName')}
+                  value={settings.profile.lastName}
+                  onChange={(e) =>
+                    handleSettingChange("profile", "lastName", e.target.value)
+                  }
+                  error={!!formErrors.lastName}
+                  helperText={formErrors.lastName}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  label={t('settings.username')}
+                  value={settings.profile.username}
+                  onChange={(e) =>
+                    handleSettingChange("profile", "username", e.target.value)
+                  }
+                  error={!!formErrors.username}
+                  helperText={formErrors.username}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  fullWidth
+                  label={t('settings.contactNumber')}
+                  value={settings.profile.contactNumber}
+                  onChange={(e) =>
+                    handleSettingChange(
+                      "profile",
+                      "contactNumber",
+                      e.target.value
+                    )
+                  }
+                  error={!!formErrors.contactNumber}
+                  helperText={formErrors.contactNumber}
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  fullWidth
+                  label={t('settings.email')}
+                  type="email"
+                  value={settings.profile.email}
+                  onChange={(e) =>
+                    handleSettingChange("profile", "email", e.target.value)
+                  }
+                  error={!!formErrors.email}
+                  helperText={formErrors.email}
+                />
+              </Grid>
+              <Grid size={12}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    mt: 1,
+                    borderRadius: 2,
+                    textTransform: "none",
+                  }}
+                  onClick={changePassword}
+                >
+                  {t('settings.changePassword')}
+                </Button>
               </Grid>
             </Grid>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Save Button */}
-        <Grid size={12} sx={{ display: "flex", justifyContent: "center" }}>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<SaveIcon />}
-            onClick={saveSettings}
-            sx={{
-              py: 1.5,
-              px: 4,
-              borderRadius: 2,
-              textTransform: "none",
-              fontSize: "1rem",
-              fontWeight: "medium",
-              boxShadow: "0 4px 10px rgba(25, 118, 210, 0.3)",
-              transition: "all 0.2s",
-              "&:hover": {
-                boxShadow: "0 6px 15px rgba(25, 118, 210, 0.4)",
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            {t('settings.saveSettings')}
-          </Button>
-         {/* Reset Button */}
-         {/* <Button
-            variant="outlined"
-            color="secondary"
-            onClick={resetSettings}
-            sx={{
-              py: 1.5,
-              px: 4,
-              borderRadius: 2,
-              textTransform: "none",
-              fontSize: "1rem",
-              fontWeight: "medium"
-            }}
-          >
-            {t('settings.resetSettings')}
-          </Button>
-          */}
-        </Grid>
+      {/* Theme and Appearance Card */}
+      <Card
+        elevation={3}
+        sx={{
+          mb: 4,
+          borderRadius: 2,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        }}
+      >
+        <CardHeader
+          title={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <ColorLensIcon sx={{ mr: 1 }} />
+              {t('settings.theme')}
+            </Box>
+          }
+          sx={{
+            backgroundColor: "primary.light",
+            color: "primary.contrastText",
+            py: 1.5,
+          }}
+          slotProps={{ title: { fontWeight: 500 } }}
+        />
+        <CardContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            <Grid size={6}>
+              <FormControl fullWidth>
+                <InputLabel id="theme-select-label">
+                  {t('settings.themeLabel')}
+                </InputLabel>
+                <Select
+                  labelId="theme-select-label"
+                  id="theme-select"
+                  value={settings.theme}
+                  label={t('settings.themeLabel')}
+                  onChange={(e) =>
+                    handleDirectSettingChange("theme", e.target.value)
+                  }
+                >
+                  <MenuItem value="light">{t('settings.lightMode')}</MenuItem>
+                  <MenuItem value="dark">{t('settings.darkMode')}</MenuItem>
+                  <MenuItem value="system">{t('settings.systemDefault')}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={6}>
+              <FormControl fullWidth>
+                <InputLabel id="language-select-label">
+                  {t('settings.language')}
+                </InputLabel>
+                <Select
+                  labelId="language-select-label"
+                  id="language-select"
+                  value={settings.language}
+                  label={t('settings.language')}
+                  onChange={(e) =>
+                    handleDirectSettingChange("language", e.target.value)
+                  }
+                >
+                  <MenuItem value="english">English</MenuItem>
+                  <MenuItem value="zh">中文</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-        {/* Notification Snackbar */}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      {/* Save Button */}
+      <Grid size={12} sx={{ display: "flex", justifyContent: "center" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<SaveIcon />}
+          onClick={saveSettings}
+          sx={{
+            py: 1.5,
+            px: 4,
+            borderRadius: 2,
+            textTransform: "none",
+            fontSize: "1rem",
+            fontWeight: "medium",
+            boxShadow: "0 4px 10px rgba(25, 118, 210, 0.3)",
+            transition: "all 0.2s",
+            "&:hover": {
+              boxShadow: "0 6px 15px rgba(25, 118, 210, 0.4)",
+              transform: "translateY(-2px)",
+            },
+          }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbarSeverity}
-            sx={{ width: "100%" }}
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+          {t('settings.saveSettings')}
+        </Button>
+      </Grid>
 
-        {/* Password Change Dialog */}
-        <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog}>
-          <DialogTitle>{t('settings.passwordDialog.title')}</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {t('settings.passwordDialog.description')}
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              label={t('settings.currentPassword')}
-              type="password"
-              fullWidth
-              value={passwordData.currentPassword}
-              onChange={(e) =>
-                handlePasswordDataChange("currentPassword", e.target.value)
-              }
-              error={!!passwordErrors.currentPassword}
-              helperText={passwordErrors.currentPassword}
-            />
-            <TextField
-              margin="dense"
-              label={t('settings.newPassword')}
-              type="password"
-              fullWidth
-              value={passwordData.newPassword}
-              onChange={(e) =>
-                handlePasswordDataChange("newPassword", e.target.value)
-              }
-              error={!!passwordErrors.newPassword}
-              helperText={passwordErrors.newPassword}
-            />
-            <TextField
-              margin="dense"
-              label={t('settings.confirmNewPassword')}
-              type="password"
-              fullWidth
-              value={passwordData.confirmPassword}
-              onChange={(e) =>
-                handlePasswordDataChange("confirmPassword", e.target.value)
-              }
-              error={!!passwordErrors.confirmPassword}
-              helperText={passwordErrors.confirmPassword}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClosePasswordDialog} color="primary">
-              {t('settings.passwordDialog.cancel')}
-            </Button>
-            <Button onClick={submitPasswordChange} color="primary">
-              {t('settings.passwordDialog.change')}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
-    );
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+      {/* Password Change Dialog */}
+      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog}>
+        <DialogTitle>{t('settings.passwordDialog.title')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t('settings.passwordDialog.description')}
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t('settings.currentPassword')}
+            type="password"
+            fullWidth
+            value={passwordData.currentPassword}
+            onChange={(e) =>
+              handlePasswordDataChange("currentPassword", e.target.value)
+            }
+            error={!!passwordErrors.currentPassword}
+            helperText={passwordErrors.currentPassword}
+          />
+          <TextField
+            margin="dense"
+            label={t('settings.newPassword')}
+            type="password"
+            fullWidth
+            value={passwordData.newPassword}
+            onChange={(e) =>
+              handlePasswordDataChange("newPassword", e.target.value)
+            }
+            error={!!passwordErrors.newPassword}
+            helperText={passwordErrors.newPassword}
+          />
+          <TextField
+            margin="dense"
+            label={t('settings.confirmNewPassword')}
+            type="password"
+            fullWidth
+            value={passwordData.confirmPassword}
+            onChange={(e) =>
+              handlePasswordDataChange("confirmPassword", e.target.value)
+            }
+            error={!!passwordErrors.confirmPassword}
+            helperText={passwordErrors.confirmPassword}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePasswordDialog} color="primary">
+            {t('settings.passwordDialog.cancel')}
+          </Button>
+          <Button onClick={submitPasswordChange} color="primary">
+            {t('settings.passwordDialog.change')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
 }
