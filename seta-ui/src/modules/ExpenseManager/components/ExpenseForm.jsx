@@ -20,36 +20,11 @@ import {
   AttachMoney as AttachMoneyIcon,
   Category as CategoryIcon,
   DateRange as DateRangeIcon,
-  Restaurant as RestaurantIcon,
-  DirectionsCar as DirectionsCarIcon,
-  Home as HomeIcon,
-  Movie as MovieIcon,
-  LocalHospital as LocalHospitalIcon,
-  ShoppingCart as ShoppingCartIcon,
-  School as SchoolIcon,
-  Lightbulb as LightbulbIcon,
-  Flight as FlightIcon,
-  Spa as SpaIcon,
-  MoreHoriz as MoreHorizIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
-
-// Define categories with original names, normalized keys, and associated icons
-const expenseCategories = [
-  { name: 'Food & Dining', key: 'foodAndDining', icon: RestaurantIcon },
-  { name: 'Transportation', key: 'transportation', icon: DirectionsCarIcon },
-  { name: 'Housing', key: 'housing', icon: HomeIcon },
-  { name: 'Entertainment', key: 'entertainment', icon: MovieIcon },
-  { name: 'Healthcare', key: 'healthcare', icon: LocalHospitalIcon },
-  { name: 'Shopping', key: 'shopping', icon: ShoppingCartIcon },
-  { name: 'Education', key: 'education', icon: SchoolIcon },
-  { name: 'Utilities', key: 'utilities', icon: LightbulbIcon },
-  { name: 'Travel', key: 'travel', icon: FlightIcon },
-  { name: 'Personal Care', key: 'personalCare', icon: SpaIcon },
-  { name: 'Others (Specify)', key: 'othersSpecify', icon: MoreHorizIcon },
-];
+import { expenseCategories } from '../../../constants'; // Import the global expenseCategories
 
 export default function ExpenseForm({
   formData,
@@ -85,6 +60,7 @@ export default function ExpenseForm({
         <form onSubmit={handleSubmit}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid container spacing={3}>
+              {/* Category Field */}
               <Grid size={4}>
                 <FormControl fullWidth required>
                   <InputLabel id="category-label"><T>expenseManager.category</T></InputLabel>
@@ -93,7 +69,7 @@ export default function ExpenseForm({
                     name="category_name"
                     value={formData.category_name}
                     onChange={handleChange}
-                    label={<T>expenseManager.category</T>}
+                    label={<T>expenseManager.category</T>} // Fixed: Valid JSX expression
                     startAdornment={
                       <InputAdornment position="start">
                         <CategoryIcon fontSize="small" />
@@ -128,27 +104,29 @@ export default function ExpenseForm({
                   />
                 )}
               </Grid>
+
+              {/* Date Picker */}
               <Grid size={4}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    disableFuture
-                    label={<T>expenseManager.date</T>}
-                    value={formData.date ? dayjs(formData.date) : null}
-                    format='YYYY-MM-DD'
-                    onChange={handleDateChange}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                      },
-                      inputAdornment: {
-                        position: 'start',
-                        children: <DateRangeIcon fontSize="small" />
-                      },
-                    }}
-                  />
-                </LocalizationProvider>
+                <DatePicker
+                  disableFuture
+                  label={<T>expenseManager.date</T>}
+                  value={formData.date ? dayjs(formData.date) : null}
+                  format="YYYY-MM-DD"
+                  onChange={handleDateChange}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                    },
+                    inputAdornment: {
+                      position: 'start',
+                      children: <DateRangeIcon fontSize="small" />,
+                    },
+                  }}
+                />
               </Grid>
+
+              {/* Amount Field */}
               <Grid size={4}>
                 <TextField
                   fullWidth
@@ -168,6 +146,8 @@ export default function ExpenseForm({
                   }}
                 />
               </Grid>
+
+              {/* Description Field */}
               <Grid size={12}>
                 <TextField
                   fullWidth
@@ -179,6 +159,8 @@ export default function ExpenseForm({
                   onChange={handleChange}
                 />
               </Grid>
+
+              {/* Submit Button */}
               <Grid size={12} sx={{ display: 'flex', justifyContent: 'end' }}>
                 <Button
                   type="submit"
@@ -196,8 +178,7 @@ export default function ExpenseForm({
                     transition: 'all 0.2s',
                     '&:hover': {
                       boxShadow: '0 6px 15px rgba(25, 118, 210, 0.4)',
-                      transform: 'translateY(-2px)'
-                    }
+                    },
                   }}
                 >
                   <T>expenseManager.addExpense</T>

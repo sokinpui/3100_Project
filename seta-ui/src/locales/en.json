@@ -79,6 +79,9 @@
         "utilities": "Utilities",
         "travel": "Travel",
         "personalCare": "Personal Care",
+        "subscriptions": "Subscriptions",
+        "transport": "Transport",
+        "food": "Food",
         "othersSpecify": "Others (Specify)"
     },
     "expenseReports": {
@@ -152,7 +155,8 @@
             "aboveAverage": "${{amount}} above average",
             "belowAverage": "${{amount}} below average",
             "topCategoryProjections": "Top Category Projections",
-            "noCategoryData": "No category data available"
+            "noCategoryData": "No category data available",
+            "noData": "No spending forecast data available"
         },
         "budgetAlertsGoals": {
             "title": "Budget Alerts & Goals",

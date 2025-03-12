@@ -2,55 +2,59 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Alert, Box, LinearProgress, Paper, Grid } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
+import { expenseCategories } from '../../../constants';
 
 export default function BudgetAlertsGoals({ expenses }) {
   const { t } = useTranslation();
   const [budgetAlerts, setBudgetAlerts] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
 
-  useEffect(() => {
-    const budgets = [
-      { category: 'Food', limit: 500, spent: 0 },
-      { category: 'Transportation', limit: 300, spent: 0 },
-      { category: 'Shopping', limit: 200, spent: 0 },
-    ];
+    useEffect(() => {
+  const budgets = expenseCategories.map(category => ({
+    category: t(`expenseManager.${category.key}`),
+    limit: 500, // Adjust limits as needed
+    spent: 0,
+  }));
 
-    const goals = [
-      { name: 'Emergency Fund', target: 3000, current: 1500 },
-      { name: 'Vacation', target: 1200, current: 400 },
-    ];
+  const goals = [
+    { name: t('dashboard.budgetAlertsGoals.emergencyFund'), target: 3000, current: 1500 },
+    { name: t('dashboard.budgetAlertsGoals.vacation'), target: 1200, current: 400 },
+  ];
 
-    if (expenses && expenses.length > 0) {
-      expenses.forEach(expense => {
-        const budgetCategory = budgets.find(b => b.category === expense.category_name);
-        if (budgetCategory) {
-          budgetCategory.spent += parseFloat(expense.amount);
-        }
-      });
-    }
+  if (expenses && expenses.length > 0) {
+    expenses.forEach(expense => {
+      const categoryObj = expenseCategories.find(cat => cat.name === expense.category_name);
+      const key = categoryObj ? categoryObj.key : expense.category_name.toLowerCase().replace(/ /g, '');
+      const translatedCategory = t(`expenseManager.${key}`);
+      const budgetCategory = budgets.find(b => b.category === translatedCategory);
+      if (budgetCategory) {
+        budgetCategory.spent += parseFloat(expense.amount);
+      }
+    });
+  }
 
-    const alerts = budgets
-      .filter(budget => budget.spent > budget.limit * 0.8)
-      .map(budget => ({
-        category: budget.category,
-        spent: budget.spent,
-        limit: budget.limit,
-        severity: budget.spent > budget.limit ? 'error' : 'warning',
-        message: budget.spent > budget.limit
-          ? t('dashboard.budgetAlertsGoals.exceededBudget', {
-              category: budget.category,
-              amount: (budget.spent - budget.limit).toFixed(2),
-            })
-          : t('dashboard.budgetAlertsGoals.closeToBudget', {
-              category: budget.category,
-              spent: budget.spent.toFixed(2),
-              limit: budget.limit,
-            }),
-      }));
+  const alerts = budgets
+    .filter(budget => budget.spent > budget.limit * 0.8)
+    .map(budget => ({
+      category: budget.category,
+      spent: budget.spent,
+      limit: budget.limit,
+      severity: budget.spent > budget.limit ? 'error' : 'warning',
+      message: budget.spent > budget.limit
+        ? t('dashboard.budgetAlertsGoals.exceededBudget', {
+            category: budget.category,
+            amount: (budget.spent - budget.limit).toFixed(2),
+          })
+        : t('dashboard.budgetAlertsGoals.closeToBudget', {
+            category: budget.category,
+            spent: budget.spent.toFixed(2),
+            limit: budget.limit,
+          }),
+    }));
 
-    setBudgetAlerts(alerts);
-    setSavingsGoals(goals);
-  }, [expenses, t]);
+  setBudgetAlerts(alerts);
+  setSavingsGoals(goals);
+}, [expenses, t]);
 
   return (
     <Card variant="outlined" sx={{ m: 2 }}>

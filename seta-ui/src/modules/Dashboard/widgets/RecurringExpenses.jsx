@@ -4,42 +4,48 @@ import RepeatIcon from '@mui/icons-material/Repeat';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import T from '../../../utils/T';
+import { useTranslation } from 'react-i18next';
+import { expenseCategories } from '../../../constants';
 
 export default function RecurringExpenses({ expenses }) {
+    const { t } = useTranslation();
   const [recurringItems, setRecurringItems] = useState([]);
   const [showFullList, setShowFullList] = useState(false);
   const widgetRef = useRef(null);
 
-  useEffect(() => {
-    if (expenses && expenses.length > 0) {
-      const expenseGroups = expenses.reduce((acc, expense) => {
-        const key = `${expense.category_name}-${expense.description}`;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(expense);
-        return acc;
-      }, {});
+    useEffect(() => {
+  if (expenses && expenses.length > 0) {
+    const expenseGroups = expenses.reduce((acc, expense) => {
+      const key = `${expense.category_name}-${expense.description}`;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(expense);
+      return acc;
+    }, {});
 
-      const recurring = Object.entries(expenseGroups)
-        .filter(([_, group]) => group.length > 1)
-        .map(([_, group]) => {
-          const totalAmount = group.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-          const avgAmount = totalAmount / group.length;
-          const mostRecent = group.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-          const frequency = determineFrequency(group.map(exp => new Date(exp.date)));
+    const recurring = Object.entries(expenseGroups)
+      .filter(([_, group]) => group.length > 1)
+      .map(([_, group]) => {
+        const totalAmount = group.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+        const avgAmount = totalAmount / group.length;
+        const mostRecent = group.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        const frequency = determineFrequency(group.map(exp => new Date(exp.date)));
+        const categoryObj = expenseCategories.find(cat => cat.name === mostRecent.category_name);
+        const key = categoryObj ? categoryObj.key : mostRecent.category_name.toLowerCase().replace(/ /g, '');
+        const translatedCategory = t(`expenseManager.${key}`);
 
-          return {
-            category: mostRecent.category_name,
-            description: mostRecent.description || mostRecent.category_name,
-            amount: avgAmount,
-            frequency,
-            occurrences: group.length,
-            lastDate: new Date(mostRecent.date),
-          };
-        });
+        return {
+          category: translatedCategory,
+          description: mostRecent.description || translatedCategory,
+          amount: avgAmount,
+          frequency,
+          occurrences: group.length,
+          lastDate: new Date(mostRecent.date),
+        };
+      });
 
-      setRecurringItems(recurring);
-    }
-  }, [expenses]);
+    setRecurringItems(recurring);
+  }
+}, [expenses, t]);
 
   const determineFrequency = (dates) => {
     if (dates.length < 2) return 'Unknown';

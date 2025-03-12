@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import T from '../../../utils/T';
+import { useTranslation } from 'react-i18next';
+import { expenseCategories } from '../../../constants'; // Import the global expenseCategories
 
 export default function MonthlyComparison({ expenses }) {
+  const { t } = useTranslation();
   const [monthlyData, setMonthlyData] = useState([]);
   const theme = useTheme();
 
@@ -15,15 +18,17 @@ export default function MonthlyComparison({ expenses }) {
         const month = date.toLocaleString('default', { month: 'short' });
         const year = date.getFullYear();
         const monthYear = `${month} ${year}`;
-        const category = expense.category_name;
+        const categoryObj = expenseCategories.find(cat => cat.name === expense.category_name);
+        const key = categoryObj ? categoryObj.key : expense.category_name.toLowerCase().replace(/ /g, '');
+        const translatedName = t(`expenseManager.${key}`);
 
         if (!monthCategories[monthYear]) {
           monthCategories[monthYear] = { fullDate: date };
         }
-        if (!monthCategories[monthYear][category]) {
-          monthCategories[monthYear][category] = 0;
+        if (!monthCategories[monthYear][translatedName]) {
+          monthCategories[monthYear][translatedName] = 0;
         }
-        monthCategories[monthYear][category] += parseFloat(expense.amount);
+        monthCategories[monthYear][translatedName] += parseFloat(expense.amount);
       });
 
       const chartData = Object.keys(monthCategories).map(monthYear => {
@@ -39,24 +44,18 @@ export default function MonthlyComparison({ expenses }) {
       chartData.sort((a, b) => a.fullDate - b.fullDate);
       setMonthlyData(chartData);
     }
-  }, [expenses]);
+  }, [expenses, t]);
 
   const allCategories = monthlyData.length > 0
     ? Array.from(new Set(monthlyData.flatMap(data => Object.keys(data).filter(key => key !== 'month' && key !== 'fullDate'))))
     : [];
 
-  const categoryColors = {
-    'Food': '#FF8042',
-    'Transportation': '#0088FE',
-    'Fuel': '#00C49F',
-    'Shopping': '#FFBB28',
-    'Housing': '#8884D8',
-    'Healthcare': '#FF6B6B',
-    'Education': '#6A5ACD',
-    'Entertainment': '#82ca9d',
-    'Utilities': '#ffc658',
-    'Other': '#8dd1e1'
-  };
+  // Dynamic color assignment
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FCCDE5'];
+  const categoryColors = allCategories.reduce((acc, category, index) => {
+    acc[category] = COLORS[index % COLORS.length];
+    return acc;
+  }, {});
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -108,7 +107,7 @@ export default function MonthlyComparison({ expenses }) {
                     key={category}
                     dataKey={category}
                     stackId="a"
-                    fill={categoryColors[category] || `#${Math.floor(Math.random()*16777215).toString(16)}`}
+                    fill={categoryColors[category]}
                   />
                 ))}
               </BarChart>

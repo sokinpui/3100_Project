@@ -1,26 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import T from '../../../utils/T'; // Adjusted import path for widgets/ directory
+import { useTranslation } from 'react-i18next';
+import T from '../../../utils/T';
+import { expenseCategories } from '../../../constants'; // Import the global expenseCategories
 
 export default function ExpenseBreakdown({ expenses }) {
+  const { t } = useTranslation();
   const [categoryData, setCategoryData] = useState([]);
   const [topExpenses, setTopExpenses] = useState([]);
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
       const categoryMap = expenses.reduce((acc, expense) => {
-        const category = expense.category_name;
-        if (!acc[category]) {
-          acc[category] = 0;
+        // Map the category_name to the corresponding key from expenseCategories
+        const categoryObj = expenseCategories.find(cat => cat.name === expense.category_name);
+        const key = categoryObj ? categoryObj.key : expense.category_name.toLowerCase().replace(/ /g, '');
+        const translatedName = t(`expenseManager.${key}`);
+        if (!acc[translatedName]) {
+          acc[translatedName] = 0;
         }
-        acc[category] += parseFloat(expense.amount);
+        acc[translatedName] += parseFloat(expense.amount);
         return acc;
       }, {});
 
       const chartData = Object.keys(categoryMap).map(category => ({
         name: category,
-        value: categoryMap[category]
+        value: categoryMap[category],
       }));
 
       const sortedExpenses = [...expenses].sort((a, b) =>
@@ -30,7 +36,7 @@ export default function ExpenseBreakdown({ expenses }) {
       setCategoryData(chartData);
       setTopExpenses(sortedExpenses);
     }
-  }, [expenses]);
+  }, [expenses, t]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FCCDE5'];
 
@@ -84,13 +90,18 @@ export default function ExpenseBreakdown({ expenses }) {
                 </TableHead>
                 <TableBody>
                   {topExpenses.length > 0 ? (
-                    topExpenses.map((expense) => (
-                      <TableRow key={expense.id}>
-                        <TableCell>{expense.category_name}</TableCell>
-                        <TableCell>{expense.description || 'N/A'}</TableCell>
-                        <TableCell align="right">${parseFloat(expense.amount).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))
+                    topExpenses.map((expense) => {
+                      const categoryObj = expenseCategories.find(cat => cat.name === expense.category_name);
+                      const key = categoryObj ? categoryObj.key : expense.category_name.toLowerCase().replace(/ /g, '');
+                      const translatedCategory = t(`expenseManager.${key}`);
+                      return (
+                        <TableRow key={expense.id}>
+                          <TableCell>{translatedCategory}</TableCell>
+                          <TableCell>{expense.description || 'N/A'}</TableCell>
+                          <TableCell align="right">${parseFloat(expense.amount).toFixed(2)}</TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell colSpan={3} align="center">

@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, Box, LinearProgress, Grid, Divider } fro
 import TimelineIcon from '@mui/icons-material/Timeline';
 import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
+import { expenseCategories } from '../../../constants'; // Import the global expenseCategories
 
 export default function SpendingForecast({ expenses }) {
   const { t } = useTranslation();
@@ -13,7 +14,7 @@ export default function SpendingForecast({ expenses }) {
       projected: 0,
       daysRemaining: 0,
       progress: 0,
-      dateRange: '', // Still use dateRange, but populate differently
+      dateRange: '',
     },
     categories: [],
   });
@@ -31,14 +32,14 @@ export default function SpendingForecast({ expenses }) {
 
     // Use the earliest and latest dates from expenses for the current month
     const currentMonthExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date); // Parse the localized string if needed
+      const expenseDate = new Date(expense.date);
       return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
     });
 
     let dateRange = '';
     if (currentMonthExpenses.length > 0) {
       const sortedExpenses = [...currentMonthExpenses].sort((a, b) => new Date(a.date) - new Date(b.date));
-      const startDate = sortedExpenses[0].date; // Already localized from backend
+      const startDate = sortedExpenses[0].date;
       const endDate = sortedExpenses[sortedExpenses.length - 1].date;
       dateRange = `${startDate} - ${endDate}`;
     }
@@ -70,9 +71,11 @@ export default function SpendingForecast({ expenses }) {
 
     const categoriesSpending = {};
     currentMonthExpenses.forEach(expense => {
-      const category = expense.category_name;
-      if (!categoriesSpending[category]) categoriesSpending[category] = 0;
-      categoriesSpending[category] += parseFloat(expense.amount);
+      const categoryObj = expenseCategories.find(cat => cat.name === expense.category_name);
+      const key = categoryObj ? categoryObj.key : expense.category_name.toLowerCase().replace(/ /g, '');
+      const translatedCategory = t(`expenseManager.${key}`);
+      if (!categoriesSpending[translatedCategory]) categoriesSpending[translatedCategory] = 0;
+      categoriesSpending[translatedCategory] += parseFloat(expense.amount);
     });
 
     const categoryForecasts = Object.entries(categoriesSpending).map(([category, amount]) => {
@@ -97,7 +100,7 @@ export default function SpendingForecast({ expenses }) {
       },
       categories: categoryForecasts.slice(0, 5),
     });
-  }, [expenses]);
+  }, [expenses, t]); // Removed the extra closing parenthesis
 
   return (
     <Card variant="outlined" sx={{ m: 2 }}>

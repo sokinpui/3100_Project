@@ -79,6 +79,9 @@
         "utilities": "公用事业",
         "travel": "旅行",
         "personalCare": "个人护理",
+        "subscriptions": "订阅",
+        "transport": "交通",
+        "food": "食品",
         "othersSpecify": "其他（指定）"
     },
     "expenseReports": {
@@ -152,7 +155,8 @@
             "aboveAverage": "超出平均值 ${{amount}}",
             "belowAverage": "低于平均值 ${{amount}}",
             "topCategoryProjections": "顶级类别预测",
-            "noCategoryData": "无类别数据可用"
+            "noCategoryData": "无类别数据可用",
+            "noData": "无可用数据"
         },
         "budgetAlertsGoals": {
             "title": "预算提醒与目标",
