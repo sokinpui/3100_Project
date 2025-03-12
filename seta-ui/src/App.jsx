@@ -19,8 +19,8 @@ export default function App() {
     try {
       const savedSettings = localStorage.getItem('userSettings');
       if (!savedSettings) {
+        // Only set language, let ThemeProvider handle theme default
         localStorage.setItem('userSettings', JSON.stringify({
-          theme: 'light',
           language: 'english'
         }));
       }

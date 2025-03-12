@@ -13,14 +13,12 @@
   bottom: 0;
 }
 
-/* Light mode styles */
 body:not(.dark-theme) .login-container {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa; /* Matches lightTheme background.default */
 }
 
-/* Dark mode styles */
 body.dark-theme .login-container {
-  background-color: #121212;
+  background-color: #121212; /* Matches darkTheme background.default */
 }
 
 .login-content {
@@ -39,15 +37,13 @@ body.dark-theme .login-container {
   max-width: 400px;
 }
 
-/* Light mode styles */
 body:not(.dark-theme) .login-form {
-  background-color: white;
+  background-color: #ffffff; /* Matches lightTheme background.paper */
 }
 
-/* Dark mode styles */
 body.dark-theme .login-form {
-  background-color: #1e1e1e;
-  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+  background-color: #1e1e1e; /* Matches darkTheme background.paper */
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.05);
 }
 
 .form-group {
@@ -59,20 +55,28 @@ body.dark-theme .login-form {
   margin-bottom: 0.5rem;
 }
 
+body:not(.dark-theme) .form-group label {
+  color: #212529; /* Matches lightTheme text.primary */
+}
+
+body.dark-theme .form-group label {
+  color: #f0f0f0; /* Matches darkTheme text.primary */
+}
+
 .form-group input {
   width: 100%;
   padding: 0.5rem;
   border-radius: 4px;
 }
 
-/* Light mode styles */
 body:not(.dark-theme) .form-group input {
   border: 1px solid #ddd;
+  background-color: #ffffff;
+  color: #212529;
 }
 
-/* Dark mode styles */
 body.dark-theme .form-group input {
-  border: 1px solid #444;
+  border: 1px solid #495057; /* Matches darkTheme border */
   background-color: #303030;
   color: #f0f0f0;
 }
@@ -85,49 +89,28 @@ button {
   cursor: pointer;
 }
 
-/* Light mode styles */
 body:not(.dark-theme) button {
-  background-color: #007bff;
-  color: white;
+  background-color: #007bff; /* Matches primary.main */
+  color: #fff;
 }
 
-/* Dark mode styles */
 body.dark-theme button {
-  background-color: #0055b3;
-  color: white;
+  background-color: #007bff; /* Keep primary.main for consistency */
+  color: #fff;
 }
 
 button:hover {
-  background-color: #006fe7;
+  background-color: #0055b3; /* Matches primary.dark */
 }
 
 button:disabled {
   cursor: not-allowed;
 }
 
-/* Light mode styles */
 body:not(.dark-theme) button:disabled {
   background-color: #cccccc;
 }
 
-/* Dark mode styles */
 body.dark-theme button:disabled {
   background-color: #444444;
-}
-
-/* delete these after */
-.test-data {
-  width: 100%;
-  max-width: 400px;
-}
-
-.test-data b {
-  display: block;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-.test-data p {
-  margin: 0.5rem 0;
-  text-align: center;
 }
