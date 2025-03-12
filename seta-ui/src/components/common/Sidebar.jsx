@@ -287,7 +287,7 @@ export default function Sidebar({ children }) {
               },
               transition: 'background-color 0.2s'
             }}
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/settings')}
           >
             <Avatar sx={{
               width: 38,
