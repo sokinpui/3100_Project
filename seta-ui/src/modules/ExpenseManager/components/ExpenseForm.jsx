@@ -17,6 +17,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AddCircleOutline as AddCircleOutlineIcon, AttachMoney as AttachMoneyIcon, Category as CategoryIcon, DateRange as DateRangeIcon } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import T from '../../../utils/T';
 
 const expenseCategories = [
   'Food & Dining', 'Transportation', 'Housing', 'Entertainment', 'Healthcare',
@@ -32,7 +33,7 @@ export default function ExpenseForm({
   handleCustomCategoryChange,
 }) {
   return (
-    <Card 
+    <Card
       elevation={3}
       sx={{
         mb: 4,
@@ -41,7 +42,7 @@ export default function ExpenseForm({
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
     }}>
       <CardHeader
-        title="Add New Expense"
+        title={<T>expenseManager.addNewExpense</T>}
         sx={{
           backgroundColor: '#5e35b1',
           color: 'primary.contrastText',
@@ -54,16 +55,15 @@ export default function ExpenseForm({
         <form onSubmit={handleSubmit}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Grid container spacing={3}>
-              {/* First row: Category, Date, Amount */}
               <Grid size={4}>
                 <FormControl fullWidth required>
-                  <InputLabel id="category-label">Category</InputLabel>
+                  <InputLabel id="category-label"><T>expenseManager.category</T></InputLabel>
                   <Select
                     labelId="category-label"
-                    name="category_name" // Changed from 'category' to match API model
+                    name="category_name"
                     value={formData.category_name}
                     onChange={handleChange}
-                    label="Category"
+                    label={<T>expenseManager.category</T>}
                     startAdornment={
                       <InputAdornment position="start">
                         <CategoryIcon fontSize="small" />
@@ -71,17 +71,17 @@ export default function ExpenseForm({
                     }
                   >
                     {expenseCategories.map(category => (
-                      <MenuItem key={category} value={category}>{category}</MenuItem>
+                      <MenuItem key={category} value={category}><T>expenseManager.{category}</T></MenuItem>
                     ))}
                   </Select>
                 </FormControl>
                 {showOtherCategoryField && (
                   <TextField
                     fullWidth
-                    label="Specify Category"
+                    label={<T>expenseManager.specifyCategory</T>}
                     value={formData.category_name === 'Others (Specify)' ? '' : formData.category_name}
                     onChange={handleCustomCategoryChange}
-                    placeholder="Enter custom category"
+                    placeholder={<T>expenseManager.enterCustomCategory</T>}
                     sx={{ mt: 2 }}
                     slotProps={{
                       input: {
@@ -95,12 +95,11 @@ export default function ExpenseForm({
                   />
                 )}
               </Grid>
-              {/* Date picker */}
               <Grid size={4}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   disableFuture
-                  label="Date"
+                  label={<T>expenseManager.date</T>}
                   value={formData.date ? dayjs(formData.date) : null}
                   format='YYYY-MM-DD'
                   onChange={handleDateChange}
@@ -117,11 +116,10 @@ export default function ExpenseForm({
                 />
                 </LocalizationProvider>
               </Grid>
-              {/* Amount field */}
               <Grid size={4}>
               <TextField
                 fullWidth
-                label="Amount"
+                label={<T>expenseManager.amount</T>}
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
@@ -137,19 +135,17 @@ export default function ExpenseForm({
                 }}
               />
               </Grid>
-              {/* Second row: Description field */}
               <Grid size={12}>
                 <TextField
                   fullWidth
                   multiline
                   rows={5}
-                  label="Description (Optional)"
+                  label={<T>expenseManager.descriptionOptional</T>}
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                 />
               </Grid>
-              {/* Third row: Submit button */}
               <Grid size={12} sx={{ display: 'flex', justifyContent: 'end'}}>
                 <Button
                   type="submit"
@@ -171,7 +167,7 @@ export default function ExpenseForm({
                     }
                   }}
                 >
-                  Add Expense
+                  <T>expenseManager.addExpense</T>
                 </Button>
               </Grid>
             </Grid>
