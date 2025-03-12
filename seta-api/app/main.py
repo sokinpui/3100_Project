@@ -11,6 +11,13 @@ import hashlib
 import secrets
 import string
 
+from fastapi.responses import FileResponse
+import io
+import pandas as pd
+from PyPDF2 import PdfWriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+
 # Create a FastAPI application instance
 app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
 
@@ -255,8 +262,8 @@ async def update_expense(expense_id: int, expense_data: CreateExpense, db: Sessi
     return expense
 
 @app.get("/expenses/{user_id}/report")
-async def generate_expense_report(user_id: int, db: Session = Depends(get_db)):
-    """Generate a detailed expense report for a user."""
+async def generate_expense_report(user_id: int, format: str = "json", db: Session = Depends(get_db)):
+    """Generate a detailed expense report for a user in specified format."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(
@@ -272,15 +279,81 @@ async def generate_expense_report(user_id: int, db: Session = Depends(get_db)):
     total_amount = sum(float(expense.amount) for expense in expenses)
     expense_count = len(expenses)
 
-    return {
-        "expenses": expenses,
-        "summary": {
-            "total_amount": total_amount,
-            "expense_count": expense_count,
-            "generated_at": datetime.now(),
-            "user_name": f"{user.first_name} {user.last_name}"
+    expense_data = [{
+        "date": exp.date,
+        "category_name": exp.category_name,
+        "amount": float(exp.amount),
+        "description": exp.description,
+        "created_at": exp.created_at
+    } for exp in expenses]
+
+    if format.lower() == "json":
+        return {
+            "expenses": expense_data,
+            "summary": {
+                "total_amount": total_amount,
+                "expense_count": expense_count,
+                "generated_at": datetime.now(),
+                "user_name": f"{user.first_name} {user.last_name}"
+            }
         }
-    }
+
+    elif format.lower() == "csv":
+        df = pd.DataFrame(expense_data)
+        buffer = io.StringIO()
+        df.to_csv(buffer, index=False)
+        buffer.seek(0)
+        return FileResponse(
+            buffer,
+            media_type="text/csv",
+            filename=f"expense_report_{datetime.now().date()}.csv"
+        )
+
+    elif format.lower() == "xlsx":
+        df = pd.DataFrame(expense_data)
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+        buffer.seek(0)
+        return FileResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename=f"expense_report_{datetime.now().date()}.xlsx"
+        )
+
+    elif format.lower() == "pdf":
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        c.drawString(30, height - 40, "Expense Report")
+        c.drawString(30, height - 60, f"User: {user.first_name} {user.last_name}")
+        c.drawString(30, height - 80, f"Generated: {datetime.now()}")
+
+        y = height - 120
+        c.drawString(30, y, "Date    Category    Amount    Description    Created At")
+        y -= 20
+
+        for exp in expense_data:
+            if y < 50:  # New page if near bottom
+                c.showPage()
+                y = height - 40
+            line = f"{exp['date']}  {exp['category_name']}  ${exp['amount']}  {exp['description'] or '-'}  {exp['created_at']}"
+            c.drawString(30, y, line[:100])  # Truncate if too long
+            y -= 20
+
+        c.showPage()
+        c.save()
+        buffer.seek(0)
+
+        return FileResponse(
+            buffer,
+            media_type="application/pdf",
+            filename=f"expense_report_{datetime.now().date()}.pdf"
+        )
+
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported format. Use json, csv, xlsx, or pdf")
 
 # --------- User Settings Endpoints ---------
 
