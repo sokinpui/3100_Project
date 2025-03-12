@@ -10,13 +10,18 @@ export const useTheme = () => useContext(ThemeContext);
 export const ThemeProvider = ({ children }) => {
   // Get theme preference from localStorage or default to 'light'
   const [themeMode, setThemeMode] = useState(() => {
-    const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings) {
-      const { theme } = JSON.parse(savedSettings);
-      if (theme === 'system') {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    try {
+      const savedSettings = localStorage.getItem('userSettings');
+      if (savedSettings) {
+        // Make sure it's valid JSON before parsing
+        const settings = JSON.parse(savedSettings);
+        if (settings.theme === 'system') {
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        return settings.theme || 'light';
       }
-      return theme || 'light';
+    } catch (error) {
+      console.error("Error parsing theme settings:", error);
     }
     return 'light';
   });
