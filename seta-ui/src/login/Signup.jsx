@@ -2,39 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Container,
-  InputAdornment,
-  Alert,
-  IconButton,
-  Avatar,
-  CircularProgress,
-  ThemeProvider as MuiThemeProvider,
-  CssBaseline
+  Box, Paper, Typography, TextField, Button, Container, InputAdornment,
+  Alert, IconButton, Avatar, CircularProgress
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import {
-  AccountCircle,
-  Person,
-  Email,
-  Phone,
-  Lock,
-  Visibility,
-  VisibilityOff,
-  HowToReg,
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon
+  AccountCircle, Person, Email, Phone, Lock, Visibility, VisibilityOff,
+  HowToReg, Brightness4 as DarkModeIcon, Brightness7 as LightModeIcon
 } from '@mui/icons-material';
-import { lightTheme, darkTheme } from '../assets/styles/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
-const API_URL = 'http://localhost:8000'; // Hardcoded
+const API_URL = 'http://localhost:8000';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { themeMode, updateTheme } = useTheme(); // Access global theme
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -48,7 +30,6 @@ export default function Signup() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false); // Local state for theme toggle
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -68,7 +49,7 @@ export default function Signup() {
         contact_number: formData.contact_number
       };
       await axios.post(`${API_URL}/signup`, userData);
-      localStorage.setItem('username', userData.username); // Store for Login page display
+      localStorage.setItem('username', userData.username);
       setIsLoading(false);
       navigate('/login', { state: { message: 'Signup successful! Please log in.' } });
     } catch (error) {
@@ -128,261 +109,243 @@ export default function Signup() {
   };
 
   const handleToggleTheme = () => {
-    setIsDarkMode(prev => !prev);
+    updateTheme(themeMode === 'dark' ? 'light' : 'dark');
   };
 
-  // Select theme based on local state
-  const theme = isDarkMode ? darkTheme : lightTheme;
-
   return (
-    <MuiThemeProvider theme={theme}>
-      <CssBaseline />
-      <Container
-        maxWidth="sm"
+    <Container
+      maxWidth="sm"
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Paper
+        elevation={3}
         sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: theme.palette.background.default,
+          p: 4,
+          width: '100%',
+          borderRadius: 2,
         }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            width: '100%',
-            borderRadius: 2,
-            bgcolor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-            <Avatar sx={{ m: 1, bgcolor: 'primary.main', width: 56, height: 56 }}>
-              <HowToReg fontSize="large" />
-            </Avatar>
-            <Typography component="h1" variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', letterSpacing: '1px' }}>
-              SETA Signup
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
-              Create your account to get started
-            </Typography>
-          </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+          <Avatar sx={{ m: 1, bgcolor: 'primary.main', width: 56, height: 56 }}>
+            <HowToReg fontSize="large" />
+          </Avatar>
+          <Typography component="h1" variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', letterSpacing: '1px' }}>
+            SETA Signup
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Create your account to get started
+          </Typography>
+        </Box>
 
-          {errors.general && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
-              {errors.general}
-            </Alert>
-          )}
-          {Object.values(errors).some(error => error) && !errors.general && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
-              Please correct the errors in the form
-            </Alert>
-          )}
+        {errors.general && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
+            {errors.general}
+          </Alert>
+        )}
+        {Object.values(errors).some(error => error) && !errors.general && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
+            Please correct the errors in the form
+          </Alert>
+        )}
 
-          <Box component="form" onSubmit={handleSignup} noValidate>
-            <Grid container spacing={2}>
-              <Grid size={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="username"
-                  label="Username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  error={!!errors.username}
-                  helperText={errors.username}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <AccountCircle sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  required
-                  fullWidth
-                  id="first_name"
-                  label="First Name"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleInputChange}
-                  error={!!errors.first_name}
-                  helperText={errors.first_name}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  required
-                  fullWidth
-                  id="last_name"
-                  label="Last Name"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleInputChange}
-                  error={!!errors.last_name}
-                  helperText={errors.last_name}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
-              <Grid size={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="email"
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
-              <Grid size={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="contact_number"
-                  label="Contact Number"
-                  name="contact_number"
-                  value={formData.contact_number}
-                  onChange={handleInputChange}
-                  error={!!errors.contact_number}
-                  helperText={errors.contact_number}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Phone sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
-              <Grid size={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="password"
-                  label="Password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  error={!!errors.password}
-                  helperText={errors.password}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={() => handleTogglePassword('password')} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
-              <Grid size={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="rePassword"
-                  label="Confirm Password"
-                  name="rePassword"
-                  type={showRePassword ? "text" : "password"}
-                  value={formData.rePassword}
-                  onChange={handleInputChange}
-                  error={!!errors.rePassword}
-                  helperText={errors.rePassword}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock sx={{ color: theme.palette.action.active }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={() => handleTogglePassword('rePassword')} edge="end">
-                          {showRePassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ '& .MuiInputBase-input': { color: theme.palette.text.primary } }}
-                />
-              </Grid>
+        <Box component="form" onSubmit={handleSignup} noValidate>
+          <Grid container spacing={2}>
+            <Grid size={12}>
+              <TextField
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                error={!!errors.username}
+                helperText={errors.username}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AccountCircle />
+                    </InputAdornment>
+                  ),
+                }}
+              />
             </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                required
+                fullWidth
+                id="first_name"
+                label="First Name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleInputChange}
+                error={!!errors.first_name}
+                helperText={errors.first_name}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                required
+                fullWidth
+                id="last_name"
+                label="Last Name"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleInputChange}
+                error={!!errors.last_name}
+                helperText={errors.last_name}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={!!errors.email}
+                helperText={errors.email}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                required
+                fullWidth
+                id="contact_number"
+                label="Contact Number"
+                name="contact_number"
+                value={formData.contact_number}
+                onChange={handleInputChange}
+                error={!!errors.contact_number}
+                helperText={errors.contact_number}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Phone />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                required
+                fullWidth
+                id="password"
+                label="Password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleInputChange}
+                error={!!errors.password}
+                helperText={errors.password}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => handleTogglePassword('password')} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                required
+                fullWidth
+                id="rePassword"
+                label="Confirm Password"
+                name="rePassword"
+                type={showRePassword ? "text" : "password"}
+                value={formData.rePassword}
+                onChange={handleInputChange}
+                error={!!errors.rePassword}
+                helperText={errors.rePassword}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => handleTogglePassword('rePassword')} edge="end">
+                        {showRePassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
 
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              mt: 4,
+              mb: 2,
+              py: 1.2,
+              borderRadius: 1,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              fontSize: '1rem',
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+          </Button>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{
-                mt: 4,
-                mb: 2,
-                py: 1.2,
-                borderRadius: 1,
-                fontWeight: 'bold',
-                textTransform: 'none',
-                fontSize: '1rem',
-                bgcolor: 'primary.main',
-                '&:hover': { bgcolor: 'primary.dark' },
-              }}
-              disabled={isLoading}
+              variant="text"
+              onClick={() => navigate('/login')}
+              sx={{ textTransform: 'none' }}
             >
-              {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+              Already have an account? Sign in
             </Button>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Button
-                variant="text"
-                onClick={() => navigate('/login')}
-                sx={{ textTransform: 'none', color: theme.palette.text.secondary }}
-              >
-                Already have an account? Sign in
-              </Button>
-              <IconButton onClick={handleToggleTheme} aria-label="toggle theme">
-                {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
-            </Box>
+            <IconButton onClick={handleToggleTheme} aria-label="toggle theme">
+              {themeMode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
           </Box>
-        </Paper>
-      </Container>
-    </MuiThemeProvider>
+        </Box>
+      </Paper>
+    </Container>
   );
 }
