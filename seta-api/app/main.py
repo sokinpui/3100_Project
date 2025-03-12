@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -10,8 +10,6 @@ from typing import List, Optional
 import hashlib
 import secrets
 import string
-from babel.dates import format_date, format_datetime
-from babel import Locale
 
 from fastapi.responses import FileResponse
 import io
@@ -26,7 +24,7 @@ app = FastAPI(title="SETA API", description="Backend API for Smart Expense Track
 # Configure CORS to allow requests from your React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,32 +39,20 @@ async def read_root():
 class ExpenseBase(BaseModel):
     """Base expense model with common attributes."""
     amount: float
-    date: str  # Change to str for localized date
+    date: date
     category_name: str
     description: Optional[str] = None
-
-    class Config:
-        json_encoders = {
-            date: lambda v: v.isoformat()  # Fallback in case date isn't converted
-        }
 
 class CreateExpense(ExpenseBase):
     """Model for validating expense creation requests."""
     user_id: int
-    date: date  # Keep as date for input validation
 
 class ExpenseResponse(ExpenseBase):
     """Response model for expenses."""
     id: int
     user_id: int
-    created_at: str  # Change to str for localized datetime
-    updated_at: Optional[str] = None
-
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            date: lambda v: v.isoformat(),
-        }
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
 class UserBase(BaseModel):
     """Base user model with common attributes."""
@@ -90,12 +76,7 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     email_verified: bool
-    last_login: Optional[str] = None  # Change to str for localized datetime
-
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-        }
+    last_login: Optional[datetime] = None
 
 class UserSettings(BaseModel):
     """Model for user settings."""
@@ -134,70 +115,54 @@ def get_user_by_username(db: Session, username: str):
     """Get a user by username."""
     return db.query(models.User).filter(models.User.username == username).first()
 
-def format_localized_date(dt, language: str, format: str = "medium"):
-    """Format a date or datetime object based on the user's language."""
-    if dt is None:
-        return None
-    locale = Locale.parse(language)
-    if isinstance(dt, datetime):
-        return format_datetime(dt, format=format, locale=locale)
-    return format_date(dt, format=format, locale=locale)
-
-# --------- Dependency to Extract Language ---------
-
-async def get_user_language(accept_language: Optional[str] = Header(default="en")):
-    """Extract the user's language from the Accept-Language header."""
-    # Map frontend language codes to Babel locale codes
-    language_map = {
-        "en": "en_US",
-        "zh": "zh_CN",
-    }
-    # Default to English if language not supported
-    return language_map.get(accept_language, "en_US")
-
 # --------- User Authentication Endpoints ---------
 
 @app.post("/login", response_model=UserResponse)
-async def login_user(user_data: UserLogin, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
     """Login a user and return user information."""
-    user = get_user_by_username(db, user_data.username)
+    user = get_user_by_username(db, user_data.username)     # Obtain the metadata of the user from the database
 
+    # First check if user exists
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
+    # Then check if account is active
     elif not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is disabled"
         )
 
+    # Finally check password
     elif not verify_password(user_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
         )
 
+    # Update last login time
     user.last_login = func.now()
     db.commit()
 
-    # Localize the last_login field
-    user_dict = user.__dict__.copy()
-    user_dict["last_login"] = format_localized_date(user.last_login, language)
-    return user_dict
+    return user
 
 @app.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def create_user(user_data: UserCreate, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     """Create a new user."""
+    # Check if username already exists
     if get_user_by_username(db, user_data.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
 
+    # Hash the password
     password_hash = hash_password(user_data.password)
+
+    # Create new user
     db_user = models.User(
         username=user_data.username,
         email=user_data.email,
@@ -211,30 +176,18 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db), lang
     db.commit()
     db.refresh(db_user)
 
-    # Localize the last_login field
-    user_dict = db_user.__dict__.copy()
-    user_dict["last_login"] = format_localized_date(db_user.last_login, language)
-    return user_dict
+    return db_user
 
 # --------- Expense Endpoints ---------
 
 @app.get("/expenses/{user_id}", response_model=List[ExpenseResponse])
-async def get_user_expenses(user_id: int, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get all expenses for a user."""
     expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).all()
-    # Localize dates in each expense
-    return [
-        {
-            **expense.__dict__,
-            "date": format_localized_date(expense.date, language),
-            "created_at": format_localized_date(expense.created_at, language),
-            "updated_at": format_localized_date(expense.updated_at, language),
-        }
-        for expense in expenses
-    ]
+    return expenses
 
 @app.post("/expenses", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
-async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_db)):
     """Create a new expense."""
     user = db.query(models.User).filter(models.User.id == expense_data.user_id).first()
     if not user:
@@ -255,12 +208,7 @@ async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_
     db.commit()
     db.refresh(db_expense)
 
-    # Localize dates
-    expense_dict = db_expense.__dict__.copy()
-    expense_dict["date"] = format_localized_date(db_expense.date, language)
-    expense_dict["created_at"] = format_localized_date(db_expense.created_at, language)
-    expense_dict["updated_at"] = format_localized_date(db_expense.updated_at, language)
-    return expense_dict
+    return db_expense
 
 @app.delete("/expenses/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_expense(expense_id: int, db: Session = Depends(get_db)):
@@ -292,7 +240,7 @@ async def delete_bulk_expenses(request: BulkDeleteRequest, db: Session = Depends
     return None
 
 @app.put("/expenses/{expense_id}", response_model=ExpenseResponse)
-async def update_expense(expense_id: int, expense_data: CreateExpense, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def update_expense(expense_id: int, expense_data: CreateExpense, db: Session = Depends(get_db)):
     """Update an expense."""
     expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
 
@@ -311,15 +259,10 @@ async def update_expense(expense_id: int, expense_data: CreateExpense, db: Sessi
     db.commit()
     db.refresh(expense)
 
-    # Localize dates
-    expense_dict = expense.__dict__.copy()
-    expense_dict["date"] = format_localized_date(expense.date, language)
-    expense_dict["created_at"] = format_localized_date(expense.created_at, language)
-    expense_dict["updated_at"] = format_localized_date(expense.updated_at, language)
-    return expense_dict
+    return expense
 
 @app.get("/expenses/{user_id}/report")
-async def generate_expense_report(user_id: int, format: str = "json", db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def generate_expense_report(user_id: int, format: str = "json", db: Session = Depends(get_db)):
     """Generate a detailed expense report for a user in specified format."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
@@ -336,13 +279,12 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
     total_amount = sum(float(expense.amount) for expense in expenses)
     expense_count = len(expenses)
 
-    # Localize dates in the expense data
     expense_data = [{
-        "date": format_localized_date(exp.date, language),
+        "date": exp.date,
         "category_name": exp.category_name,
         "amount": float(exp.amount),
         "description": exp.description,
-        "created_at": format_localized_date(exp.created_at, language)
+        "created_at": exp.created_at
     } for exp in expenses]
 
     if format.lower() == "json":
@@ -351,7 +293,7 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
             "summary": {
                 "total_amount": total_amount,
                 "expense_count": expense_count,
-                "generated_at": format_localized_date(datetime.now(), language),
+                "generated_at": datetime.now(),
                 "user_name": f"{user.first_name} {user.last_name}"
             }
         }
@@ -386,7 +328,7 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
 
         c.drawString(30, height - 40, "Expense Report")
         c.drawString(30, height - 60, f"User: {user.first_name} {user.last_name}")
-        c.drawString(30, height - 80, f"Generated: {format_localized_date(datetime.now(), language)}")
+        c.drawString(30, height - 80, f"Generated: {datetime.now()}")
 
         y = height - 120
         c.drawString(30, y, "Date    Category    Amount    Description    Created At")
@@ -433,7 +375,7 @@ async def update_user_settings(user_id: int, settings: UserSettings, db: Session
     return settings
 
 @app.get("/users/{user_id}", response_model=UserResponse)
-async def get_user_profile(user_id: int, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
     """Get user profile."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
 
@@ -443,12 +385,10 @@ async def get_user_profile(user_id: int, db: Session = Depends(get_db), language
             detail="User not found"
         )
 
-    user_dict = user.__dict__.copy()
-    user_dict["last_login"] = format_localized_date(user.last_login, language)
-    return user_dict
+    return user
 
 @app.put("/users/{user_id}", response_model=UserResponse)
-async def update_user_profile(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db), language: str = Depends(get_user_language)):
+async def update_user_profile(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db)):
     """Update user profile."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
 
@@ -467,9 +407,7 @@ async def update_user_profile(user_id: int, user_data: UserUpdate, db: Session =
     db.commit()
     db.refresh(user)
 
-    user_dict = user.__dict__.copy()
-    user_dict["last_login"] = format_localized_date(user.last_login, language)
-    return user_dict
+    return user
 
 @app.put("/users/{user_id}/password", status_code=status.HTTP_200_OK)
 async def change_user_password(user_id: int, password_data: PasswordChange, db: Session = Depends(get_db)):
@@ -504,3 +442,4 @@ async def get_total_expenses(user_id: int, db: Session = Depends(get_db)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
