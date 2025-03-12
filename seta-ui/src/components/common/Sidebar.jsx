@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import T from '../../utils/T.jsx'; // Import the T component for translation
 
 import {
   Box,
@@ -41,27 +42,27 @@ const collapsedWidth = 70;
 // Sidebar Menu Items all listed here
 const menuItems = [
   {
-    text: 'Dashboard',
+    text: 'sidebar.dashboard',
     icon: <DashboardIcon />,
     path: '/'
   },
   {
-    text: 'Expense Manager',
+    text: 'sidebar.expenseManager',
     icon: <AddCardIcon />,
     path: '/add-expense'
   },
-    {
-        text: 'New Expenses Manager',  // New entry for modular version
-        icon: <AddCardIcon />,
-        path: '/manage-expenses'
-    },
   {
-    text: 'Reports',
+    text: 'sidebar.newExpenseManager',
+    icon: <AddCardIcon />,
+    path: '/manage-expenses'
+  },
+  {
+    text: 'sidebar.reports',
     icon: <AssessmentIcon />,
     path: '/reports'
   },
   {
-    text: 'Settings',
+    text: 'sidebar.settings',
     icon: <SettingsIcon />,
     path: '/settings'
   },
@@ -84,8 +85,6 @@ export default function Sidebar({ children }) {
   const handleLogoutClick = () => {
     setLogoutDialogOpen(true);
   };
-
-  
 
   const handleLogoutConfirm = () => {
     // Reset theme to light explicitly
@@ -137,7 +136,7 @@ export default function Sidebar({ children }) {
             letterSpacing: '1px',
             textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
           }}>
-            SETA App
+            <T>sidebar.appName</T>
           </Typography>
         )}
         {!open && <Box />}
@@ -166,14 +165,14 @@ export default function Sidebar({ children }) {
               color: isDarkMode ? 'text.primary' : 'inherit'
             }}
           >
-            Main Menu
+            <T>sidebar.mainMenu</T>
           </Typography>
         )}
 
         {/* Sidebar Menu Items mapped by using menuItems*/}
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mt: 0.5 }}>
-            <Tooltip title={open ? "" : item.text} placement="right" arrow>
+            <Tooltip title={open ? "" : <T>{item.text}</T>} placement="right" arrow>
               <ListItemButton
                 onClick={() => navigate(item.path)}
                 sx={{
@@ -202,7 +201,7 @@ export default function Sidebar({ children }) {
 
                 {open && (
                   <ListItemText
-                    primary={item.text}
+                    primary={<T>{item.text}</T>}
                     slotProps={{
                       primary: {
                         sx: {
@@ -224,24 +223,24 @@ export default function Sidebar({ children }) {
           borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'
         }} />
 
-      {open && (
+        {open && (
           <Typography
-          variant="overline"
-          sx={{
+            variant="overline"
+            sx={{
               pl: 2,
-                  opacity: 0.7,
-                  fontWeight: 'bold',
-                  letterSpacing: 1,
-                  color: isDarkMode ? 'text.primary' : 'inherit'
-          }}
+              opacity: 0.7,
+              fontWeight: 'bold',
+              letterSpacing: 1,
+              color: isDarkMode ? 'text.primary' : 'inherit'
+            }}
           >
-          Account
+            <T>sidebar.account</T>
           </Typography>
-      )}
+        )}
 
         {/* Logout Button div and its icon*/}
         <ListItem disablePadding sx={{ mt: 0.5 }}>
-          <Tooltip title={open ? "" : "Logout"} placement="right" arrow>
+          <Tooltip title={open ? "" : <T>sidebar.logout</T>} placement="right" arrow>
             <ListItemButton
               onClick={handleLogoutClick}
               sx={{
@@ -262,7 +261,7 @@ export default function Sidebar({ children }) {
               }}>
                 <LogoutIcon />
               </ListItemIcon>
-              {open && <ListItemText primary="Logout" sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />}
+              {open && <ListItemText primary={<T>sidebar.logout</T>} sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />}
             </ListItemButton>
           </Tooltip>
         </ListItem>
@@ -270,7 +269,7 @@ export default function Sidebar({ children }) {
 
       {/* User Profile Section */}
       {open ? (
-        <Tooltip title="View Profile" arrow placement="top">
+        <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="top">
           {/* Profile Section with Avatar, Username and Email */}
           <Box
             sx={{
@@ -318,7 +317,7 @@ export default function Sidebar({ children }) {
           </Box>
         </Tooltip>
       ) : (
-        <Tooltip title="View Profile" arrow placement="right">
+        <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="right">
           <Box
             sx={{
               borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
@@ -344,7 +343,6 @@ export default function Sidebar({ children }) {
         </Tooltip>
       )}
 
-
       {/* Logout Confirmation Dialog */}
       <Dialog
         open={logoutDialogOpen}
@@ -357,12 +355,12 @@ export default function Sidebar({ children }) {
         }}
       >
         <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}>
-          {"Confirm Logout"}
+          <T>sidebar.confirmLogout</T>
         </DialogTitle>
 
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to log out of your account?
+            <T>sidebar.logoutMessage</T>
           </DialogContentText>
         </DialogContent>
 
@@ -377,7 +375,7 @@ export default function Sidebar({ children }) {
               px: 2
             }}
           >
-            Cancel
+            <T>sidebar.cancel</T>
           </Button>
 
           <Button
@@ -396,7 +394,7 @@ export default function Sidebar({ children }) {
               }
             }}
           >
-            Logout
+            <T>sidebar.logoutButton</T>
           </Button>
         </DialogActions>
       </Dialog>
@@ -440,3 +438,4 @@ export default function Sidebar({ children }) {
     </Box>
   );
 }
+
