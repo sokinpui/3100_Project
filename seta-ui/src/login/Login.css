@@ -6,12 +6,21 @@
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+/* Light mode styles */
+body:not(.dark-theme) .login-container {
+  background-color: #f5f5f5;
+}
+
+/* Dark mode styles */
+body.dark-theme .login-container {
+  background-color: #121212;
 }
 
 .login-content {
@@ -23,12 +32,22 @@
 }
 
 .login-form {
-  background-color: white;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
+}
+
+/* Light mode styles */
+body:not(.dark-theme) .login-form {
+  background-color: white;
+}
+
+/* Dark mode styles */
+body.dark-theme .login-form {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
 .form-group {
@@ -43,18 +62,39 @@
 .form-group input {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+/* Light mode styles */
+body:not(.dark-theme) .form-group input {
+  border: 1px solid #ddd;
+}
+
+/* Dark mode styles */
+body.dark-theme .form-group input {
+  border: 1px solid #444;
+  background-color: #303030;
+  color: #f0f0f0;
 }
 
 button {
   width: 100%;
   padding: 0.75rem;
-  background-color: #007bff;
-  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+/* Light mode styles */
+body:not(.dark-theme) button {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Dark mode styles */
+body.dark-theme button {
+  background-color: #0055b3;
+  color: white;
 }
 
 button:hover {
@@ -62,8 +102,17 @@ button:hover {
 }
 
 button:disabled {
-  background-color: #cccccc;
   cursor: not-allowed;
+}
+
+/* Light mode styles */
+body:not(.dark-theme) button:disabled {
+  background-color: #cccccc;
+}
+
+/* Dark mode styles */
+body.dark-theme button:disabled {
+  background-color: #444444;
 }
 
 /* delete these after */
