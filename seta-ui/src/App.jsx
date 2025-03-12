@@ -19,9 +19,10 @@ export default function App() {
     try {
       const savedSettings = localStorage.getItem('userSettings');
       if (!savedSettings) {
-        // Only set language, let ThemeProvider handle theme default
+        // Initialize with system theme as default
         localStorage.setItem('userSettings', JSON.stringify({
-          language: 'english'
+          language: 'english',
+          theme: 'system' // Default to system theme
         }));
       }
     } catch (error) {

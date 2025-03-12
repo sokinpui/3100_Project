@@ -26,9 +26,11 @@ export const ThemeProvider = ({ children }) => {
     }
   });
 
+  // Track system theme changes when theme is 'system'
   useEffect(() => {
     const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings && JSON.parse(savedSettings).theme === 'system') {
+    const settings = savedSettings ? JSON.parse(savedSettings) : { theme: 'system' }; // Default to 'system'
+    if (settings.theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = (e) => setThemeMode(e.matches ? 'dark' : 'light');
       mediaQuery.addEventListener('change', handleChange);
@@ -36,6 +38,7 @@ export const ThemeProvider = ({ children }) => {
     }
   }, []);
 
+  // Sync with localStorage changes across tabs
   useEffect(() => {
     const handleStorageChange = () => {
       const savedSettings = localStorage.getItem('userSettings');
@@ -46,12 +49,16 @@ export const ThemeProvider = ({ children }) => {
         } else {
           setThemeMode(theme);
         }
+      } else {
+        // If no settings, default to system
+        setThemeMode(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       }
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Apply dark-theme class to body
   useEffect(() => {
     if (themeMode === 'dark') {
       document.body.classList.add('dark-theme');
@@ -65,7 +72,6 @@ export const ThemeProvider = ({ children }) => {
       ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
       : newTheme
     );
-    // Optionally save to localStorage
     localStorage.setItem('userSettings', JSON.stringify({ theme: newTheme }));
   };
 
