@@ -16,6 +16,7 @@ import {
   AttachMoney as AttachMoneyIcon,
   Description as DescriptionIcon,
 } from '@mui/icons-material';
+import T from '../../../utils/T';
 
 export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
   const [pageSize] = useState(5);
@@ -24,24 +25,24 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
   const columns = [
     {
       field: 'date',
-      headerName: 'Date',
+      headerName: <T>date</T>,
       width: 150,
       renderHeader: () => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
-          Date
+          <T>date</T>
         </Box>
       ),
       sortable: true,
     },
     {
       field: 'amount',
-      headerName: 'Amount',
+      headerName: <T>amount</T>,
       width: 150,
       renderHeader: () => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
-          Amount
+          <T>amount</T>
         </Box>
       ),
       renderCell: (params) => (
@@ -55,13 +56,13 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     },
     {
       field: 'description',
-      headerName: 'Description',
+      headerName: <T>description</T>,
       flex: 1,
       minWidth: 200,
       renderHeader: () => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
-          Description
+          <T>description</T>
         </Box>
       ),
       renderCell: (params) => (
@@ -74,7 +75,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
             </Tooltip>
           ) : (
             <Typography variant="body2" color="text.secondary" fontStyle="italic">
-              No description
+              <T>noDescription</T>
             </Typography>
           )}
         </Box>
@@ -83,12 +84,12 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     },
     {
       field: 'actions',
-      headerName: 'Actions',
+      headerName: <T>actions</T>,
       width: 100,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Tooltip title="Delete expense" arrow>
+        <Tooltip title={<T>deleteExpense</T>} arrow>
           <IconButton
             onClick={() => handleOpenDeleteDialog(params.row.id)}
             color="error"
@@ -106,7 +107,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     },
     {
       field: 'created_at',
-      headerName: 'Created At',
+      headerName: <T>createdAt</T>,
       width: 200,
       renderCell: (params) => (
         <Typography>
@@ -131,14 +132,14 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
   return (
     <Card elevation={3} sx={{ mb: 4, borderRadius: 2 }}>
       <CardHeader
-        title="Expense History"
+        title={<T>expenseHistory</T>}
         sx={{ backgroundColor: 'secondary.light', color: 'secondary.contrastText', py: 1.5 }}
         slotProps={{ title: { fontWeight: 500 } }}
       />
       <CardContent sx={{ p: 0 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <Typography>Loading...</Typography>
+            <Typography><T>loading</T></Typography>
           </Box>
         ) : (
           <>
@@ -151,7 +152,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
                   startIcon={<DeleteIcon />}
                   sx={{ textTransform: 'none' }}
                 >
-                  Delete Selected ({selectedExpenseIds.length})
+                  <T>deleteSelected</T> ({selectedExpenseIds.length})
                 </Button>
               </Box>
             )}
@@ -175,8 +176,8 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
                 slots={{
                   noRowsOverlay: () => (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                      <Typography variant="body1" color="textSecondary">No expenses added yet</Typography>
-                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>Use the form above to add your first expense</Typography>
+                      <Typography variant="body1" color="textSecondary"><T>noExpensesAddedYet</T></Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}><T>useFormAboveToAddFirstExpense</T></Typography>
                     </Box>
                   ),
                 }}

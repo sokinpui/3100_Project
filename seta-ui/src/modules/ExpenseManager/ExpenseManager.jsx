@@ -7,6 +7,7 @@ import ExpenseNotifications from './components/ExpenseNotifications';
 import ExpenseDialogs from './components/ExpenseDialogs';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import T from '../../utils/T';
 
 const API_URL = 'http://localhost:8000';
 
@@ -29,17 +30,17 @@ export default function ExpenseManager() {
     if (userId) fetchExpenses();
   }, [userId]);
 
-  const fetchExpenses = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(`${API_URL}/expenses/${userId}`);
-      setExpenses(response.data);
-    } catch (error) {
-      showNotification('Failed to load expenses', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const fetchExpenses = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get(`${API_URL}/expenses/${userId}`);
+            setExpenses(response.data);
+        } catch (error) {
+            showNotification(<T>failedToLoadExpenses</T>, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
