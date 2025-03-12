@@ -36,6 +36,8 @@ try {
         order: ['localStorage', 'navigator'],
         caches: ['localStorage'],
       },
+        ns: ['translation'], // Default namespace
+        defaultNS: 'translation'
     });
 } catch (error) {
   console.error('i18n initialization failed:', error);
