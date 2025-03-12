@@ -134,188 +134,180 @@ export default function Sidebar({ children }) {
         </IconButton>
       </Box>
 
-      <List sx={{ flexGrow: 1, px: open ? 2 : 0.5 }}>
-        {/* Theme Control */}
-        <ListItem disablePadding sx={{ mt: 0.5 }}>
-          <Tooltip title={open ? '' : <T>settings.themeLabel</T>} placement="right" arrow>
-            <ListItemButton
-              onClick={handleThemeClick}
-              sx={{
-                justifyContent: open ? 'initial' : 'center',
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                '&:hover': {
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                },
-                transition: 'background-color 0.2s',
-                py: open ? 1 : 1.5,
-              }}
-            >
-              <ListItemIcon sx={{ color: isDarkMode ? 'text.primary' : 'text.secondary', minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
-                <ColorLensIcon />
-              </ListItemIcon>
-              {open && <ListItemText primary={<T>settings.themeLabel</T>} slotProps={{ primary: { sx: { fontWeight: 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
-            </ListItemButton>
-          </Tooltip>
-        </ListItem>
-        <Menu
-          anchorEl={themeAnchorEl}
-          open={Boolean(themeAnchorEl)}
-          onClose={handleThemeClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <MenuItem onClick={() => handleThemeChange('light')}><T>settings.lightMode</T></MenuItem>
-          <MenuItem onClick={() => handleThemeChange('dark')}><T>settings.darkMode</T></MenuItem>
-          <MenuItem onClick={() => handleThemeChange('system')}><T>settings.systemDefault</T></MenuItem>
-        </Menu>
-
-        {/* Language Control */}
-        <ListItem disablePadding sx={{ mt: 0.5 }}>
-          <Tooltip title={open ? '' : <T>settings.language</T>} placement="right" arrow>
-            <ListItemButton
-              onClick={handleLanguageClick}
-              sx={{
-                justifyContent: open ? 'initial' : 'center',
-                borderRadius: '8px',
-                backgroundColor: 'transparent',
-                '&:hover': {
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                },
-                transition: 'background-color 0.2s',
-                py: open ? 1 : 1.5,
-              }}
-            >
-              <ListItemIcon sx={{ color: isDarkMode ? 'text.primary' : 'text.secondary', minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
-                <LanguageIcon />
-              </ListItemIcon>
-              {open && <ListItemText primary={<T>settings.language</T>} slotProps={{ primary: { sx: { fontWeight: 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
-            </ListItemButton>
-          </Tooltip>
-        </ListItem>
-        <Menu
-          anchorEl={languageAnchorEl}
-          open={Boolean(languageAnchorEl)}
-          onClose={handleLanguageClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <MenuItem onClick={() => handleLanguageChange('english')}>English</MenuItem>
-          <MenuItem onClick={() => handleLanguageChange('zh')}>中文</MenuItem>
-        </Menu>
-
-        <Divider sx={{ my: 2, borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)' }} />
-
-        {open && (
-          <Typography variant="overline" sx={{ pl: 2, opacity: 0.7, fontWeight: 'bold', letterSpacing: 1, color: isDarkMode ? 'text.primary' : 'inherit' }}>
-            <T>sidebar.mainMenu</T>
-          </Typography>
-        )}
-
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ mt: 0.5 }}>
-            <Tooltip title={open ? '' : <T>{item.text}</T>} placement="right" arrow>
+      <List sx={{ flexGrow: 1, px: open ? 2 : 0.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        {/* Main Menu Items */}
+        <Box>
+          {/* Theme Control */}
+          <ListItem disablePadding sx={{ mt: 0.5 }}>
+            <Tooltip title={open ? '' : <T>settings.themeLabel</T>} placement="right" arrow>
               <ListItemButton
-                onClick={() => navigate(item.path)}
+                onClick={handleThemeClick}
                 sx={{
                   justifyContent: open ? 'initial' : 'center',
                   borderRadius: '8px',
-                  backgroundColor: isActive(item.path) ? (isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.12)') : 'transparent',
+                  backgroundColor: 'transparent',
                   '&:hover': {
-                    backgroundColor: isActive(item.path) ? (isDarkMode ? 'rgba(25, 118, 210, 0.25)' : 'rgba(25, 118, 210, 0.18)') : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'),
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                   },
                   transition: 'background-color 0.2s',
                   py: open ? 1 : 1.5,
                 }}
               >
-                <ListItemIcon sx={{ color: isActive(item.path) ? 'primary.main' : (isDarkMode ? 'text.primary' : 'text.secondary'), minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
-                  {item.icon}
+                <ListItemIcon sx={{ color: isDarkMode ? 'text.primary' : 'text.secondary', minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
+                  <ColorLensIcon />
                 </ListItemIcon>
-                {open && <ListItemText primary={<T>{item.text}</T>} slotProps={{ primary: { sx: { fontWeight: isActive(item.path) ? 'medium' : 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
+                {open && <ListItemText primary={<T>settings.themeLabel</T>} slotProps={{ primary: { sx: { fontWeight: 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
               </ListItemButton>
             </Tooltip>
           </ListItem>
-        ))}
+          <Menu
+            anchorEl={themeAnchorEl}
+            open={Boolean(themeAnchorEl)}
+            onClose={handleThemeClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <MenuItem onClick={() => handleThemeChange('light')}><T>settings.lightMode</T></MenuItem>
+            <MenuItem onClick={() => handleThemeChange('dark')}><T>settings.darkMode</T></MenuItem>
+            <MenuItem onClick={() => handleThemeChange('system')}><T>settings.systemDefault</T></MenuItem>
+          </Menu>
 
-        <Divider sx={{ my: 2, borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)' }} />
+          {/* Language Control */}
+          <ListItem disablePadding sx={{ mt: 0.5 }}>
+            <Tooltip title={open ? '' : <T>settings.language</T>} placement="right" arrow>
+              <ListItemButton
+                onClick={handleLanguageClick}
+                sx={{
+                  justifyContent: open ? 'initial' : 'center',
+                  borderRadius: '8px',
+                  backgroundColor: 'transparent',
+                  '&:hover': {
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                  },
+                  transition: 'background-color 0.2s',
+                  py: open ? 1 : 1.5,
+                }}
+              >
+                <ListItemIcon sx={{ color: isDarkMode ? 'text.primary' : 'text.secondary', minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
+                  <LanguageIcon />
+                </ListItemIcon>
+                {open && <ListItemText primary={<T>settings.language</T>} slotProps={{ primary: { sx: { fontWeight: 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
+              </ListItemButton>
+            </Tooltip>
+          </ListItem>
+          <Menu
+            anchorEl={languageAnchorEl}
+            open={Boolean(languageAnchorEl)}
+            onClose={handleLanguageClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <MenuItem onClick={() => handleLanguageChange('english')}>English</MenuItem>
+            <MenuItem onClick={() => handleLanguageChange('zh')}>中文</MenuItem>
+          </Menu>
 
-        {open && (
-          <Typography variant="overline" sx={{ pl: 2, opacity: 0.7, fontWeight: 'bold', letterSpacing: 1, color: isDarkMode ? 'text.primary' : 'inherit' }}>
-            <T>sidebar.account</T>
-          </Typography>
-        )}
+          <Divider sx={{ my: 2, borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)' }} />
 
-        <ListItem disablePadding sx={{ mt: 0.5 }}>
-          <Tooltip title={open ? '' : <T>sidebar.logout</T>} placement="right" arrow>
-            <ListItemButton
-              onClick={handleLogoutClick}
-              sx={{
-                justifyContent: open ? 'initial' : 'center',
-                borderRadius: '8px',
-                '&:hover': { backgroundColor: isDarkMode ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.08)' },
-                transition: 'background-color 0.2s',
-                py: open ? 1 : 1.5,
-              }}
-            >
-              <ListItemIcon sx={{ color: 'error.main', minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
-                <LogoutIcon />
-              </ListItemIcon>
-              {open && <ListItemText primary={<T>sidebar.logout</T>} sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />}
-            </ListItemButton>
-          </Tooltip>
-        </ListItem>
+          {menuItems.map((item) => (
+            <ListItem key={item.text} disablePadding sx={{ mt: 0.5 }}>
+              <Tooltip title={open ? '' : <T>{item.text}</T>} placement="right" arrow>
+                <ListItemButton
+                  onClick={() => navigate(item.path)}
+                  sx={{
+                    justifyContent: open ? 'initial' : 'center',
+                    borderRadius: '8px',
+                    backgroundColor: isActive(item.path) ? (isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.12)') : 'transparent',
+                    '&:hover': {
+                      backgroundColor: isActive(item.path) ? (isDarkMode ? 'rgba(25, 118, 210, 0.25)' : 'rgba(25, 118, 210, 0.18)') : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'),
+                    },
+                    transition: 'background-color 0.2s',
+                    py: open ? 1 : 1.5,
+                  }}
+                >
+                  <ListItemIcon sx={{ color: isActive(item.path) ? 'primary.main' : (isDarkMode ? 'text.primary' : 'text.secondary'), minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  {open && <ListItemText primary={<T>{item.text}</T>} slotProps={{ primary: { sx: { fontWeight: isActive(item.path) ? 'medium' : 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          ))}
+        </Box>
+
+        {/* Account Section */}
+        <Box>
+          <ListItem disablePadding sx={{ mt: 0.5 }}>
+            <Tooltip title={open ? '' : <T>sidebar.logout</T>} placement="right" arrow>
+              <ListItemButton
+                onClick={handleLogoutClick}
+                sx={{
+                  justifyContent: open ? 'initial' : 'center',
+                  borderRadius: '8px',
+                  '&:hover': { backgroundColor: isDarkMode ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.08)' },
+                  transition: 'background-color 0.2s',
+                  py: open ? 1 : 1.5,
+                }}
+              >
+                <ListItemIcon sx={{ color: 'error.main', minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
+                  <LogoutIcon />
+                </ListItemIcon>
+                {open && <ListItemText primary={<T>sidebar.logout</T>} sx={{ color: isDarkMode ? 'text.primary' : 'inherit' }} />}
+              </ListItemButton>
+            </Tooltip>
+          </ListItem>
+
+          {open ? (
+            <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="top">
+              <Box
+                sx={{
+                  borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
+                  px: 2,
+                  py: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  boxSizing: 'border-box',
+                  minWidth: 0,
+                  cursor: 'pointer',
+                  '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' },
+                  transition: 'background-color 0.2s',
+                }}
+                onClick={() => navigate('/settings')}
+              >
+                <Avatar sx={{ width: 38, height: 38, flexShrink: 0, bgcolor: 'primary.main', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
+                  <AccountCircleIcon />
+                </Avatar>
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                  <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: isDarkMode ? 'text.primary' : 'inherit' }}>
+                    {localStorage.getItem('username')}
+                  </Typography>
+                  <Typography variant="caption" noWrap sx={{ opacity: 0.7, display: 'block', color: isDarkMode ? 'text.secondary' : 'inherit' }}>
+                    {localStorage.getItem('email')}
+                  </Typography>
+                </Box>
+              </Box>
+            </Tooltip>
+          ) : (
+            <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="right">
+              <Box
+                sx={{
+                  borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
+                  py: 2,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' },
+                }}
+                onClick={() => navigate('/settings')}
+              >
+                <Avatar sx={{ width: 38, height: 38, bgcolor: 'primary.main', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
+                  <AccountCircleIcon />
+                </Avatar>
+              </Box>
+            </Tooltip>
+          )}
+        </Box>
       </List>
-
-      {open ? (
-        <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="top">
-          <Box
-            sx={{
-              borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
-              px: 2,
-              py: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              boxSizing: 'border-box',
-              minWidth: 0,
-              cursor: 'pointer',
-              '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' },
-              transition: 'background-color 0.2s',
-            }}
-            onClick={() => navigate('/settings')}
-          >
-            <Avatar sx={{ width: 38, height: 38, flexShrink: 0, bgcolor: 'primary.main', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
-              <AccountCircleIcon />
-            </Avatar>
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-              <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: isDarkMode ? 'text.primary' : 'inherit' }}>
-                {localStorage.getItem('username')}
-              </Typography>
-              <Typography variant="caption" noWrap sx={{ opacity: 0.7, display: 'block', color: isDarkMode ? 'text.secondary' : 'inherit' }}>
-                {localStorage.getItem('email')}
-              </Typography>
-            </Box>
-          </Box>
-        </Tooltip>
-      ) : (
-        <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="right">
-          <Box
-            sx={{
-              borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
-              py: 2,
-              display: 'flex',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' },
-            }}
-            onClick={() => navigate('/settings')}
-          >
-            <Avatar sx={{ width: 38, height: 38, bgcolor: 'primary.main', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
-              <AccountCircleIcon />
-            </Avatar>
-          </Box>
-        </Tooltip>
-      )}
 
       <Dialog
         open={logoutDialogOpen}
