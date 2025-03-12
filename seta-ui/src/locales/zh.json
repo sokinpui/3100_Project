@@ -56,6 +56,7 @@
       "specifyCategory": "指定类别",
       "enterCustomCategory": "输入自定义类别",
       "descriptionOptional": "描述（可选）",
+      "description": "描述",
       "addExpense": "添加支出",
       "expenseHistory": "支出历史",
       "noDescription": "无描述",

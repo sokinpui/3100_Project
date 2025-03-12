@@ -25,24 +25,24 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
   const columns = [
     {
       field: 'date',
-      headerName: <T>date</T>,
+      headerName: <T>expenseManager.date</T>,
       width: 150,
       renderHeader: () => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
-          <T>date</T>
+          <T>expenseManager.date</T>
         </Box>
       ),
       sortable: true,
     },
     {
       field: 'amount',
-      headerName: <T>amount</T>,
+      headerName: <T>expenseManager.amount</T>,
       width: 150,
       renderHeader: () => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <AttachMoneyIcon fontSize="small" sx={{ mr: 1 }} />
-          <T>amount</T>
+          <T>expenseManager.amount</T>
         </Box>
       ),
       renderCell: (params) => (
@@ -56,13 +56,13 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     },
     {
       field: 'description',
-      headerName: <T>description</T>,
+      headerName: <T>expenseManager.description</T>,
       flex: 1,
       minWidth: 200,
       renderHeader: () => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
-          <T>description</T>
+          <T>expenseManager.description</T>
         </Box>
       ),
       renderCell: (params) => (
@@ -75,7 +75,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
             </Tooltip>
           ) : (
             <Typography variant="body2" color="text.secondary" fontStyle="italic">
-              <T>noDescription</T>
+              <T>expenseManager.noDescription</T>
             </Typography>
           )}
         </Box>
@@ -84,12 +84,12 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     },
     {
       field: 'actions',
-      headerName: <T>actions</T>,
+      headerName: <T>expenseManager.actions</T>,
       width: 100,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Tooltip title={<T>deleteExpense</T>} arrow>
+        <Tooltip title={<T>expenseManager.deleteExpense</T>} arrow>
           <IconButton
             onClick={() => handleOpenDeleteDialog(params.row.id)}
             color="error"
@@ -107,7 +107,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     },
     {
       field: 'created_at',
-      headerName: <T>createdAt</T>,
+      headerName: <T>expenseManager.createdAt</T>,
       width: 200,
       renderCell: (params) => (
         <Typography>
@@ -132,14 +132,14 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
   return (
     <Card elevation={3} sx={{ mb: 4, borderRadius: 2 }}>
       <CardHeader
-        title={<T>expenseHistory</T>}
+        title={<T>expenseManager.expenseHistory</T>}
         sx={{ backgroundColor: 'secondary.light', color: 'secondary.contrastText', py: 1.5 }}
         slotProps={{ title: { fontWeight: 500 } }}
       />
       <CardContent sx={{ p: 0 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <Typography><T>loading</T></Typography>
+            <Typography><T>expenseManager.loading</T></Typography>
           </Box>
         ) : (
           <>
@@ -152,7 +152,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
                   startIcon={<DeleteIcon />}
                   sx={{ textTransform: 'none' }}
                 >
-                  <T>deleteSelected</T> ({selectedExpenseIds.length})
+                  <T>expenseManager.deleteSelected</T> ({selectedExpenseIds.length})
                 </Button>
               </Box>
             )}
@@ -176,8 +176,8 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
                 slots={{
                   noRowsOverlay: () => (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                      <Typography variant="body1" color="textSecondary"><T>noExpensesAddedYet</T></Typography>
-                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}><T>useFormAboveToAddFirstExpense</T></Typography>
+                      <Typography variant="body1" color="textSecondary"><T>expenseManager.noExpensesAddedYet</T></Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}><T>expenseManager.useFormAboveToAddFirstExpense</T></Typography>
                     </Box>
                   ),
                 }}

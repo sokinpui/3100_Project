@@ -36,7 +36,7 @@ export default function ExpenseManager() {
             const response = await axios.get(`${API_URL}/expenses/${userId}`);
             setExpenses(response.data);
         } catch (error) {
-            showNotification(<T>failedToLoadExpenses</T>, 'error');
+            showNotification(<T>expenseManager.failedToLoadExpenses</T>, 'error');
         } finally {
             setIsLoading(false);
         }

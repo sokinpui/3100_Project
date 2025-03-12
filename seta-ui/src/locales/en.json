@@ -57,6 +57,7 @@
       "enterCustomCategory": "Enter custom category",
       "descriptionOptional": "Description (Optional)",
       "addExpense": "Add Expense",
+      "description": "description",
       "expenseHistory": "Expense History",
       "noDescription": "No description",
       "actions": "Actions",

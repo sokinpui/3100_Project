@@ -42,7 +42,7 @@ export default function ExpenseForm({
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
     }}>
       <CardHeader
-        title={<T>addNewExpense</T>}
+        title={<T>expenseManager.addNewExpense</T>}
         sx={{
           backgroundColor: '#5e35b1',
           color: 'primary.contrastText',
@@ -57,13 +57,13 @@ export default function ExpenseForm({
             <Grid container spacing={3}>
               <Grid size={4}>
                 <FormControl fullWidth required>
-                  <InputLabel id="category-label"><T>category</T></InputLabel>
+                  <InputLabel id="category-label"><T>expenseManager.category</T></InputLabel>
                   <Select
                     labelId="category-label"
                     name="category_name"
                     value={formData.category_name}
                     onChange={handleChange}
-                    label={<T>category</T>}
+                    label={<T>expenseManager.category</T>}
                     startAdornment={
                       <InputAdornment position="start">
                         <CategoryIcon fontSize="small" />
@@ -71,17 +71,17 @@ export default function ExpenseForm({
                     }
                   >
                     {expenseCategories.map(category => (
-                      <MenuItem key={category} value={category}><T>{category}</T></MenuItem>
+                      <MenuItem key={category} value={category}><T>expenseManager.{category}</T></MenuItem>
                     ))}
                   </Select>
                 </FormControl>
                 {showOtherCategoryField && (
                   <TextField
                     fullWidth
-                    label={<T>specifyCategory</T>}
+                    label={<T>expenseManager.specifyCategory</T>}
                     value={formData.category_name === 'Others (Specify)' ? '' : formData.category_name}
                     onChange={handleCustomCategoryChange}
-                    placeholder={<T>enterCustomCategory</T>}
+                    placeholder={<T>expenseManager.enterCustomCategory</T>}
                     sx={{ mt: 2 }}
                     slotProps={{
                       input: {
@@ -99,7 +99,7 @@ export default function ExpenseForm({
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   disableFuture
-                  label={<T>date</T>}
+                  label={<T>expenseManager.date</T>}
                   value={formData.date ? dayjs(formData.date) : null}
                   format='YYYY-MM-DD'
                   onChange={handleDateChange}
@@ -119,7 +119,7 @@ export default function ExpenseForm({
               <Grid size={4}>
               <TextField
                 fullWidth
-                label={<T>amount</T>}
+                label={<T>expenseManager.amount</T>}
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
@@ -140,7 +140,7 @@ export default function ExpenseForm({
                   fullWidth
                   multiline
                   rows={5}
-                  label={<T>descriptionOptional</T>}
+                  label={<T>expenseManager.descriptionOptional</T>}
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
@@ -167,7 +167,7 @@ export default function ExpenseForm({
                     }
                   }}
                 >
-                  <T>addExpense</T>
+                  <T>expenseManager.addExpense</T>
                 </Button>
               </Grid>
             </Grid>
