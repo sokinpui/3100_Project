@@ -46,11 +46,11 @@ const menuItems = [
     icon: <DashboardIcon />,
     path: '/'
   },
-  {
-    text: 'sidebar.expenseManager',
-    icon: <AddCardIcon />,
-    path: '/add-expense'
-  },
+  // {
+  //   text: 'sidebar.expenseManager',
+  //   icon: <AddCardIcon />,
+  //   path: '/add-expense'
+  // },
   {
     text: 'sidebar.newExpenseManager',
     icon: <AddCardIcon />,
