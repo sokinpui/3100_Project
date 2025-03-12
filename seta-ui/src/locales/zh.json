@@ -71,11 +71,15 @@
     "totalEntries": "总条目"
   },
   "expenseReports": {
-    "title": "费用报告",
-    "description": "将您的支出历史下载为 CSV 文件。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
-    "errorLoading": "加载支出失败。请重试。",
-    "totalRecords": "总记录数：{count}",
-    "downloadButton": "下载费用报告",
-    "loading": "加载中..."
+      "title": "费用报告",
+      "description": "将您的支出历史下载为 CSV、Excle或PDF文件。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
+      "descriptionMultipleFormats": "以多种格式下载您的支出历史。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
+      "errorLoading": "加载支出失败。请重试。",
+      "totalRecords": "总记录数：",
+      "downloadButton": "下载费用报告",
+      "downloadCSV": "CSV",
+      "downloadExcel": "Excel",
+      "downloadPDF": "PDF",
+      "loading": "加载中..."
   }
 }

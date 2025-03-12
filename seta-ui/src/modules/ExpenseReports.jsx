@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import TableChartIcon from '@mui/icons-material/TableChart';
+import T from '../utils/T'; // Adjust path based on your project structure
 
 export default function ExpenseReports() {
   const [expenses, setExpenses] = useState([]);
@@ -90,7 +91,7 @@ export default function ExpenseReports() {
           title={
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <TableChartIcon sx={{ mr: 1 }} />
-              Expense Reports
+              <T>expenseReports.title</T>
             </Box>
           }
           sx={{
@@ -102,23 +103,25 @@ export default function ExpenseReports() {
         <CardContent>
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
+              <T>{error}</T>
             </Alert>
           )}
 
           <Typography variant="body1" sx={{ mb: 3 }}>
-            Download your expense history in various formats. The report includes all your recorded expenses
-            with details such as date, category, amount, and description.
+            <T>expenseReports.description</T>
           </Typography>
 
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
               <CircularProgress />
+              <Typography sx={{ ml: 2 }}>
+                <T>expenseReports.loading</T>
+              </Typography>
             </Box>
           ) : (
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Total Records: {expenses.length}
+                <T>expenseReports.totalRecords</T> {expenses.length}
               </Typography>
 
               <Box sx={{ display: 'flex', gap: 2 }}>
@@ -145,7 +148,7 @@ export default function ExpenseReports() {
                       }
                     }}
                   >
-                    CSV
+                    <T>CSV</T>
                   </Button>
                 </CSVLink>
 
@@ -167,7 +170,7 @@ export default function ExpenseReports() {
                     }
                   }}
                 >
-                  Excel
+                  <T>Excel</T>
                 </Button>
 
                 <Button
@@ -188,7 +191,7 @@ export default function ExpenseReports() {
                     }
                   }}
                 >
-                  PDF
+                  <T>PDF</T>
                 </Button>
               </Box>
             </Box>

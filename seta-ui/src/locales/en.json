@@ -71,11 +71,15 @@
     "totalEntries": "Total Entries"
   },
   "expenseReports": {
-    "title": "Expense Reports",
-    "description": "Download your expense history as a CSV file. The report includes all your recorded expenses with details such as date, category, amount, and description.",
-    "errorLoading": "Failed to load expenses. Please try again.",
-    "totalRecords": "Total Records: {count}",
-    "downloadButton": "Download Expense Report",
-    "loading": "Loading..."
+      "title": "Expense Reports",
+      "description": "Download your expense history as a CSV, EXCEL or PDF file. The report includes all your recorded expenses with details such as date, category, amount, and description.",
+      "descriptionMultipleFormats": "Download your expense history in various formats. The report includes all your recorded expenses with details such as date, category, amount, and description.",
+      "errorLoading": "Failed to load expenses. Please try again.",
+      "totalRecords": "Total Records: ",
+      "downloadButton": "Download Expense Report",
+      "downloadCSV": "CSV",
+      "downloadExcel": "Excel",
+      "downloadPDF": "PDF",
+      "loading": "Loading..."
   }
 }
