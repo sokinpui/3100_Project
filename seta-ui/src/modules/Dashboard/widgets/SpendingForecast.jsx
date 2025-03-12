@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Box, LinearProgress, Grid, Divider } from '@mui/material';
 import TimelineIcon from '@mui/icons-material/Timeline';
-import { useTranslation } from 'react-i18next'; // Import useTranslation for t function
+import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
 
 export default function SpendingForecast({ expenses }) {
-  const { t } = useTranslation(); // Get the t function for translation
+  const { t } = useTranslation();
   const [forecast, setForecast] = useState({
     monthlyAverage: 0,
     currentMonth: {
       spent: 0,
       projected: 0,
       daysRemaining: 0,
-      progress: 0
+      progress: 0,
+      dateRange: '', // Still use dateRange, but populate differently
     },
-    categories: []
+    categories: [],
   });
 
   useEffect(() => {
@@ -28,10 +29,19 @@ export default function SpendingForecast({ expenses }) {
     const daysRemaining = daysInMonth - dayOfMonth;
     const monthProgress = (dayOfMonth / daysInMonth) * 100;
 
+    // Use the earliest and latest dates from expenses for the current month
     const currentMonthExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
+      const expenseDate = new Date(expense.date); // Parse the localized string if needed
       return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
     });
+
+    let dateRange = '';
+    if (currentMonthExpenses.length > 0) {
+      const sortedExpenses = [...currentMonthExpenses].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const startDate = sortedExpenses[0].date; // Already localized from backend
+      const endDate = sortedExpenses[sortedExpenses.length - 1].date;
+      dateRange = `${startDate} - ${endDate}`;
+    }
 
     const currentMonthTotal = currentMonthExpenses.reduce(
       (sum, expense) => sum + parseFloat(expense.amount), 0
@@ -72,7 +82,7 @@ export default function SpendingForecast({ expenses }) {
         category,
         spent: amount,
         projected,
-        percentOfTotal: (amount / currentMonthTotal) * 100
+        percentOfTotal: (amount / currentMonthTotal) * 100,
       };
     }).sort((a, b) => b.spent - a.spent);
 
@@ -82,9 +92,10 @@ export default function SpendingForecast({ expenses }) {
         spent: currentMonthTotal,
         projected: projectedMonthTotal,
         daysRemaining,
-        progress: monthProgress
+        progress: monthProgress,
+        dateRange,
       },
-      categories: categoryForecasts.slice(0, 5)
+      categories: categoryForecasts.slice(0, 5),
     });
   }, [expenses]);
 
@@ -99,9 +110,7 @@ export default function SpendingForecast({ expenses }) {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Typography variant="subtitle1">
-              {t('dashboard.spendingForecast.monthProgress', {
-                progress: Math.round(forecast.currentMonth.progress)
-              })}
+              {forecast.currentMonth.dateRange || t('dashboard.spendingForecast.noData')}
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -110,7 +119,7 @@ export default function SpendingForecast({ expenses }) {
             />
             <Typography variant="caption" display="block">
               {t('dashboard.spendingForecast.daysRemaining', {
-                count: forecast.currentMonth.daysRemaining
+                count: forecast.currentMonth.daysRemaining,
               })}
             </Typography>
           </Grid>
@@ -133,18 +142,18 @@ export default function SpendingForecast({ expenses }) {
               </Typography>
               <Typography
                 variant="h5"
-                color={forecast.currentMonth.projected > forecast.monthlyAverage ? "error" : "success"}
+                color={forecast.currentMonth.projected > forecast.monthlyAverage ? 'error' : 'success'}
               >
                 ${forecast.currentMonth.projected.toFixed(2)}
               </Typography>
               <Typography variant="caption" display="block">
                 {forecast.currentMonth.projected > forecast.monthlyAverage ? (
                   t('dashboard.spendingForecast.aboveAverage', {
-                    amount: (forecast.currentMonth.projected - forecast.monthlyAverage).toFixed(2)
+                    amount: (forecast.currentMonth.projected - forecast.monthlyAverage).toFixed(2),
                   })
                 ) : (
                   t('dashboard.spendingForecast.belowAverage', {
-                    amount: (forecast.monthlyAverage - forecast.currentMonth.projected).toFixed(2)
+                    amount: (forecast.monthlyAverage - forecast.currentMonth.projected).toFixed(2),
                   })
                 )}
               </Typography>
@@ -169,7 +178,7 @@ export default function SpendingForecast({ expenses }) {
                   <LinearProgress
                     variant="determinate"
                     value={cat.percentOfTotal > 100 ? 100 : cat.percentOfTotal}
-                    color={index % 2 === 0 ? "primary" : "secondary"}
+                    color={index % 2 === 0 ? 'primary' : 'secondary'}
                   />
                 </Box>
               ))

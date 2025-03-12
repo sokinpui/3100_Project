@@ -157,11 +157,12 @@
         "budgetAlertsGoals": {
             "title": "预算提醒与目标",
             "alerts": "预算提醒",
-            "goals": "目标",
             "savingsGoalProgress": "储蓄目标进度",
             "exceededBudget": "您已超出 {{category}} 预算 ${{amount}}",
             "closeToBudget": "您接近 {{category}} 预算限额 ({{spent}}/{{limit}})",
-            "noAlerts": "您做得很好！所有支出都在预算之内。"
+            "noAlerts": "您做得很好！所有支出都在预算之内。",
+            "emergencyFund": "紧急基金",
+            "vacation": "假期"
         },
         "quickActions": {
             "title": "快速操作",

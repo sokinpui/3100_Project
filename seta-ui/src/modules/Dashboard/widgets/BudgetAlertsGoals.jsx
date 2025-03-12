@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Alert, Box, LinearProgress, Paper, Grid } from '@mui/material';
-import { useTranslation } from 'react-i18next'; // Import useTranslation for t function
+import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
 
 export default function BudgetAlertsGoals({ expenses }) {
-  const { t } = useTranslation(); // Get the t function for translation
+  const { t } = useTranslation();
   const [budgetAlerts, setBudgetAlerts] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
 
@@ -12,12 +12,12 @@ export default function BudgetAlertsGoals({ expenses }) {
     const budgets = [
       { category: 'Food', limit: 500, spent: 0 },
       { category: 'Transportation', limit: 300, spent: 0 },
-      { category: 'Shopping', limit: 200, spent: 0 }
+      { category: 'Shopping', limit: 200, spent: 0 },
     ];
 
     const goals = [
       { name: 'Emergency Fund', target: 3000, current: 1500 },
-      { name: 'Vacation', target: 1200, current: 400 }
+      { name: 'Vacation', target: 1200, current: 400 },
     ];
 
     if (expenses && expenses.length > 0) {
@@ -39,18 +39,18 @@ export default function BudgetAlertsGoals({ expenses }) {
         message: budget.spent > budget.limit
           ? t('dashboard.budgetAlertsGoals.exceededBudget', {
               category: budget.category,
-              amount: (budget.spent - budget.limit).toFixed(2)
+              amount: (budget.spent - budget.limit).toFixed(2),
             })
           : t('dashboard.budgetAlertsGoals.closeToBudget', {
               category: budget.category,
               spent: budget.spent.toFixed(2),
-              limit: budget.limit
-            })
+              limit: budget.limit,
+            }),
       }));
 
     setBudgetAlerts(alerts);
     setSavingsGoals(goals);
-  }, [expenses, t]); // Add t to dependency array
+  }, [expenses, t]);
 
   return (
     <Card variant="outlined" sx={{ m: 2 }}>
@@ -87,14 +87,14 @@ export default function BudgetAlertsGoals({ expenses }) {
                 <Grid item xs={12} md={6} key={index}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" color="primary">
-                      {goal.name}
+                      {goal.name} {/* This should be translated if added to i18n */}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, mt: 1 }}>
                       <Box sx={{ width: '100%', mr: 1 }}>
                         <LinearProgress
                           variant="determinate"
                           value={progress}
-                          color={progress > 75 ? "success" : "primary"}
+                          color={progress > 75 ? 'success' : 'primary'}
                         />
                       </Box>
                       <Box>

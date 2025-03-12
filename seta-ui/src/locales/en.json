@@ -157,11 +157,12 @@
         "budgetAlertsGoals": {
             "title": "Budget Alerts & Goals",
             "alerts": "Budget Alerts",
-            "goals": "Goals",
             "savingsGoalProgress": "Savings Goal Progress",
             "exceededBudget": "You've exceeded your {{category}} budget by ${{amount}}",
             "closeToBudget": "You're close to your {{category}} budget limit ({{spent}}/{{limit}})",
-            "noAlerts": "You're doing great! All your spending is within budget."
+            "noAlerts": "You're doing great! All your spending is within budget.",
+            "emergencyFund": "Emergency Fund",
+            "vacation": "Vacation"
         },
         "quickActions": {
             "title": "Quick Actions",

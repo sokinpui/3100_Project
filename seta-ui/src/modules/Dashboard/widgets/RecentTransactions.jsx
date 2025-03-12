@@ -46,7 +46,7 @@ export default function RecentTransactions({ transactions }) {
           <Typography variant="h6" component="div">
             <T>dashboard.recentTransactions.title</T>
           </Typography>
-          <Button component={Link} to="/expenses" size="small" color="primary">
+          <Button component={Link} to="/reports" size="small" color="primary">
             <T>dashboard.recentTransactions.viewAll</T>
           </Button>
         </Box>
