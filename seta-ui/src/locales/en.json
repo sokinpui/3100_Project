@@ -71,15 +71,106 @@
     "totalEntries": "Total Entries"
   },
   "expenseReports": {
-      "title": "Expense Reports",
-      "description": "Download your expense history as a CSV, EXCEL or PDF file. The report includes all your recorded expenses with details such as date, category, amount, and description.",
-      "descriptionMultipleFormats": "Download your expense history in various formats. The report includes all your recorded expenses with details such as date, category, amount, and description.",
-      "errorLoading": "Failed to load expenses. Please try again.",
-      "totalRecords": "Total Records: ",
-      "downloadButton": "Download Expense Report",
-      "downloadCSV": "CSV",
-      "downloadExcel": "Excel",
-      "downloadPDF": "PDF",
-      "loading": "Loading..."
+    "title": "Expense Reports",
+    "description": "Download your expense history as a CSV, EXCEL or PDF file. The report includes all your recorded expenses with details such as date, category, amount, and description.",
+    "descriptionMultipleFormats": "Download your expense history in various formats. The report includes all your recorded expenses with details such as date, category, amount, and description.",
+    "errorLoading": "Failed to load expenses. Please try again.",
+    "totalRecords": "Total Records: ",
+    "downloadButton": "Download Expense Report",
+    "downloadCSV": "CSV",
+    "downloadExcel": "Excel",
+    "downloadPDF": "PDF",
+    "loading": "Loading..."
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Overview Summary",
+      "totalExpenses": "Total Expenses",
+      "totalIncome": "Total Income",
+      "netSavings": "Net Savings",
+      "savingsProgress": "Savings Progress"
+    },
+    "expenseBreakdown": {
+      "title": "Expense Breakdown",
+      "categories": "Categories",
+      "amount": "Amount",
+      "noData": "No expense data available",
+      "topExpenses": "Top Expenses",
+      "noExpenses": "No expenses found"
+    },
+    "expenseTrendAnalytics": {
+      "title": "Expense Trend Analytics",
+      "monthlyTrend": "Monthly Trend",
+      "yearlyTrend": "Yearly Trend",
+      "noData": "No trend data available"
+    },
+    "monthlyComparison": {
+      "title": "Monthly Comparison",
+      "currentMonth": "Current Month",
+      "previousMonth": "Previous Month",
+      "noData": "Not enough data for month-to-month comparison"
+    },
+    "recentTransactions": {
+      "title": "Recent Transactions",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "viewAll": "View All",
+      "noTransactions": "No recent transactions found"
+    },
+    "recurringExpenses": {
+      "title": "Recurring Expenses",
+      "expense": "Expense",
+      "frequency": "Frequency",
+      "amount": "Amount",
+      "lastPaid": "Last Paid",
+      "frequencyWeekly": "Weekly",
+      "frequencyMonthly": "Monthly",
+      "frequencyQuarterly": "Quarterly",
+      "frequencyYearly": "Yearly",
+      "noRecurringExpenses": "No recurring expenses detected yet"
+    },
+    "spendingForecast": {
+      "title": "Spending Forecast",
+      "nextMonth": "Next Month",
+      "nextQuarter": "Next Quarter",
+      "monthProgress": "Month Progress ({{progress}}%)",
+      "daysRemaining": "{{count}} days remaining this month",
+      "spentSoFar": "Spent So Far",
+      "projectedTotal": "Projected Total",
+      "aboveAverage": "${{amount}} above average",
+      "belowAverage": "${{amount}} below average",
+      "topCategoryProjections": "Top Category Projections",
+      "noCategoryData": "No category data available"
+    },
+    "budgetAlertsGoals": {
+      "title": "Budget Alerts & Goals",
+      "alerts": "Budget Alerts",
+      "goals": "Goals",
+      "savingsGoalProgress": "Savings Goal Progress",
+      "exceededBudget": "You've exceeded your {{category}} budget by ${{amount}}",
+      "closeToBudget": "You're close to your {{category}} budget limit ({{spent}}/{{limit}})",
+      "noAlerts": "You're doing great! All your spending is within budget."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "addExpense": "Add Expense",
+      "addIncome": "Add Income",
+      "setBudget": "Set Budget"
+    },
+    "timePeriodSelector": {
+      "title": "Time Period",
+      "week": "Week",
+      "month": "Month",
+      "quarter": "Quarter",
+      "year": "Year",
+      "custom": "Custom",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "selectCustomDates": "Select custom dates",
+      "selectTimePeriod": "Select a time period"
+    },
+    "loading": "Loading dashboard data...",
+    "error": "Failed to load dashboard data. Please try again later."
   }
 }

@@ -3,38 +3,28 @@ import { Card, CardContent, Typography, Table, TableBody, TableCell, TableContai
 import RepeatIcon from '@mui/icons-material/Repeat';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import T from '../../../utils/T';
 
 export default function RecurringExpenses({ expenses }) {
   const [recurringItems, setRecurringItems] = useState([]);
   const [showFullList, setShowFullList] = useState(false);
-  const widgetRef = useRef(null); // Create a ref to reference the widget container
+  const widgetRef = useRef(null);
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
-      // Group expenses by description and category
       const expenseGroups = expenses.reduce((acc, expense) => {
         const key = `${expense.category_name}-${expense.description}`;
-        if (!acc[key]) {
-          acc[key] = [];
-        }
+        if (!acc[key]) acc[key] = [];
         acc[key].push(expense);
         return acc;
       }, {});
 
-      // Filter for groups with multiple occurrences and similar amounts
       const recurring = Object.entries(expenseGroups)
-        .filter(([key, group]) => group.length > 1)
-        .map(([key, group]) => {
-          // Calculate average amount
+        .filter(([_, group]) => group.length > 1)
+        .map(([_, group]) => {
           const totalAmount = group.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
           const avgAmount = totalAmount / group.length;
-
-          // Get the most recent occurrence
-          const mostRecent = group.sort((a, b) =>
-            new Date(b.date) - new Date(a.date)
-          )[0];
-
-          // Determine frequency based on date patterns
+          const mostRecent = group.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
           const frequency = determineFrequency(group.map(exp => new Date(exp.date)));
 
           return {
@@ -51,38 +41,26 @@ export default function RecurringExpenses({ expenses }) {
     }
   }, [expenses]);
 
-  // Simple function to determine expense frequency
   const determineFrequency = (dates) => {
     if (dates.length < 2) return 'Unknown';
-
-    // Sort dates in ascending order
     dates.sort((a, b) => a - b);
-
-    // Calculate average days between occurrences
     let totalDays = 0;
     for (let i = 1; i < dates.length; i++) {
       const diffTime = Math.abs(dates[i] - dates[i - 1]);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       totalDays += diffDays;
     }
-
     const avgDays = totalDays / (dates.length - 1);
-
-    // Determine frequency based on average days
     if (avgDays < 15) return 'Weekly';
     if (avgDays < 45) return 'Monthly';
     if (avgDays < 100) return 'Quarterly';
     return 'Yearly';
   };
 
-  // Toggle full list visibility and maintain scroll position
   const handleToggleFullList = () => {
-    const isExpanding = !showFullList; // Check if we're expanding or collapsing
-    setShowFullList(!showFullList); // Toggle the state
-
-    // If collapsing (going back to 5 rows), maintain the scroll position
-    if (isExpanding === false) {
-      // Use setTimeout to ensure the DOM updates before adjusting the scroll
+    const isExpanding = !showFullList;
+    setShowFullList(!showFullList);
+    if (!isExpanding) {
       setTimeout(() => {
         if (widgetRef.current) {
           widgetRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -91,7 +69,6 @@ export default function RecurringExpenses({ expenses }) {
     }
   };
 
-  // Determine the number of items to display
   const displayedItems = showFullList ? recurringItems : recurringItems.slice(0, 5);
 
   return (
@@ -99,7 +76,7 @@ export default function RecurringExpenses({ expenses }) {
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
           <RepeatIcon sx={{ mr: 1 }} />
-          Recurring Expenses
+          <T>dashboard.recurringExpenses.title</T>
         </Typography>
 
         {recurringItems.length > 0 ? (
@@ -108,11 +85,11 @@ export default function RecurringExpenses({ expenses }) {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Expense</TableCell>
-                    <TableCell>Category</TableCell>
-                    <TableCell align="right">Amount</TableCell>
-                    <TableCell align="center">Frequency</TableCell>
-                    <TableCell align="right">Last Paid</TableCell>
+                    <TableCell><T>dashboard.recurringExpenses.expense</T></TableCell>
+                    <TableCell><T>dashboard.expenseBreakdown.categories</T></TableCell>
+                    <TableCell align="right"><T>dashboard.recentTransactions.amount</T></TableCell>
+                    <TableCell align="center"><T>dashboard.recurringExpenses.frequency</T></TableCell>
+                    <TableCell align="right"><T>dashboard.recurringExpenses.lastPaid</T></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -123,7 +100,7 @@ export default function RecurringExpenses({ expenses }) {
                       <TableCell align="right">${item.amount.toFixed(2)}</TableCell>
                       <TableCell align="center">
                         <Chip
-                          label={item.frequency}
+                          label={<T>{`dashboard.recurringExpenses.frequency${item.frequency}`}</T>}
                           size="small"
                           color={
                             item.frequency === 'Weekly' ? 'error' :
@@ -132,9 +109,7 @@ export default function RecurringExpenses({ expenses }) {
                           }
                         />
                       </TableCell>
-                      <TableCell align="right">
-                        {item.lastDate.toLocaleDateString()}
-                      </TableCell>
+                      <TableCell align="right">{item.lastDate.toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -154,7 +129,7 @@ export default function RecurringExpenses({ expenses }) {
           </>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            No recurring expenses detected yet
+            <T>dashboard.recurringExpenses.noRecurringExpenses</T>
           </Typography>
         )}
       </CardContent>

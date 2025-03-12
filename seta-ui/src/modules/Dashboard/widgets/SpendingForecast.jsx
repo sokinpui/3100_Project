@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Box, LinearProgress, Grid, Divider } from '@mui/material';
 import TimelineIcon from '@mui/icons-material/Timeline';
+import { useTranslation } from 'react-i18next'; // Import useTranslation for t function
+import T from '../../../utils/T';
 
 export default function SpendingForecast({ expenses }) {
+  const { t } = useTranslation(); // Get the t function for translation
   const [forecast, setForecast] = useState({
     monthlyAverage: 0,
     currentMonth: {
@@ -17,7 +20,6 @@ export default function SpendingForecast({ expenses }) {
   useEffect(() => {
     if (!expenses || expenses.length === 0) return;
 
-    // Get current date info
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
@@ -26,38 +28,27 @@ export default function SpendingForecast({ expenses }) {
     const daysRemaining = daysInMonth - dayOfMonth;
     const monthProgress = (dayOfMonth / daysInMonth) * 100;
 
-    // Filter expenses from the current month
     const currentMonthExpenses = expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
       return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
     });
 
-    // Calculate current month's spending
     const currentMonthTotal = currentMonthExpenses.reduce(
       (sum, expense) => sum + parseFloat(expense.amount), 0
     );
 
-    // Calculate average daily spending this month
     const avgDailySpending = currentMonthTotal / dayOfMonth;
-
-    // Project total spending for the month
     const projectedMonthTotal = currentMonthTotal + (avgDailySpending * daysRemaining);
 
-    // Calculate monthly average from historic data (exclude current month)
     const historicExpenses = expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
       return !(expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear);
     });
 
-    // Group historic expenses by month to calculate average
     const expensesByMonth = historicExpenses.reduce((acc, expense) => {
       const expenseDate = new Date(expense.date);
       const monthKey = `${expenseDate.getFullYear()}-${expenseDate.getMonth()}`;
-
-      if (!acc[monthKey]) {
-        acc[monthKey] = 0;
-      }
-
+      if (!acc[monthKey]) acc[monthKey] = 0;
       acc[monthKey] += parseFloat(expense.amount);
       return acc;
     }, {});
@@ -67,30 +58,23 @@ export default function SpendingForecast({ expenses }) {
       ? monthlyTotals.reduce((sum, total) => sum + total, 0) / monthlyTotals.length
       : 0;
 
-    // Category-wise forecast
     const categoriesSpending = {};
-
-    // Calculate spending by category this month
     currentMonthExpenses.forEach(expense => {
       const category = expense.category_name;
-      if (!categoriesSpending[category]) {
-        categoriesSpending[category] = 0;
-      }
+      if (!categoriesSpending[category]) categoriesSpending[category] = 0;
       categoriesSpending[category] += parseFloat(expense.amount);
     });
 
-    // Format category data for display
     const categoryForecasts = Object.entries(categoriesSpending).map(([category, amount]) => {
       const dailyAvg = amount / dayOfMonth;
       const projected = amount + (dailyAvg * daysRemaining);
-
       return {
         category,
         spent: amount,
         projected,
         percentOfTotal: (amount / currentMonthTotal) * 100
       };
-    }).sort((a, b) => b.spent - a.spent); // Sort by highest spending
+    }).sort((a, b) => b.spent - a.spent);
 
     setForecast({
       monthlyAverage,
@@ -100,7 +84,7 @@ export default function SpendingForecast({ expenses }) {
         daysRemaining,
         progress: monthProgress
       },
-      categories: categoryForecasts.slice(0, 5) // Top 5 categories
+      categories: categoryForecasts.slice(0, 5)
     });
   }, [expenses]);
 
@@ -109,13 +93,15 @@ export default function SpendingForecast({ expenses }) {
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
           <TimelineIcon sx={{ mr: 1 }} />
-          Spending Forecast
+          <T>dashboard.spendingForecast.title</T>
         </Typography>
 
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Typography variant="subtitle1">
-              Month Progress ({Math.round(forecast.currentMonth.progress)}%)
+              {t('dashboard.spendingForecast.monthProgress', {
+                progress: Math.round(forecast.currentMonth.progress)
+              })}
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -123,14 +109,16 @@ export default function SpendingForecast({ expenses }) {
               sx={{ height: 10, borderRadius: 5, my: 1 }}
             />
             <Typography variant="caption" display="block">
-              {forecast.currentMonth.daysRemaining} days remaining this month
+              {t('dashboard.spendingForecast.daysRemaining', {
+                count: forecast.currentMonth.daysRemaining
+              })}
             </Typography>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Spent So Far
+                <T>dashboard.spendingForecast.spentSoFar</T>
               </Typography>
               <Typography variant="h5" color="primary">
                 ${forecast.currentMonth.spent.toFixed(2)}
@@ -141,7 +129,7 @@ export default function SpendingForecast({ expenses }) {
           <Grid item xs={12} sm={6}>
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Projected Total
+                <T>dashboard.spendingForecast.projectedTotal</T>
               </Typography>
               <Typography
                 variant="h5"
@@ -150,10 +138,15 @@ export default function SpendingForecast({ expenses }) {
                 ${forecast.currentMonth.projected.toFixed(2)}
               </Typography>
               <Typography variant="caption" display="block">
-                {forecast.currentMonth.projected > forecast.monthlyAverage
-                  ? `$${(forecast.currentMonth.projected - forecast.monthlyAverage).toFixed(2)} above average`
-                  : `$${(forecast.monthlyAverage - forecast.currentMonth.projected).toFixed(2)} below average`
-                }
+                {forecast.currentMonth.projected > forecast.monthlyAverage ? (
+                  t('dashboard.spendingForecast.aboveAverage', {
+                    amount: (forecast.currentMonth.projected - forecast.monthlyAverage).toFixed(2)
+                  })
+                ) : (
+                  t('dashboard.spendingForecast.belowAverage', {
+                    amount: (forecast.monthlyAverage - forecast.currentMonth.projected).toFixed(2)
+                  })
+                )}
               </Typography>
             </Box>
           </Grid>
@@ -161,7 +154,7 @@ export default function SpendingForecast({ expenses }) {
           <Grid item xs={12}>
             <Divider sx={{ my: 1 }} />
             <Typography variant="subtitle1" gutterBottom>
-              Top Category Projections
+              <T>dashboard.spendingForecast.topCategoryProjections</T>
             </Typography>
 
             {forecast.categories.length > 0 ? (
@@ -182,7 +175,7 @@ export default function SpendingForecast({ expenses }) {
               ))
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No category data available
+                <T>dashboard.spendingForecast.noCategoryData</T>
               </Typography>
             )}
           </Grid>

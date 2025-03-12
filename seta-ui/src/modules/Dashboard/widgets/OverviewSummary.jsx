@@ -4,10 +4,10 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import SavingsIcon from '@mui/icons-material/Savings';
+import T from '../../../utils/T';
 
 export default function OverviewSummary({ totalExpenses }) {
-  // Sample data - in a real application, you would fetch this from your API
-  const totalIncome = 5000; // Placeholder
+  const totalIncome = 5000;
   const netBalance = totalIncome - totalExpenses;
   const savingsGoal = 1000;
   const currentSavings = netBalance > 0 ? netBalance : 0;
@@ -17,13 +17,15 @@ export default function OverviewSummary({ totalExpenses }) {
     <Card variant="outlined" sx={{ m: 2 }}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom>
-          Overview Summary
+          <T>dashboard.overview.title</T>
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <TrendingUpIcon color="success" sx={{ mr: 1 }} />
-              <Typography variant="subtitle1">Total Income</Typography>
+              <Typography variant="subtitle1">
+                <T>dashboard.overview.totalIncome</T>
+              </Typography>
             </Box>
             <Typography variant="h5" color="text.primary">
               ${totalIncome.toFixed(2)}
@@ -33,7 +35,9 @@ export default function OverviewSummary({ totalExpenses }) {
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <TrendingDownIcon color="error" sx={{ mr: 1 }} />
-              <Typography variant="subtitle1">Total Expenses</Typography>
+              <Typography variant="subtitle1">
+                <T>dashboard.overview.totalExpenses</T>
+              </Typography>
             </Box>
             <Typography variant="h5" color="error">
               ${totalExpenses.toFixed(2)}
@@ -43,7 +47,9 @@ export default function OverviewSummary({ totalExpenses }) {
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <AccountBalanceWalletIcon color="primary" sx={{ mr: 1 }} />
-              <Typography variant="subtitle1">Net Balance</Typography>
+              <Typography variant="subtitle1">
+                <T>dashboard.overview.netSavings</T>
+              </Typography>
             </Box>
             <Typography
               variant="h5"
@@ -56,7 +62,9 @@ export default function OverviewSummary({ totalExpenses }) {
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <SavingsIcon color="primary" sx={{ mr: 1 }} />
-              <Typography variant="subtitle1">Savings Progress</Typography>
+              <Typography variant="subtitle1">
+                <T>dashboard.overview.savingsProgress</T>
+              </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box sx={{ width: '100%', mr: 1 }}>

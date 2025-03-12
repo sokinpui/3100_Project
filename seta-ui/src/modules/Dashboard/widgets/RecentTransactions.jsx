@@ -10,9 +10,9 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import SchoolIcon from '@mui/icons-material/School';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Link } from 'react-router-dom';
+import T from '../../../utils/T';
 
 export default function RecentTransactions({ transactions }) {
-  // Map category names to icons
   const getCategoryIcon = (category) => {
     const categoryMap = {
       'Food': <RestaurantIcon />,
@@ -23,11 +23,9 @@ export default function RecentTransactions({ transactions }) {
       'Healthcare': <LocalHospitalIcon />,
       'Education': <SchoolIcon />
     };
-
     return categoryMap[category] || <MoreHorizIcon />;
   };
 
-  // Get color based on category
   const getCategoryColor = (category) => {
     const colorMap = {
       'Food': '#FF8042',
@@ -38,7 +36,6 @@ export default function RecentTransactions({ transactions }) {
       'Healthcare': '#FF6B6B',
       'Education': '#6A5ACD'
     };
-
     return colorMap[category] || '#9E9E9E';
   };
 
@@ -47,10 +44,10 @@ export default function RecentTransactions({ transactions }) {
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" component="div">
-            Recent Transactions
+            <T>dashboard.recentTransactions.title</T>
           </Typography>
           <Button component={Link} to="/expenses" size="small" color="primary">
-            View All
+            <T>dashboard.recentTransactions.viewAll</T>
           </Button>
         </Box>
 
@@ -66,21 +63,13 @@ export default function RecentTransactions({ transactions }) {
                   </ListItemAvatar>
                   <ListItemText
                     primary={
-                      <Typography
-                        component="span"
-                        variant="body1"
-                        color="text.primary"
-                      >
+                      <Typography component="span" variant="body1" color="text.primary">
                         {transaction.description || transaction.category_name}
                       </Typography>
                     }
                     secondary={
                       <React.Fragment>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="text.primary"
-                        >
+                        <Typography component="span" variant="body2" color="text.primary">
                           ${parseFloat(transaction.amount).toFixed(2)}
                         </Typography>
                         {" — "}
@@ -95,7 +84,7 @@ export default function RecentTransactions({ transactions }) {
           </List>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            No recent transactions found
+            <T>dashboard.recentTransactions.noTransactions</T>
           </Typography>
         )}
       </CardContent>

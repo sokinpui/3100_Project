@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import T from '../../../utils/T'; // Adjusted import path for widgets/ directory
 
 export default function ExpenseBreakdown({ expenses }) {
   const [categoryData, setCategoryData] = useState([]);
@@ -8,7 +9,6 @@ export default function ExpenseBreakdown({ expenses }) {
 
   useEffect(() => {
     if (expenses && expenses.length > 0) {
-      // Group expenses by category
       const categoryMap = expenses.reduce((acc, expense) => {
         const category = expense.category_name;
         if (!acc[category]) {
@@ -18,13 +18,11 @@ export default function ExpenseBreakdown({ expenses }) {
         return acc;
       }, {});
 
-      // Convert to array for pie chart
       const chartData = Object.keys(categoryMap).map(category => ({
         name: category,
         value: categoryMap[category]
       }));
 
-      // Sort expenses by amount (descending) and take top 5
       const sortedExpenses = [...expenses].sort((a, b) =>
         parseFloat(b.amount) - parseFloat(a.amount)
       ).slice(0, 5);
@@ -40,7 +38,7 @@ export default function ExpenseBreakdown({ expenses }) {
     <Card variant="outlined" sx={{ m: 2 }}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom>
-          Expense Breakdown
+          <T>dashboard.expenseBreakdown.title</T>
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
@@ -67,21 +65,21 @@ export default function ExpenseBreakdown({ expenses }) {
               </ResponsiveContainer>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No expense data available
+                <T>dashboard.expenseBreakdown.noData</T>
               </Typography>
             )}
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle1" gutterBottom>
-              Top Expenses
+              <T>dashboard.expenseBreakdown.topExpenses</T>
             </Typography>
             <TableContainer component={Paper} variant="outlined">
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Category</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell align="right">Amount</TableCell>
+                    <TableCell><T>dashboard.expenseBreakdown.categories</T></TableCell>
+                    <TableCell><T>dashboard.recentTransactions.description</T></TableCell>
+                    <TableCell align="right"><T>dashboard.recentTransactions.amount</T></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -95,7 +93,9 @@ export default function ExpenseBreakdown({ expenses }) {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={3} align="center">No expenses found</TableCell>
+                      <TableCell colSpan={3} align="center">
+                        <T>dashboard.expenseBreakdown.noExpenses</T>
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>

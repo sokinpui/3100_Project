@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import T from '../../../utils/T';
 
 export default function MonthlyComparison({ expenses }) {
   const [monthlyData, setMonthlyData] = useState([]);
@@ -9,7 +10,6 @@ export default function MonthlyComparison({ expenses }) {
   useEffect(() => {
     if (expenses && expenses.length > 0) {
       const monthCategories = {};
-
       expenses.forEach(expense => {
         const date = new Date(expense.date);
         const month = date.toLocaleString('default', { month: 'short' });
@@ -20,11 +20,9 @@ export default function MonthlyComparison({ expenses }) {
         if (!monthCategories[monthYear]) {
           monthCategories[monthYear] = { fullDate: date };
         }
-
         if (!monthCategories[monthYear][category]) {
           monthCategories[monthYear][category] = 0;
         }
-
         monthCategories[monthYear][category] += parseFloat(expense.amount);
       });
 
@@ -38,10 +36,7 @@ export default function MonthlyComparison({ expenses }) {
         return dataPoint;
       });
 
-      chartData.sort((a, b) => {
-        return a.fullDate - b.fullDate;
-      });
-
+      chartData.sort((a, b) => a.fullDate - b.fullDate);
       setMonthlyData(chartData);
     }
   }, [expenses]);
@@ -77,10 +72,7 @@ export default function MonthlyComparison({ expenses }) {
           }}
         >
           <Typography variant="body2">
-            {data.fullDate.toLocaleDateString('en-US', {
-              month: 'short',
-              year: 'numeric'
-            })}
+            {data.fullDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </Typography>
           {payload.map((entry, index) => (
             <Typography key={index} variant="body2">
@@ -97,7 +89,7 @@ export default function MonthlyComparison({ expenses }) {
     <Card variant="outlined" sx={{ m: 2 }}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom>
-          Month-to-Month Comparison
+          <T>dashboard.monthlyComparison.title</T>
         </Typography>
         {monthlyData.length > 1 ? (
           <Box sx={{ height: 400 }}>
@@ -124,7 +116,7 @@ export default function MonthlyComparison({ expenses }) {
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            Not enough data for month-to-month comparison
+            <T>dashboard.monthlyComparison.noData</T>
           </Typography>
         )}
       </CardContent>

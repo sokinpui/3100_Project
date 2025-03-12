@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, Select, MenuItem, Box } from '@mui/mater
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import T from '../../../utils/T';
 
 export default function TimePeriodSelector({ selectedPeriod, onChange, customRange: parentCustomRange }) {
   const [localCustomRange, setLocalCustomRange] = useState({
@@ -11,7 +12,6 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
   });
   const [showCustomPicker, setShowCustomPicker] = useState(selectedPeriod === 'custom');
 
-  // Sync local state with parent customRange prop
   useEffect(() => {
     setLocalCustomRange({
       startDate: parentCustomRange?.startDate || null,
@@ -24,9 +24,8 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
     const value = event.target.value;
     if (value === 'custom') {
       setShowCustomPicker(true);
-      // Reset custom range when switching to custom
       setLocalCustomRange({ startDate: null, endDate: null });
-      onChange('custom'); // Notify parent of period change
+      onChange('custom');
     } else {
       setShowCustomPicker(false);
       setLocalCustomRange({ startDate: null, endDate: null });
@@ -49,16 +48,14 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
   };
 
   const getTimeRange = () => {
-    // Handle custom period explicitly
     if (selectedPeriod === 'custom') {
       if (localCustomRange.startDate && localCustomRange.endDate) {
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
         return `${localCustomRange.startDate.toLocaleDateString('en-US', options)} - ${localCustomRange.endDate.toLocaleDateString('en-US', options)}`;
       }
-      return 'Select custom dates'; // Placeholder when custom dates are not fully selected
+      return <T>dashboard.timePeriodSelector.selectCustomDates</T>;
     }
 
-    // Handle predefined periods
     const now = new Date();
     let startDate, endDate;
 
@@ -82,7 +79,7 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
         endDate = new Date(now.getFullYear(), 11, 31);
         break;
       default:
-        return 'Select a time period';
+        return <T>dashboard.timePeriodSelector.selectTimePeriod</T>;
     }
 
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
@@ -96,30 +93,30 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box>
               <Typography variant="h6" component="div" gutterBottom>
-                Time Period
+                <T>dashboard.timePeriodSelector.title</T>
               </Typography>
               <Select
                 value={selectedPeriod}
                 onChange={handlePeriodChange}
                 displayEmpty
               >
-                <MenuItem value="week">This Week</MenuItem>
-                <MenuItem value="month">This Month</MenuItem>
-                <MenuItem value="quarter">This Quarter</MenuItem>
-                <MenuItem value="year">This Year</MenuItem>
-                <MenuItem value="custom">Custom</MenuItem>
+                <MenuItem value="week"><T>dashboard.timePeriodSelector.week</T></MenuItem>
+                <MenuItem value="month"><T>dashboard.timePeriodSelector.month</T></MenuItem>
+                <MenuItem value="quarter"><T>dashboard.timePeriodSelector.quarter</T></MenuItem>
+                <MenuItem value="year"><T>dashboard.timePeriodSelector.year</T></MenuItem>
+                <MenuItem value="custom"><T>dashboard.timePeriodSelector.custom</T></MenuItem>
               </Select>
               {showCustomPicker && (
                 <Box sx={{ mt: 2 }}>
                   <DatePicker
-                    label="Start Date"
+                    label={<T>dashboard.timePeriodSelector.startDate</T>}
                     value={localCustomRange.startDate}
                     onChange={handleCustomDateChange('startDate')}
                     maxDate={localCustomRange.endDate || new Date()}
                     sx={{ mr: 2 }}
                   />
                   <DatePicker
-                    label="End Date"
+                    label={<T>dashboard.timePeriodSelector.endDate</T>}
                     value={localCustomRange.endDate}
                     onChange={handleCustomDateChange('endDate')}
                     minDate={localCustomRange.startDate}

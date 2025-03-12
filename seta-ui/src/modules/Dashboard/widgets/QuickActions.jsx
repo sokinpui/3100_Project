@@ -5,13 +5,14 @@ import AddIcon from '@mui/icons-material/Add';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PieChartIcon from '@mui/icons-material/PieChart';
+import T from '../../../utils/T'; // Import the T component
 
 export default function QuickActions() {
   return (
     <Card variant="outlined" sx={{ m: 2 }}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom>
-          Quick Actions
+          <T>dashboard.quickActions.title</T>
         </Typography>
         <Grid container spacing={2}>
           <Grid item>
@@ -22,7 +23,7 @@ export default function QuickActions() {
               to="/manage-expenses"
               startIcon={<AddIcon />}
             >
-              Add Expense
+              <T>dashboard.quickActions.addExpense</T>
             </Button>
           </Grid>
           <Grid item>
@@ -33,7 +34,7 @@ export default function QuickActions() {
               to="/reports"
               startIcon={<AssessmentIcon />}
             >
-              Generate Report
+              <T>expenseReports.downloadButton</T>
             </Button>
           </Grid>
           <Grid item>
@@ -44,7 +45,7 @@ export default function QuickActions() {
               to="/settings"
               startIcon={<SettingsIcon />}
             >
-              Settings
+              <T>sidebar.settings</T>
             </Button>
           </Grid>
           <Grid item>
@@ -54,7 +55,7 @@ export default function QuickActions() {
               to="/analytics"
               startIcon={<PieChartIcon />}
             >
-              Analytics
+              <T>dashboard.expenseTrendAnalytics.title</T>
             </Button>
           </Grid>
         </Grid>

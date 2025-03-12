@@ -13,6 +13,8 @@ import SpendingForecast from './widgets/SpendingForecast';
 import { getUserExpenses, getTotalExpenses } from '../../services/apiService';
 import '../../assets/styles/dashboard.css';
 
+import T from '../../utils/T';
+
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [totalExpense, setTotalExpense] = useState(0);
@@ -106,11 +108,11 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
+    if (loading) {
     return (
       <div className="dashboard-loading">
         <CircularProgress />
-        <Typography variant="h6">Loading dashboard data...</Typography>
+        <Typography variant="h6"><T>dashboard.loading</T></Typography>
       </div>
     );
   }
@@ -118,7 +120,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="dashboard-error">
-        <Typography variant="h6" color="error">{error}</Typography>
+        <Typography variant="h6" color="error"><T>dashboard.error</T></Typography>
       </div>
     );
   }
@@ -126,25 +128,19 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <TimePeriodSelector
-          selectedPeriod={timePeriod}
-          onChange={handlePeriodChange}
-          customRange={customRange}
+        selectedPeriod={timePeriod}
+        onChange={handlePeriodChange}
+        customRange={customRange}
       />
       <Grid container spacing={2} direction="column">
         <Grid item xs={12}>
-          <OverviewSummary
-            totalExpenses={totalExpense}
-          />
+          <OverviewSummary totalExpenses={totalExpense} />
         </Grid>
         <Grid item xs={12}>
-          <ExpenseBreakdown
-            expenses={expenses}
-          />
+          <ExpenseBreakdown expenses={expenses} />
         </Grid>
         <Grid item xs={12}>
-          <RecentTransactions
-            transactions={expenses.slice(0, 5)}
-          />
+          <RecentTransactions transactions={expenses.slice(0, 5)} />
         </Grid>
         <Grid item xs={12}>
           <ExpenseTrendAnalytics expenses={expenses} />
@@ -159,9 +155,7 @@ export default function Dashboard() {
           <MonthlyComparison expenses={expenses} />
         </Grid>
         <Grid item xs={12}>
-          <BudgetAlertsGoals
-            expenses={expenses}
-          />
+          <BudgetAlertsGoals expenses={expenses} />
         </Grid>
         <Grid item xs={12}>
           <QuickActions />

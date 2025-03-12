@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Alert, Box, LinearProgress, Paper, Grid } from '@mui/material';
+import { useTranslation } from 'react-i18next'; // Import useTranslation for t function
+import T from '../../../utils/T';
 
 export default function BudgetAlertsGoals({ expenses }) {
+  const { t } = useTranslation(); // Get the t function for translation
   const [budgetAlerts, setBudgetAlerts] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
 
   useEffect(() => {
-    // Sample budget categories with limits
-    // In a real app, these would come from user settings in the database
     const budgets = [
       { category: 'Food', limit: 500, spent: 0 },
       { category: 'Transportation', limit: 300, spent: 0 },
       { category: 'Shopping', limit: 200, spent: 0 }
     ];
 
-    // Sample savings goals
-    // Again, these would come from user settings
     const goals = [
       { name: 'Emergency Fund', target: 3000, current: 1500 },
       { name: 'Vacation', target: 1200, current: 400 }
     ];
 
     if (expenses && expenses.length > 0) {
-      // Calculate spending per category
       expenses.forEach(expense => {
         const budgetCategory = budgets.find(b => b.category === expense.category_name);
         if (budgetCategory) {
@@ -31,33 +29,39 @@ export default function BudgetAlertsGoals({ expenses }) {
       });
     }
 
-    // Generate alerts for categories approaching or exceeding budget
     const alerts = budgets
-      .filter(budget => budget.spent > budget.limit * 0.8) // 80% of budget
+      .filter(budget => budget.spent > budget.limit * 0.8)
       .map(budget => ({
         category: budget.category,
         spent: budget.spent,
         limit: budget.limit,
         severity: budget.spent > budget.limit ? 'error' : 'warning',
         message: budget.spent > budget.limit
-          ? `You've exceeded your ${budget.category} budget by $${(budget.spent - budget.limit).toFixed(2)}`
-          : `You're close to your ${budget.category} budget limit ($${budget.spent.toFixed(2)}/$${budget.limit})`
+          ? t('dashboard.budgetAlertsGoals.exceededBudget', {
+              category: budget.category,
+              amount: (budget.spent - budget.limit).toFixed(2)
+            })
+          : t('dashboard.budgetAlertsGoals.closeToBudget', {
+              category: budget.category,
+              spent: budget.spent.toFixed(2),
+              limit: budget.limit
+            })
       }));
 
     setBudgetAlerts(alerts);
     setSavingsGoals(goals);
-  }, [expenses]);
+  }, [expenses, t]); // Add t to dependency array
 
   return (
     <Card variant="outlined" sx={{ m: 2 }}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom>
-          Budget Alerts & Goals
+          <T>dashboard.budgetAlertsGoals.title</T>
         </Typography>
 
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle1" gutterBottom>
-            Budget Alerts
+            <T>dashboard.budgetAlertsGoals.alerts</T>
           </Typography>
           {budgetAlerts.length > 0 ? (
             budgetAlerts.map((alert, index) => (
@@ -67,14 +71,14 @@ export default function BudgetAlertsGoals({ expenses }) {
             ))
           ) : (
             <Typography variant="body2" color="text.secondary">
-              You're doing great! All your spending is within budget.
+              <T>dashboard.budgetAlertsGoals.noAlerts</T>
             </Typography>
           )}
         </Box>
 
         <Box>
           <Typography variant="subtitle1" gutterBottom>
-            Savings Goal Progress
+            <T>dashboard.budgetAlertsGoals.savingsGoalProgress</T>
           </Typography>
           <Grid container spacing={2}>
             {savingsGoals.map((goal, index) => {
@@ -100,7 +104,7 @@ export default function BudgetAlertsGoals({ expenses }) {
                       </Box>
                     </Box>
                     <Typography variant="caption" display="block">
-                      ${goal.current.toFixed(2)} of ${goal.target.toFixed(2)}
+                      ${goal.current.toFixed(2)} / ${goal.target.toFixed(2)}
                     </Typography>
                   </Paper>
                 </Grid>

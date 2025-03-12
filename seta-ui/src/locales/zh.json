@@ -71,15 +71,106 @@
     "totalEntries": "总条目"
   },
   "expenseReports": {
-      "title": "费用报告",
-      "description": "将您的支出历史下载为 CSV、Excle或PDF文件。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
-      "descriptionMultipleFormats": "以多种格式下载您的支出历史。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
-      "errorLoading": "加载支出失败。请重试。",
-      "totalRecords": "总记录数：",
-      "downloadButton": "下载费用报告",
-      "downloadCSV": "CSV",
-      "downloadExcel": "Excel",
-      "downloadPDF": "PDF",
-      "loading": "加载中..."
+    "title": "费用报告",
+    "description": "将您的支出历史下载为 CSV、Excel 或 PDF 文件。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
+    "descriptionMultipleFormats": "以多种格式下载您的支出历史。报告包括所有记录的支出，详情如日期、类别、金额和描述。",
+    "errorLoading": "加载支出失败。请重试。",
+    "totalRecords": "总记录数：",
+    "downloadButton": "下载费用报告",
+    "downloadCSV": "CSV",
+    "downloadExcel": "Excel",
+    "downloadPDF": "PDF",
+    "loading": "加载中..."
+  },
+  "dashboard": {
+    "overview": {
+      "title": "概览摘要",
+      "totalExpenses": "总支出",
+      "totalIncome": "总收入",
+      "netSavings": "净储蓄",
+      "savingsProgress": "储蓄进度"
+    },
+    "expenseBreakdown": {
+      "title": "支出分类",
+      "categories": "类别",
+      "amount": "金额",
+      "noData": "无支出数据可用",
+      "topExpenses": "最高支出",
+      "noExpenses": "未找到支出"
+    },
+    "expenseTrendAnalytics": {
+      "title": "支出趋势分析",
+      "monthlyTrend": "月度趋势",
+      "yearlyTrend": "年度趋势",
+      "noData": "无趋势数据可用"
+    },
+    "monthlyComparison": {
+      "title": "月度对比",
+      "currentMonth": "本月",
+      "previousMonth": "上月",
+      "noData": "月度对比数据不足"
+    },
+    "recentTransactions": {
+      "title": "最近交易",
+      "date": "日期",
+      "description": "描述",
+      "amount": "金额",
+      "viewAll": "查看全部",
+      "noTransactions": "未找到最近的交易"
+    },
+    "recurringExpenses": {
+      "title": "定期支出",
+      "expense": "支出",
+      "frequency": "频率",
+      "amount": "金额",
+      "lastPaid": "最后支付",
+      "frequencyWeekly": "每周",
+      "frequencyMonthly": "每月",
+      "frequencyQuarterly": "每季度",
+      "frequencyYearly": "每年",
+      "noRecurringExpenses": "尚未检测到定期支出"
+    },
+    "spendingForecast": {
+      "title": "支出预测",
+      "nextMonth": "下月",
+      "nextQuarter": "下季度",
+      "monthProgress": "本月进度 ({{progress}}%)",
+      "daysRemaining": "{{count}} 本月剩余天数",
+      "spentSoFar": "迄今为止的支出",
+      "projectedTotal": "预计总额",
+      "aboveAverage": "超出平均值 ${{amount}}",
+      "belowAverage": "低于平均值 ${{amount}}",
+      "topCategoryProjections": "顶级类别预测",
+      "noCategoryData": "无类别数据可用"
+    },
+    "budgetAlertsGoals": {
+      "title": "预算提醒与目标",
+      "alerts": "预算提醒",
+      "goals": "目标",
+      "savingsGoalProgress": "储蓄目标进度",
+      "exceededBudget": "您已超出 {{category}} 预算 ${{amount}}",
+      "closeToBudget": "您接近 {{category}} 预算限额 ({{spent}}/{{limit}})",
+      "noAlerts": "您做得很好！所有支出都在预算之内。"
+    },
+    "quickActions": {
+      "title": "快速操作",
+      "addExpense": "添加支出",
+      "addIncome": "添加收入",
+      "setBudget": "设置预算"
+    },
+    "timePeriodSelector": {
+      "title": "时间段",
+      "week": "周",
+      "month": "月",
+      "quarter": "季度",
+      "year": "年",
+      "custom": "自定义",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "selectCustomDates": "选择自定义日期",
+      "selectTimePeriod": "选择时间段"
+    },
+    "loading": "加载仪表板数据中...",
+    "error": "加载仪表板数据失败。请稍后重试。"
   }
 }
