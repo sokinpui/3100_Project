@@ -50,7 +50,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
         </Box>
       ),
       renderCell: (params) => (
-        <Typography>
+        <Typography sx={{display: 'flex', justifyContent: 'left', alignItems: 'center', height: '100%'}}>
           {formatDate(new Date(params.value), getDateFormat())} {/* Use dynamic format */}
         </Typography>
       ),
