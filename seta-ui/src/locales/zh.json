@@ -85,7 +85,14 @@
         "othersSpecify": "其他（指定）",
         "dateFormatHint": "年-月-日",
         "rowsPerPage": "每页行数",
-        "of": "的"
+        "of": "的",
+        "sortByAsc": "按升序排序",
+        "sortByDesc": "按降序排序",
+        "filter": "过滤",
+        "hideColumn": "隐藏列",
+        "manageColumns": "管理列",
+        "reset": "重置",
+        "showHideAll": "显示/隐藏全部"
     },
     "expenseReports": {
         "title": "费用报告",

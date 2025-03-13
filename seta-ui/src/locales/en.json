@@ -85,7 +85,12 @@
         "othersSpecify": "Others (Specify)",
         "dateFormatHint": "YYYY-MM-DD",
         "rowsPerPage": "Rows per page",
-        "of": "of"
+        "of": "of",
+        "sortByAsc": "Sort by ASC",
+        "sortByDesc": "Sort by DESC",
+        "filter": "Filter",
+        "hideColumn": "Hide column",
+        "manageColumns": "Manage columns"
     },
     "expenseReports": {
         "title": "Expense Reports",
