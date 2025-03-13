@@ -17,25 +17,21 @@ import {
   Description as DescriptionIcon,
 } from '@mui/icons-material';
 import T from '../../../utils/T';
-import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat'; // Import the utility
-import { enUS } from 'date-fns/locale'; // Import enUS for language detection
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
+import { enUS } from 'date-fns/locale';
 
 export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
-  const [pageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(5);
   const [sortModel, setSortModel] = useState([]);
-
-  // Use the localized date formatting hook
   const { format: formatDate } = useLocalizedDateFormat();
 
-  // Determine the appropriate format string based on language
   const getDateFormat = () => {
     const testDate = new Date();
     const englishFormat = 'MMM d, yyyy';
     const chineseFormat = 'yyyy年M月d日';
-    // Compare the formatted output with enUS locale to detect language
     return formatDate(testDate, englishFormat) === formatDate(testDate, englishFormat, { locale: enUS })
-      ? englishFormat // Use English format if the locale is enUS
-      : chineseFormat; // Use Chinese format otherwise
+      ? englishFormat
+      : chineseFormat;
   };
 
   const columns = [
@@ -199,6 +195,16 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                       <Typography variant="body1" color="textSecondary"><T>expenseManager.noExpensesAddedYet</T></Typography>
                       <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}><T>expenseManager.useFormAboveToAddFirstExpense</T></Typography>
+                    </Box>
+                  ),
+                  pagination: () => (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+                      <Typography variant="body2">
+                        <T>expenseManager.rowsPerPage</T>
+                      </Typography>
+                      <Typography variant="body2">
+                        {`1–${pageSize} `}<T>expenseManager.of</T>{` ${expenses.length}`}
+                      </Typography>
                     </Box>
                   ),
                 }}

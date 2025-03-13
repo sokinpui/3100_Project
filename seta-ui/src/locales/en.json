@@ -82,7 +82,10 @@
         "subscriptions": "Subscriptions",
         "transport": "Transport",
         "food": "Food",
-        "othersSpecify": "Others (Specify)"
+        "othersSpecify": "Others (Specify)",
+        "dateFormatHint": "YYYY-MM-DD",
+        "rowsPerPage": "Rows per page",
+        "of": "of"
     },
     "expenseReports": {
         "title": "Expense Reports",

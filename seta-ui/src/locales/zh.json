@@ -82,7 +82,10 @@
         "subscriptions": "订阅",
         "transport": "交通",
         "food": "食品",
-        "othersSpecify": "其他（指定）"
+        "othersSpecify": "其他（指定）",
+        "dateFormatHint": "年-月-日",
+        "rowsPerPage": "每页行数",
+        "of": "的"
     },
     "expenseReports": {
         "title": "费用报告",
