@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardContent, Typography, List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider, Box, Button } from '@mui/material';
-import { formatDistanceToNow } from 'date-fns';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
 import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
@@ -11,8 +10,12 @@ import SchoolIcon from '@mui/icons-material/School';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Link } from 'react-router-dom';
 import T from '../../../utils/T';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 export default function RecentTransactions({ transactions }) {
+  // Use the localized date formatting hook
+  const { formatDistanceToNow } = useLocalizedDateFormat();
+
   const getCategoryIcon = (category) => {
     const categoryMap = {
       'Food': <RestaurantIcon />,
@@ -21,7 +24,7 @@ export default function RecentTransactions({ transactions }) {
       'Shopping': <ShoppingBasketIcon />,
       'Housing': <HomeIcon />,
       'Healthcare': <LocalHospitalIcon />,
-      'Education': <SchoolIcon />
+      'Education': <SchoolIcon />,
     };
     return categoryMap[category] || <MoreHorizIcon />;
   };
@@ -34,9 +37,35 @@ export default function RecentTransactions({ transactions }) {
       'Shopping': '#FFBB28',
       'Housing': '#8884D8',
       'Healthcare': '#FF6B6B',
-      'Education': '#6A5ACD'
+      'Education': '#6A5ACD',
     };
     return colorMap[category] || '#9E9E9E';
+  };
+
+  // Map category names to translation keys
+  const getTranslatedCategory = (category) => {
+    const categoryKeyMap = {
+      'Food': 'expenseManager.food',
+      'Transportation': 'expenseManager.transportation',
+      'Fuel': 'expenseManager.transport', // Fuel can map to transport
+      'Shopping': 'expenseManager.shopping',
+      'Housing': 'expenseManager.housing',
+      'Healthcare': 'expenseManager.healthcare',
+      'Education': 'expenseManager.education',
+      'Utilities': 'expenseManager.utilities', // For electricity, internet bills
+      'Travel': 'expenseManager.travel', // For souvenirs
+    };
+    return categoryKeyMap[category] ? <T>{categoryKeyMap[category]}</T> : category;
+  };
+
+  // Determine the display text: use description if available, otherwise use category
+  const getDisplayText = (transaction) => {
+    if (transaction.description && transaction.description !== transaction.category_name) {
+      // If description exists and is different from category, use it as-is (user input)
+      return transaction.description;
+    }
+    // Otherwise, translate the category
+    return getTranslatedCategory(transaction.category_name);
   };
 
   return (
@@ -64,7 +93,7 @@ export default function RecentTransactions({ transactions }) {
                   <ListItemText
                     primary={
                       <Typography component="span" variant="body1" color="text.primary">
-                        {transaction.description || transaction.category_name}
+                        {getDisplayText(transaction)}
                       </Typography>
                     }
                     secondary={
@@ -73,7 +102,7 @@ export default function RecentTransactions({ transactions }) {
                           ${parseFloat(transaction.amount).toFixed(2)}
                         </Typography>
                         {" — "}
-                        {formatDistanceToNow(new Date(transaction.date), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(transaction.date))}
                       </React.Fragment>
                     }
                   />

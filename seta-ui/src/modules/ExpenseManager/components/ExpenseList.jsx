@@ -17,10 +17,26 @@ import {
   Description as DescriptionIcon,
 } from '@mui/icons-material';
 import T from '../../../utils/T';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat'; // Import the utility
+import { enUS } from 'date-fns/locale'; // Import enUS for language detection
 
 export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
   const [pageSize] = useState(5);
   const [sortModel, setSortModel] = useState([]);
+
+  // Use the localized date formatting hook
+  const { format: formatDate } = useLocalizedDateFormat();
+
+  // Determine the appropriate format string based on language
+  const getDateFormat = () => {
+    const testDate = new Date();
+    const englishFormat = 'MMM d, yyyy';
+    const chineseFormat = 'yyyy年M月d日';
+    // Compare the formatted output with enUS locale to detect language
+    return formatDate(testDate, englishFormat) === formatDate(testDate, englishFormat, { locale: enUS })
+      ? englishFormat // Use English format if the locale is enUS
+      : chineseFormat; // Use Chinese format otherwise
+  };
 
   const columns = [
     {
@@ -32,6 +48,11 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
           <DateRangeIcon fontSize="small" sx={{ mr: 1 }} />
           <T>expenseManager.date</T>
         </Box>
+      ),
+      renderCell: (params) => (
+        <Typography>
+          {formatDate(new Date(params.value), getDateFormat())} {/* Use dynamic format */}
+        </Typography>
       ),
       sortable: true,
     },
@@ -111,7 +132,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
       width: 200,
       renderCell: (params) => (
         <Typography>
-          {new Date(params.value).toLocaleString()}
+          {formatDate(new Date(params.value), getDateFormat())} {/* Use dynamic format */}
         </Typography>
       ),
       sortable: true,

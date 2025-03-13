@@ -5,7 +5,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import T from '../../../utils/T';
 import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
-import { enUS, zhCN } from 'date-fns/locale'; // Import the locales
+import { enUS, zhCN } from 'date-fns/locale';
 
 export default function TimePeriodSelector({ selectedPeriod, onChange, customRange: parentCustomRange }) {
   const [localCustomRange, setLocalCustomRange] = useState({
@@ -14,8 +14,8 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
   });
   const [showCustomPicker, setShowCustomPicker] = useState(selectedPeriod === 'custom');
 
-  // Use the localized date formatting hook
-  const formatDate = useLocalizedDateFormat();
+  // Use the localized date formatting hook, now returning an object
+  const { format: formatDate } = useLocalizedDateFormat(); // Destructure `format` and rename it to `formatDate`
 
   useEffect(() => {
     setLocalCustomRange({
@@ -56,7 +56,6 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
     if (selectedPeriod === 'custom') {
       if (localCustomRange.startDate && localCustomRange.endDate) {
         // Use the localized formatDate function
-        // For Chinese, use 'yyyy年M月d日'; for English, use 'MMM d, yyyy'
         const formatStr = formatDate(new Date(), 'MMM d, yyyy') === formatDate(new Date(), 'MMM d, yyyy', { locale: enUS })
           ? 'MMM d, yyyy' // English format
           : 'yyyy年M月d日'; // Chinese format
