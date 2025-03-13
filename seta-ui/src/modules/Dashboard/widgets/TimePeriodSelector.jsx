@@ -4,6 +4,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import T from '../../../utils/T';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
+import { enUS, zhCN } from 'date-fns/locale'; // Import the locales
 
 export default function TimePeriodSelector({ selectedPeriod, onChange, customRange: parentCustomRange }) {
   const [localCustomRange, setLocalCustomRange] = useState({
@@ -11,6 +13,9 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
     endDate: parentCustomRange?.endDate || null,
   });
   const [showCustomPicker, setShowCustomPicker] = useState(selectedPeriod === 'custom');
+
+  // Use the localized date formatting hook
+  const formatDate = useLocalizedDateFormat();
 
   useEffect(() => {
     setLocalCustomRange({
@@ -50,8 +55,12 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
   const getTimeRange = () => {
     if (selectedPeriod === 'custom') {
       if (localCustomRange.startDate && localCustomRange.endDate) {
-        const options = { month: 'short', day: 'numeric', year: 'numeric' };
-        return `${localCustomRange.startDate.toLocaleDateString('en-US', options)} - ${localCustomRange.endDate.toLocaleDateString('en-US', options)}`;
+        // Use the localized formatDate function
+        // For Chinese, use 'yyyy年M月d日'; for English, use 'MMM d, yyyy'
+        const formatStr = formatDate(new Date(), 'MMM d, yyyy') === formatDate(new Date(), 'MMM d, yyyy', { locale: enUS })
+          ? 'MMM d, yyyy' // English format
+          : 'yyyy年M月d日'; // Chinese format
+        return `${formatDate(localCustomRange.startDate, formatStr)} - ${formatDate(localCustomRange.endDate, formatStr)}`;
       }
       return <T>dashboard.timePeriodSelector.selectCustomDates</T>;
     }
@@ -82,8 +91,11 @@ export default function TimePeriodSelector({ selectedPeriod, onChange, customRan
         return <T>dashboard.timePeriodSelector.selectTimePeriod</T>;
     }
 
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    return `${startDate.toLocaleDateString('en-US', options)} - ${endDate.toLocaleDateString('en-US', options)}`;
+    // Use the localized formatDate function
+    const formatStr = formatDate(new Date(), 'MMM d, yyyy') === formatDate(new Date(), 'MMM d, yyyy', { locale: enUS })
+      ? 'MMM d, yyyy' // English format
+      : 'yyyy年M月d日'; // Chinese format
+    return `${formatDate(startDate, formatStr)} - ${formatDate(endDate, formatStr)}`;
   };
 
   return (

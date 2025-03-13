@@ -33,11 +33,11 @@
         "reports": "报告",
         "settings": "设置",
         "account": "账户",
-        "logout": "退出",
-        "confirmLogout": "确认退出",
-        "logoutMessage": "您确定要退出您的账户吗？",
+        "logout": "登出",
+        "confirmLogout": "确认登出",
+        "logoutMessage": "您确定要登出您的账户吗？",
         "cancel": "取消",
-        "logoutButton": "退出",
+        "logoutButton": "登出",
         "viewProfile": "查看个人资料"
     },
     "expenseManager": {
