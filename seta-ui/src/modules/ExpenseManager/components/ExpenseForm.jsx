@@ -117,6 +117,7 @@ export default function ExpenseForm({
                     textField: {
                       fullWidth: true,
                       required: true,
+                      placeholder: t('expenseManager.dateFormatHint') // Add placeholder with hint
                     },
                     inputAdornment: {
                       position: 'start',
