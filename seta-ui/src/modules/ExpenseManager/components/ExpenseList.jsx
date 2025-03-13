@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardHeader,
@@ -17,9 +17,8 @@ import {
   Description as DescriptionIcon,
 } from '@mui/icons-material';
 import T from '../../../utils/T';
-import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
-import { enUS } from 'date-fns/locale';
-import i18n from 'i18next'; // Import i18n instance
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat'; // Import the utility
+import { enUS } from 'date-fns/locale'; // Import enUS for language detection
 
 export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
   const [pageSize] = useState(5);
@@ -33,60 +32,11 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
     const testDate = new Date();
     const englishFormat = 'MMM d, yyyy';
     const chineseFormat = 'yyyy年M月d日';
+    // Compare the formatted output with enUS locale to detect language
     return formatDate(testDate, englishFormat) === formatDate(testDate, englishFormat, { locale: enUS })
-      ? englishFormat
-      : chineseFormat;
+      ? englishFormat // Use English format if the locale is enUS
+      : chineseFormat; // Use Chinese format otherwise
   };
-
-    const [localeText, setLocaleText] = useState({
-        // Footer pagination
-        footerRowPerPage: i18n.t('expenseManager.rowsPerPage'), // Correct key for "Rows per page:"
-        // Note: "of" in "1-5 of 1119" is not directly customizable via a single key in Material-UI DataGrid.
-        // You may need to use a custom pagination component or override the footer slot if you want to change "of".
-
-        // Column menu (sorting, filtering, hiding)
-        columnMenuSortAsc: i18n.t('expenseManager.sortByAsc'), // "Sort by ASC"
-        columnMenuSortDesc: i18n.t('expenseManager.sortByDesc'), // "Sort by DESC"
-        columnMenuFilter: i18n.t('expenseManager.filter'), // "Filter"
-        columnMenuHideColumn: i18n.t('expenseManager.hideColumn'), // "Hide column"
-        columnMenuManageColumns: i18n.t('expenseManager.manageColumns'), // "Manage columns"
-
-        // Filter panel
-        filterPanelDeleteIconLabel: i18n.t('expenseManager.reset'), // Tooltip for the reset button in the filter panel
-
-        // Column management (Columns Panel)
-        columnsPanelShowAllButton: i18n.t('expenseManager.showHideAll'), // "Show/Hide All" (Show All)
-        columnsPanelHideAllButton: i18n.t('expenseManager.showHideAll'), // "Show/Hide All" (Hide All)
-
-        // Additional keys for completeness (optional)
-        noRowsLabel: i18n.t('expenseManager.noExpensesAddedYet'), // "No expenses added yet"
-        columnsPanelTextFieldLabel: 'Find column', // Optional: Label for the search input in the columns panel
-        columnsPanelTextFieldPlaceholder: 'Column title', // Optional: Placeholder for the search input
-    });
-
-    useEffect(() => {
-        setLocaleText({
-            // Footer pagination
-            footerRowPerPage: i18n.t('expenseManager.rowsPerPage'), // "Rows per page:" or "每页行数:"
-
-            // Column menu
-            columnMenuSortAsc: i18n.t('expenseManager.sortByAsc'), // "Sort by ASC" or "按升序排序"
-            columnMenuSortDesc: i18n.t('expenseManager.sortByDesc'), // "Sort by DESC" or "按降序排序"
-            columnMenuFilter: i18n.t('expenseManager.filter'), // "Filter" or "过滤"
-            columnMenuHideColumn: i18n.t('expenseManager.hideColumn'), // "Hide column" or "隐藏列"
-            columnMenuManageColumns: i18n.t('expenseManager.manageColumns'), // "Manage columns" or "管理列"
-
-            // Filter panel
-            filterPanelDeleteIconLabel: i18n.t('expenseManager.reset'), // "Reset" or "重置" (for the reset button tooltip)
-
-            // Column management (Columns Panel)
-            columnsPanelShowAllButton: i18n.t('expenseManager.showHideAll'), // "Show/Hide All" or "显示/隐藏全部"
-            columnsPanelHideAllButton: i18n.t('expenseManager.showHideAll'), // "Show/Hide All" or "显示/隐藏全部"
-
-            // Additional keys
-            noRowsLabel: i18n.t('expenseManager.noExpensesAddedYet'), // "No expenses added yet" or "尚未添加任何支出"
-        });
-    }, [i18n.language]);
 
   const columns = [
     {
@@ -100,8 +50,8 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
         </Box>
       ),
       renderCell: (params) => (
-        <Typography sx={{ display: 'flex', justifyContent: 'left', alignItems: 'center', height: '100%' }}>
-          {formatDate(new Date(params.value), getDateFormat())}
+        <Typography sx={{display: 'flex', justifyContent: 'left', alignItems: 'center', height: '100%'}}>
+          {formatDate(new Date(params.value), getDateFormat())} {/* Use dynamic format */}
         </Typography>
       ),
       sortable: true,
@@ -182,7 +132,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
       width: 200,
       renderCell: (params) => (
         <Typography>
-          {formatDate(new Date(params.value), getDateFormat())}
+          {formatDate(new Date(params.value), getDateFormat())} {/* Use dynamic format */}
         </Typography>
       ),
       sortable: true,
@@ -228,32 +178,31 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
               </Box>
             )}
             <Box sx={{ width: '100%' }}>
-            <DataGrid
-            rows={expenses}
-            columns={columns}
-            initialState={initialState}
-            pageSizeOptions={[5, 10, 25, 50, 100]}
-            checkboxSelection
-            onRowSelectionModelChange={(newSelection) => onSelectionChange(newSelection)}
-            rowSelectionModel={selectedExpenseIds}
-            sortModel={sortModel}
-            onSortModelChange={(newSortModel) => setSortModel(newSortModel)}
-            localeText={localeText}
-            sx={{
-                '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5' },
-                    '& .MuiDataGrid-row:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
-                    '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
-                    border: 'none',
-            }}
-            slots={{
-                noRowsOverlay: () => (
+              <DataGrid
+                rows={expenses}
+                columns={columns}
+                initialState={initialState}
+                pageSizeOptions={[5, 10, 25, 50, 100]}
+                checkboxSelection
+                onRowSelectionModelChange={(newSelection) => onSelectionChange(newSelection)}
+                rowSelectionModel={selectedExpenseIds}
+                sortModel={sortModel}
+                onSortModelChange={(newSortModel) => setSortModel(newSortModel)}
+                sx={{
+                  '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5' },
+                  '& .MuiDataGrid-row:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
+                  '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                  border: 'none',
+                }}
+                slots={{
+                  noRowsOverlay: () => (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    <Typography variant="body1" color="textSecondary"><T>expenseManager.noExpensesAddedYet</T></Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}><T>expenseManager.useFormAboveToAddFirstExpense</T></Typography>
+                      <Typography variant="body1" color="textSecondary"><T>expenseManager.noExpensesAddedYet</T></Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}><T>expenseManager.useFormAboveToAddFirstExpense</T></Typography>
                     </Box>
-                ),
-            }}
-            />
+                  ),
+                }}
+              />
             </Box>
           </>
         )}
