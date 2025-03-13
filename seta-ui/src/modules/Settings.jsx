@@ -335,7 +335,7 @@ export default function Settings() {
           <TextField
             autoFocus
             margin="dense"
-            label={t('settings.currentPassword')}
+            label={t('settings.passwordDialog.currentPassword')}
             type="password"
             fullWidth
             value={passwordData.currentPassword}
@@ -345,7 +345,7 @@ export default function Settings() {
           />
           <TextField
             margin="dense"
-            label={t('settings.newPassword')}
+            label={t('settings.passwordDialog.newPassword')}
             type="password"
             fullWidth
             value={passwordData.newPassword}
@@ -355,7 +355,7 @@ export default function Settings() {
           />
           <TextField
             margin="dense"
-            label={t('settings.confirmNewPassword')}
+            label={t('settings.passwordDialog.confirmPassword')}
             type="password"
             fullWidth
             value={passwordData.confirmPassword}
