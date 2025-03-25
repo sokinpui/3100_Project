@@ -192,7 +192,7 @@ export default function Login() {
           <Typography variant="body2">
             Login Info (Currently available accounts): <br />
             <strong>Username:</strong> test <br />
-            <strong>Password:</strong> Password123 <br />
+            <strong>Password:</strong> Password123. <br />
             {localStorage.getItem('username') && (
               <>
                 <strong>Username:</strong> {localStorage.getItem('username')} <br />
