@@ -1,5 +1,7 @@
+// file name: modules/ExpenseManager/components/ExpenseForm.jsx
 import React from 'react';
-import Grid from '@mui/material/Grid2';
+// Use original Grid import if that was present
+import Grid from '@mui/material/Grid'; // Or Grid2 if that was original
 import {
   Card,
   CardHeader,
@@ -11,6 +13,9 @@ import {
   MenuItem,
   InputAdornment,
   Button,
+  Box,         // Added for MenuItem layout
+  Typography,  // Added for MenuItem layout
+  CircularProgress, // Added for submit button loading state
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -22,9 +27,9 @@ import {
   DateRange as DateRangeIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
-import { useTranslation } from 'react-i18next';
-import T from '../../../utils/T';
-import { expenseCategories } from '../../../constants'; // Import the global expenseCategories
+import { useTranslation } from 'react-i18next'; // Keep this
+import T from '../../../utils/T'; // Keep this
+import { expenseCategories } from '../../../constants'; // Import categories
 
 export default function ExpenseForm({
   formData,
@@ -33,35 +38,43 @@ export default function ExpenseForm({
   handleDateChange,
   handleSubmit,
   handleCustomCategoryChange,
+  isSubmitting, // Keep receiving this prop
 }) {
+  // Get the translation function
   const { t } = useTranslation();
 
   return (
     <Card
+      // Keep original elevation and shadow
       elevation={3}
       sx={{
         mb: 4,
         overflow: 'visible',
         borderRadius: 2,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)', // Original shadow
       }}
     >
       <CardHeader
         title={<T>expenseManager.addNewExpense</T>}
         sx={{
+          // Original styles
           backgroundColor: '#5e35b1',
-          color: 'primary.contrastText',
+          color: 'primary.contrastText', // Assuming this was intended or use 'white'
           py: 1.5,
-          borderRadius: '5px 5px 0 0',
+          borderRadius: '5px 5px 0 0', // Original border radius
         }}
+        // Keep original slotProps usage
         slotProps={{ title: { fontWeight: 500 } }}
       />
       <CardContent>
-        <form onSubmit={handleSubmit}>
+        {/* Keep original form structure */}
+        <form onSubmit={handleSubmit} noValidate>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
+            {/* Keep original Grid structure */}
             <Grid container spacing={3}>
               {/* Category Field */}
-              <Grid size={4}>
+              {/* Use original Grid size prop */}
+              <Grid item xs={12} sm={4}> {/* Adjusted to item and xs/sm for basic responsiveness while keeping structure */}
                 <FormControl fullWidth required>
                   <InputLabel id="category-label"><T>expenseManager.category</T></InputLabel>
                   <Select
@@ -69,29 +82,47 @@ export default function ExpenseForm({
                     name="category_name"
                     value={formData.category_name}
                     onChange={handleChange}
-                    label={<T>expenseManager.category</T>} // Fixed: Valid JSX expression
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <CategoryIcon fontSize="small" />
-                      </InputAdornment>
-                    }
+                    label={<T>expenseManager.category</T>}
+                    renderValue={(selectedValue) => { // Keep renderValue for selected display
+                      const selectedCategory = expenseCategories.find(cat => cat.name === selectedValue);
+                      const translationKey = selectedCategory
+                          ? `expenseManager.category_${selectedCategory.key}`
+                          : 'expenseManager.category_unknown';
+                      return t(translationKey, { defaultValue: selectedValue });
+                    }}
+                    // Keep original startAdornment usage if desired, although less common for Select
+                    // startAdornment={
+                    //   <InputAdornment position="start">
+                    //     <CategoryIcon fontSize="small" />
+                    //   </InputAdornment>
+                    // }
                   >
-                    {expenseCategories.map(({ name, key, icon: Icon }) => (
-                      <MenuItem key={name} value={name}>
-                        <Icon fontSize="small" sx={{ mr: 1 }} />
-                        {t(`expenseManager.${key}`)}
-                      </MenuItem>
-                    ))}
+                    {expenseCategories.map(({ name, key, icon: Icon }) => {
+                      const translationKey = `expenseManager.category_${key}`;
+                      const translatedName = t(translationKey, { defaultValue: name });
+                      return (
+                        <MenuItem key={name} value={name}>
+                           {/* Keep original MenuItem structure */}
+                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}> {/* Use Box for layout */}
+                             <Icon fontSize="small" sx={{ mr: 1 }} /> {/* Original icon usage */}
+                             <Typography variant="inherit">{translatedName}</Typography> {/* Display translated name */}
+                           </Box>
+                        </MenuItem>
+                      );
+                    })}
                   </Select>
                 </FormControl>
                 {showOtherCategoryField && (
                   <TextField
                     fullWidth
+                    required
                     label={<T>expenseManager.specifyCategory</T>}
                     value={formData.category_name === 'Others (Specify)' ? '' : formData.category_name}
                     onChange={handleCustomCategoryChange}
-                    placeholder={<T>expenseManager.enterCustomCategory</T>}
+                    // *** FIX HERE: Use t() for placeholder string ***
+                    placeholder={t('expenseManager.enterCustomCategory')}
                     sx={{ mt: 2 }}
+                    // Keep original slotProps usage for TextField adornment
                     slotProps={{
                       input: {
                         startAdornment: (
@@ -106,19 +137,23 @@ export default function ExpenseForm({
               </Grid>
 
               {/* Date Picker */}
-              <Grid size={4}>
+              {/* Use original Grid size prop */}
+              <Grid item xs={12} sm={4}>
                 <DatePicker
                   disableFuture
                   label={<T>expenseManager.date</T>}
                   value={formData.date ? dayjs(formData.date) : null}
-                  format="YYYY-MM-DD"
+                  format="YYYY-MM-DD" // Keep explicit format
                   onChange={handleDateChange}
+                  // Keep original slotProps usage
                   slotProps={{
                     textField: {
                       fullWidth: true,
                       required: true,
-                      placeholder: t('expenseManager.dateFormatHint') // Add placeholder with hint
+                      // Keep original placeholder usage
+                      placeholder: t('expenseManager.dateFormatHint')
                     },
+                    // Keep original inputAdornment usage
                     inputAdornment: {
                       position: 'start',
                       children: <DateRangeIcon fontSize="small" />,
@@ -128,13 +163,17 @@ export default function ExpenseForm({
               </Grid>
 
               {/* Amount Field */}
-              <Grid size={4}>
+              {/* Use original Grid size prop */}
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
+                  required
                   label={<T>expenseManager.amount</T>}
                   name="amount"
                   value={formData.amount}
                   onChange={handleChange}
+                  type="number" // Keep type number
+                  // Keep original slotProps usage
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -142,18 +181,22 @@ export default function ExpenseForm({
                           <AttachMoneyIcon fontSize="small" />
                         </InputAdornment>
                       ),
-                      type: 'number',
+                      // Keep original type if specified here
+                      // type: 'number',
+                      step: "0.01", // Keep step/min if they were here
+                      min: "0"
                     },
                   }}
                 />
               </Grid>
 
               {/* Description Field */}
-              <Grid size={12}>
+              {/* Use original Grid size prop */}
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   multiline
-                  rows={5}
+                  rows={5} // Keep original rows
                   label={<T>expenseManager.descriptionOptional</T>}
                   name="description"
                   value={formData.description}
@@ -162,13 +205,16 @@ export default function ExpenseForm({
               </Grid>
 
               {/* Submit Button */}
-              <Grid size={12} sx={{ display: 'flex', justifyContent: 'end' }}>
+              {/* Use original Grid size prop */}
+              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}> {/* Keep original 'end' */}
                 <Button
                   type="submit"
                   variant="contained"
                   color="primary"
-                  startIcon={<AddCircleOutlineIcon />}
+                  disabled={isSubmitting} // Keep disabled state
+                  startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddCircleOutlineIcon />} // Keep loading indicator
                   sx={{
+                    // Keep original styles
                     py: 1.25,
                     px: 2.5,
                     borderRadius: 2,

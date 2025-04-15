@@ -90,7 +90,18 @@
         "sortByDesc": "Sort by DESC",
         "filter": "Filter",
         "hideColumn": "Hide column",
-        "manageColumns": "Manage columns"
+        "manageColumns": "Manage columns",
+        "category": "Category",
+        "category_food": "Food",
+        "category_transport": "Transport",
+        "category_utilities": "Utilities",
+        "category_housing": "Housing",
+        "category_healthcare": "Healthcare",
+        "category_subscriptions": "Subscriptions",
+        "category_entertainment": "Entertainment",
+        "category_personal_care": "Personal Care",
+        "category_shopping": "Shopping",
+        "category_othersSpecify": "Others (Specify)"
     },
     "expenseReports": {
         "title": "Expense Reports",

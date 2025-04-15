@@ -92,7 +92,18 @@
         "hideColumn": "隐藏列",
         "manageColumns": "管理列",
         "reset": "重置",
-        "showHideAll": "显示/隐藏全部"
+        "showHideAll": "显示/隐藏全部",
+        "category": "类别",
+        "category_food": "餐饮",
+        "category_transport": "交通",
+        "category_utilities": "水电费",
+        "category_housing": "住房",
+        "category_healthcare": "医疗保健",
+        "category_subscriptions": "订阅",
+        "category_entertainment": "娱乐",
+        "category_personal_care": "个人护理",
+        "category_shopping": "购物",
+        "category_othersSpecify": "其他 (请注明)"
     },
     "expenseReports": {
         "title": "费用报告",

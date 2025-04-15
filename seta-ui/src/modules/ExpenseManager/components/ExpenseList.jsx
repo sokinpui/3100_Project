@@ -18,44 +18,30 @@ import {
   DateRange as DateRangeIcon,
   AttachMoney as AttachMoneyIcon,
   Description as DescriptionIcon,
-  Category as CategoryIcon,
+  Category as CategoryIcon, // Default Icon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
 import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
-import { expenseCategories } from '../../../constants';
-// Import the actual format function if useLocalizedDateFormat doesn't export it directly
-// Assuming it uses date-fns or similar under the hood
-import { format as formatDateFns } from 'date-fns'; // Example if using date-fns
+// Import the details helper and categories directly
+import { expenseCategories, getCategoryDetails } from '../../../constants';
+import { format as formatDateFns } from 'date-fns';
 
 const dataGridLocaleTextMap = {
   english: enUS.components.MuiDataGrid.defaultProps.localeText,
   zh: zhCN.components.MuiDataGrid.defaultProps.localeText,
-  // Add other languages as needed
 };
 
-const getCategoryIcon = (categoryName) => {
-  const category = expenseCategories.find(cat => cat.name === categoryName);
-  return category ? category.icon : CategoryIcon;
-};
-
-// Helper to safely format dates, falling back to a basic string format
-const safeFormatDate = (date, optionsOrFormatString, localeFormatHook) => {
+// Simplified safe formatter, assuming date-fns is available
+const safeFormatDate = (date, formatString) => {
     if (!date || isNaN(date.getTime())) {
-        return 'N/A'; // Handle invalid dates
+        return 'N/A';
     }
     try {
-        // Prefer the localized hook if available and working
-        if (localeFormatHook) {
-            return localeFormatHook(date, optionsOrFormatString);
-        }
-        // Fallback to date-fns basic formatting if hook is unavailable or throws
-        // Adjust the format string as needed 'Pp' is localized date and time (short)
-        return formatDateFns(date, typeof optionsOrFormatString === 'string' ? optionsOrFormatString : 'Pp');
+        return formatDateFns(date, formatString);
     } catch (error) {
         console.error("Date formatting error:", error);
-        // Final fallback if formatting fails
-        return date.toLocaleDateString();
+        return date.toLocaleDateString(); // Basic fallback
     }
 };
 
@@ -71,7 +57,7 @@ export default function ExpenseList({
 }) {
   const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
   const [sortModel, setSortModel] = useState([{ field: 'date', sort: 'desc' }]);
-  const { format: formatLocaleDate } = useLocalizedDateFormat(); // Keep using the hook
+  // const { format: formatLocaleDate } = useLocalizedDateFormat(); // Not used in this version for simplicity
   const { i18n, t } = useTranslation();
 
   const currentLanguage = i18n.language.split('-')[0];
@@ -89,43 +75,59 @@ export default function ExpenseList({
         </Box>
       ),
       renderCell: (params) => {
-          // Ensure params.value is valid before creating Date
           const dateValue = params.value ? new Date(params.value) : null;
-          // Use the safe formatter - provide a basic date format string 'yyyy-MM-dd' as fallback/override
-          // Or try with undefined options first to use hook's default: safeFormatDate(dateValue, undefined, formatLocaleDate)
+          // Using a standard, unambiguous format
           return (
               <Typography sx={{display: 'flex', alignItems: 'center', height: '100%'}}>
-                  {safeFormatDate(dateValue, 'yyyy-MM-dd', formatLocaleDate)}
+                  {safeFormatDate(dateValue, 'yyyy-MM-dd')}
               </Typography>
           );
       },
       sortable: true,
-      type: 'date', // Important for sorting/filtering
+      type: 'date',
       valueGetter: (value) => value ? new Date(value) : null
     },
     {
         field: 'category_name',
-        headerName: t('expenseManager.category'),
+        headerName: t('expenseManager.category'), // Header uses 'category' key
         width: 180,
         renderHeader: () => (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* Use the default category icon for the header */}
             <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
             <T>expenseManager.category</T>
             </Box>
         ),
         renderCell: (params) => {
-            const IconComponent = getCategoryIcon(params.value);
-            const translatedCategory = t(`expenseManager.category${params.value?.replace(/\s+/g, '')}`, { defaultValue: params.value || '' });
+            // 1. Find the category details using the name from the data
+            const categoryDetails = getCategoryDetails(params.value);
+
+            // 2. Determine the icon (use default if category not found)
+            const IconComponent = categoryDetails ? categoryDetails.icon : CategoryIcon;
+
+            // 3. Construct the translation key using the stable 'key' property
+            //    Use the original name as defaultValue if key/translation missing
+            const translationKey = categoryDetails
+                ? `expenseManager.category_${categoryDetails.key}`
+                : 'expenseManager.category_unknown'; // Fallback key if needed
+            const translatedCategory = t(translationKey, { defaultValue: params.value || 'Unknown' });
+
             return (
                 <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', gap: 1 }}>
                     <IconComponent fontSize="small" color="action" />
-                    <Typography variant="body2" noWrap>
+                    <Typography variant="body2" noWrap title={translatedCategory}> {/* Add title for long names */}
                         {translatedCategory}
                     </Typography>
                 </Box>
             );
         },
         sortable: true,
+        // Optional: If you want filtering based on translated values, you might need valueGetter
+        // valueGetter: (value, row) => {
+        //    const details = getCategoryDetails(value);
+        //    const key = details ? `expenseManager.category_${details.key}` : 'expenseManager.category_unknown';
+        //    return t(key, { defaultValue: value || 'Unknown' });
+        // }
     },
     {
       field: 'amount',
@@ -182,25 +184,16 @@ export default function ExpenseList({
       headerName: t('expenseManager.createdAt'),
       width: 170,
       renderCell: (params) => {
-          // Ensure params.value is valid before creating Date
           const dateValue = params.value ? new Date(params.value) : null;
-          // *** Explicitly use a safe format string that avoids locale styles for now ***
-          // 'Pp' = Short date + short time (localized by date-fns) - this is often safe
-          const formatString = 'Pp';
-          // Or use a completely non-localized format like: 'yyyy-MM-dd HH:mm'
-          // const formatString = 'yyyy-MM-dd HH:mm';
-
+          // Using 'Pp' for localized short date/time via date-fns
           return (
               <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                  {/* Use the safe formatter, providing the explicit format string */}
-                  {safeFormatDate(dateValue, formatString, null)}
-                  {/* If you want to try the hook again later with options: */}
-                  {/* {safeFormatDate(dateValue, { dateStyle: 'short', timeStyle: 'short' }, formatLocaleDate)} */}
+                  {safeFormatDate(dateValue, 'Pp')}
               </Typography>
           );
       },
       sortable: true,
-      type: 'dateTime', // Important for sorting/filtering
+      type: 'dateTime',
       valueGetter: (value) => value ? new Date(value) : null
     },
     {
@@ -233,8 +226,7 @@ export default function ExpenseList({
   const initialState = {
     columns: {
       columnVisibilityModel: {
-        // Keep created_at initially visible for debugging, hide later if needed
-        // created_at: false,
+         created_at: false, // Hide by default again
       },
     },
   };
