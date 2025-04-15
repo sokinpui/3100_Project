@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, asc, desc
 import models
 from models import get_db, User, Expense
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import List, Optional
 import hashlib
 import secrets
@@ -54,6 +54,9 @@ class ExpenseResponse(ExpenseBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
+    class Config:
+        orm_mode = True
+
 class UserBase(BaseModel):
     """Base user model with common attributes."""
     username: str
@@ -78,6 +81,8 @@ class UserResponse(UserBase):
     email_verified: bool
     last_login: Optional[datetime] = None
 
+    model_config = ConfigDict(from_attributes=True)
+
 class UserSettings(BaseModel):
     """Model for user settings."""
     theme: str = "light"
@@ -101,6 +106,11 @@ class BulkDeleteRequest(BaseModel):
     """Model for bulk delete requests."""
     expense_ids: List[int]
 
+class PaginatedExpenseResponse(BaseModel):
+    """Response model for paginated expenses."""
+    total_count: int
+    expenses: List[ExpenseResponse]
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -120,49 +130,42 @@ def get_user_by_username(db: Session, username: str):
 @app.post("/login", response_model=UserResponse)
 async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
     """Login a user and return user information."""
-    user = get_user_by_username(db, user_data.username)     # Obtain the metadata of the user from the database
+    user = get_user_by_username(db, user_data.username)
 
-    # First check if user exists
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-
-    # Then check if account is active
-    elif not user.is_active:
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is disabled"
         )
-
-    # Finally check password
-    elif not verify_password(user_data.password, user.password_hash):
+    if not verify_password(user_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
         )
 
-    # Update last login time
     user.last_login = func.now()
     db.commit()
+    db.refresh(user) # Refresh to get updated last_login if needed by response
 
-    return user
+    # Pydantic will now correctly serialize the 'user' ORM object
+    # into a UserResponse model because from_attributes=True is set.
+    return user # No need for UserResponse.from_orm(user) explicitly here
 
 @app.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     """Create a new user."""
-    # Check if username already exists
     if get_user_by_username(db, user_data.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
 
-    # Hash the password
     password_hash = hash_password(user_data.password)
-
-    # Create new user
     db_user = models.User(
         username=user_data.username,
         email=user_data.email,
@@ -171,12 +174,13 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         last_name=user_data.last_name,
         contact_number=user_data.contact_number
     )
-
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
 
+    # Pydantic will correctly serialize db_user here too
     return db_user
+
 
 # --------- Expense Endpoints ---------
 
@@ -184,7 +188,9 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 async def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get all expenses for a user."""
     expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).all()
-    return expenses
+    # Pydantic will correctly serialize the list of ORM objects
+    # because ExpenseResponse has from_attributes=True
+    return expenses # No need for list comprehension with .from_orm()
 
 @app.post("/expenses", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
 async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_db)):
