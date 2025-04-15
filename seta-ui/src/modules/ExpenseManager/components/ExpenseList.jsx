@@ -26,7 +26,7 @@ const dataGridLocaleTextMap = {
   zh: zhCN.components.MuiDataGrid.defaultProps.localeText,
 };
 
-export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
+export default function ExpenseList({ expenses, isLoading, isBulkDeleting, handleOpenDeleteDialog, onSelectionChange, handleBulkDelete, selectedExpenseIds }) {
   // Use state for pagination model to control page size and current page
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 5, // Initial page size
@@ -173,7 +173,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
         slotProps={{ title: { fontWeight: 500 } }}
       />
       <CardContent sx={{ p: 0 }}> {/* Ensure no padding conflicts */}
-        {isLoading ? (
+        {(isLoading || isBulkDeleting) && !expenses.length ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <Typography><T>expenseManager.loading</T></Typography>
           </Box>
@@ -196,6 +196,7 @@ export default function ExpenseList({ expenses, isLoading, handleOpenDeleteDialo
             <DataGrid
               // ADD autoHeight prop
               autoHeight
+              loading={isLoading || isBulkDeleting}
               rows={expenses}
               columns={columns}
               // Control pagination state directly

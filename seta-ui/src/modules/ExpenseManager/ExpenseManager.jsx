@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container } from '@mui/material';
+import { Container, Box, CircularProgress } from '@mui/material'; // Import
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import ExpenseSummaryCards from './components/ExpenseSummaryCards';
@@ -23,6 +23,7 @@ export default function ExpenseManager() {
   const [showOtherCategoryField, setShowOtherCategoryField] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const userId = localStorage.getItem('userId');
 
@@ -120,16 +121,19 @@ export default function ExpenseManager() {
   };
 
   const handleConfirmBulkDelete = async () => {
+    setIsBulkDeleting(true); // <-- Set loading true
     try {
       await axios.post(`${API_URL}/expenses/bulk/delete`, { expense_ids: selectedExpenseIds });
+      // Update state optimistically or re-fetch if necessary
       setExpenses(prev => prev.filter(expense => !selectedExpenseIds.includes(expense.id)));
-      setSelectedExpenseIds([]);
+      setSelectedExpenseIds([]); // Clear selection
       showNotification(`Successfully deleted ${selectedExpenseIds.length} expense(s)`);
     } catch (error) {
-      showNotification('Failed to delete some or all expenses', 'error');
-      console.error("Bulk delete error:", error.response?.data);
+      showNotification(<T>expenseManager.failedToDeleteExpenses</T>, 'error'); // Use translation key
+      console.error("Bulk delete error:", error.response?.data || error.message);
     } finally {
       setBulkDeleteDialogOpen(false);
+      setIsBulkDeleting(false); // <-- Set loading false
     }
   };
 
@@ -160,6 +164,7 @@ export default function ExpenseManager() {
       <ExpenseList
         expenses={expenses}
         isLoading={isLoading}
+        isBulkDeleting={isBulkDeleting}
         handleOpenDeleteDialog={handleOpenDeleteDialog}
         onSelectionChange={handleSelectionChange}
         handleBulkDelete={handleBulkDelete}
@@ -175,6 +180,7 @@ export default function ExpenseManager() {
         handleConfirmAdd={handleConfirmAddExpense}
         handleCancelDelete={handleCancelDelete}
         handleConfirmDelete={handleConfirmDelete}
+        isBulkDeleting={isBulkDeleting}
         handleConfirmBulkDelete={handleConfirmBulkDelete}
       />
     </Container>

@@ -228,16 +228,38 @@ async def delete_expense(expense_id: int, db: Session = Depends(get_db)):
 
 @app.post("/expenses/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_bulk_expenses(request: BulkDeleteRequest, db: Session = Depends(get_db)):
-    """Delete multiple expenses by their IDs."""
-    expenses_to_delete = db.query(models.Expense).filter(models.Expense.id.in_(request.expense_ids)).all()
-    if not expenses_to_delete:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No expenses found to delete")
-    if len(expenses_to_delete) != len(request.expense_ids):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Some expenses not found")
-    for expense in expenses_to_delete:
-        db.delete(expense)
-    db.commit()
-    return None
+    """Delete multiple expenses by their IDs efficiently."""
+    if not request.expense_ids:
+        # Handle empty list case if necessary, maybe return early or raise 400
+        return None # Or raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No expense IDs provided")
+
+    # Construct the delete query directly
+    delete_query = db.query(models.Expense).filter(models.Expense.id.in_(request.expense_ids))
+
+    # Execute the bulk delete operation
+    # synchronize_session=False is generally faster for bulk deletes.
+    # It tells SQLAlchemy not to try and reconcile the session state with the deleted rows.
+    # Use 'fetch' if you need to access attributes of deleted objects *after* delete,
+    # or None/False if you don't. False is usually the most performant.
+    try:
+        deleted_count = delete_query.delete(synchronize_session=False)
+        db.commit()
+    except Exception as e:
+        db.rollback() # Rollback on error
+        print(f"Error during bulk delete: {e}") # Log the error
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete expenses due to a database error."
+        )
+
+    # Optional: Check if the number of deleted rows matches the input count
+    # This might be useful for verification but adds complexity if partial success is okay
+    # if deleted_count != len(request.expense_ids):
+    #     print(f"Warning: Expected to delete {len(request.expense_ids)} expenses, but deleted {deleted_count}.")
+        # Decide how to handle this: maybe log, maybe raise a specific error if needed.
+        # For now, we'll assume success if no exception occurred.
+
+    return None # Return 204 No Content on success
 
 @app.put("/expenses/{expense_id}", response_model=ExpenseResponse)
 async def update_expense(expense_id: int, expense_data: CreateExpense, db: Session = Depends(get_db)):

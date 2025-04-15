@@ -21,6 +21,7 @@ export default function ExpenseDialogs({
   handleCancelDelete,
   handleConfirmDelete,
   handleConfirmBulkDelete,
+  isBulkDeleting,
   formData,
   isSubmitting,
 }) {
@@ -72,24 +73,39 @@ export default function ExpenseDialogs({
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Dialog
+<Dialog
         open={bulkDeleteDialogOpen}
         onClose={handleCancelDelete}
+        // Disable closing via backdrop click while deleting
+        disableEscapeKeyDown={isBulkDeleting}
+        // Add aria attributes for accessibility
+        aria-labelledby="bulk-delete-dialog-title"
+        aria-describedby="bulk-delete-dialog-description"
         sx={{ '& .MuiDialog-paper': { borderRadius: 2, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' } }}
       >
-        <DialogTitle sx={{ bgcolor: 'error.main', color: 'white', py: 1.5 }}>
+        <DialogTitle id="bulk-delete-dialog-title" sx={{ bgcolor: 'error.main', color: 'white', py: 1.5 }}>
           <T>expenseManager.deleteMultipleExpenses</T>
         </DialogTitle>
         <DialogContent sx={{ mt: 2, px: 3 }}>
-          <DialogContentText><T>expenseManager.confirmBulkDeleteExpenses</T></DialogContentText>
+          <DialogContentText id="bulk-delete-dialog-description">
+            <T>expenseManager.confirmBulkDeleteExpenses</T>
+          </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCancelDelete} variant="outlined" sx={{ borderRadius: 1, textTransform: 'none', px: 2 }}>
+          {/* Disable Cancel button during delete */}
+          <Button onClick={handleCancelDelete} variant="outlined" sx={{ borderRadius: 1, textTransform: 'none', px: 2 }} disabled={isBulkDeleting}>
             <T>expenseManager.cancel</T>
           </Button>
-          <Button onClick={handleConfirmBulkDelete} variant="contained" color="error" sx={{ borderRadius: 1, textTransform: 'none', px: 2 }} autoFocus>
-            <T>expenseManager.delete</T>
+          {/* Disable Confirm button and show spinner */}
+          <Button
+            onClick={handleConfirmBulkDelete}
+            variant="contained"
+            color="error"
+            sx={{ borderRadius: 1, textTransform: 'none', px: 2, minWidth: 90 }} // Add minWidth for spinner consistency
+            autoFocus
+            disabled={isBulkDeleting} // Disable button
+          >
+            {isBulkDeleting ? <CircularProgress size={24} color="inherit" /> : <T>expenseManager.delete</T>}
           </Button>
         </DialogActions>
       </Dialog>
