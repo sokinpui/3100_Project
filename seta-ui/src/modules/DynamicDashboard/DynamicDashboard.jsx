@@ -36,12 +36,23 @@ const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
 
 const DEFAULT_MAX_AMOUNT = 1000;
 
+const DEFAULT_FILTERS = {
+    categories: [],
+    amountRange: [0, DEFAULT_MAX_AMOUNT] // Use the default max initially
+};
+
 const WIDGET_COMPONENTS = {
   overviewSummary: {
     component: OverviewSummaryWidget,
     titleKey: 'dynamicDashboard.overviewSummary',
     // Reduced min size - allows smaller display
     defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
+  },
+  filterWidget: {
+      component: FilterWidget,
+      titleKey: 'dynamicDashboard.filterWidgetTitle',
+      // Adjust default/min size as needed
+      defaultLayout: { w: 3, h: 5, minW: 2, minH: 4, isResizable: true } // Filters might not need much height
   },
   categoryBreakdown: {
     component: CategoryBreakdownWidget,
@@ -97,12 +108,6 @@ const WIDGET_COMPONENTS = {
      // Allow narrower and shorter
      defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 }
    },
-   filterWidget: {
-       component: FilterWidget,
-       titleKey: 'dynamicDashboard.filterWidgetTitle',
-       // Adjust default/min size as needed
-       defaultLayout: { w: 3, h: 5, minW: 2, minH: 4, isResizable: true } // Filters might not need much height
-   },
 };
 // --- End Constants ---
 
@@ -119,11 +124,7 @@ export default function DynamicDashboard() {
     const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
-     const [activeFilters, setActiveFilters] = useState({
-        categories: [],
-        // Initialize range with default max, will be adjusted by FilterWidget based on prop
-        amountRange: [0, DEFAULT_MAX_AMOUNT]
-    });
+    const [activeFilters, setActiveFilters] = useState(DEFAULT_FILTERS);
     // --- End State ---
 
     // --- Load Layout ---
@@ -259,65 +260,69 @@ export default function DynamicDashboard() {
 
     // --- Handler for Dialog Apply Changes ---
     const handleApplyWidgetChanges = useCallback((desiredStates) => {
-        console.log("Applying changes with desired states:", desiredStates); // Debug log
-        const currentWidgetsMap = new Map(widgets.map(w => [w.type, w.id])); // Map type to instance ID
+        console.log("Applying changes with desired states:", desiredStates);
+        const currentWidgetsMap = new Map(widgets.map(w => [w.type, w.id]));
 
         // Determine widgets to add and remove
         Object.entries(desiredStates).forEach(([widgetType, shouldBePresent]) => {
             const isCurrentlyPresent = currentWidgetsMap.has(widgetType);
 
             if (shouldBePresent && !isCurrentlyPresent) {
-                console.log("Decision: Add widget type", widgetType); // Debug log
+                console.log("Decision: Add widget type", widgetType);
                 addSingleWidget(widgetType);
             } else if (!shouldBePresent && isCurrentlyPresent) {
                 const instanceIdToRemove = currentWidgetsMap.get(widgetType);
-                console.log(`Decision: Remove widget type ${widgetType} with instance ID ${instanceIdToRemove}`); // Debug log
+                console.log(`Decision: Remove widget type ${widgetType} with instance ID ${instanceIdToRemove}`);
                 if (instanceIdToRemove) {
-                     removeSingleWidget(instanceIdToRemove); // Remove using the correct instance ID
+                     removeSingleWidget(instanceIdToRemove);
+                     // --- RESET FILTERS IF FILTER WIDGET IS REMOVED ---
+                     if (widgetType === 'filterWidget') {
+                         console.log("Filter widget removed, resetting active filters.");
+                         // Reset state using the default constant
+                         // We pass maxExpenseAmount here so the reset range is relevant
+                         setActiveFilters({
+                             categories: [],
+                             amountRange: [0, maxExpenseAmount]
+                         });
+                     }
+                     // --- END RESET ---
                 } else {
                     console.error(`Could not find instance ID for widget type ${widgetType} to remove.`);
                 }
             }
         });
 
-    }, [widgets, addSingleWidget, removeSingleWidget]);
+    }, [widgets, addSingleWidget, removeSingleWidget, maxExpenseAmount]);
     // --- End Handler for Dialog Apply Changes ---
 
     // --- Callback for Filter Widget ---
     const handleFilterChange = useCallback((newFilters) => {
         console.log("Filters updated:", newFilters);
-        // Ensure the amount range max doesn't exceed the calculated max for the period
+        // Clamp range on update
         const adjustedRange = [...newFilters.amountRange];
-        if (adjustedRange[1] > maxExpenseAmount) {
-            adjustedRange[1] = maxExpenseAmount;
-        }
-        if (adjustedRange[0] > adjustedRange[1]) { // Ensure min isn't > max
-             adjustedRange[0] = adjustedRange[1];
-        }
+        if (adjustedRange[1] > maxExpenseAmount) adjustedRange[1] = maxExpenseAmount;
+        if (adjustedRange[0] > adjustedRange[1]) adjustedRange[0] = adjustedRange[1];
 
         setActiveFilters(prev => ({
              ...prev,
              categories: newFilters.categories,
              amountRange: adjustedRange
         }));
-    }, [maxExpenseAmount]); // Add maxExpenseAmount dependency
+    }, [maxExpenseAmount]);
     // --- End Callback ---
 
     // --- Render Widgets ---
     const renderWidgets = () => {
-        // console.log("Rendering widgets:", widgets); // Debug log render
         return widgets.map((widget) => {
             const config = WIDGET_COMPONENTS[widget.type];
-            if (!config) { console.warn(`Widget type "${widget.type}" not found.`); return null; }
+            if (!config) { /* ... */ return null; }
             const WidgetComponent = config.component;
 
-             // --- Pass onFilterChange only to FilterWidget ---
-            // Pass specific props to FilterWidget
             const extraProps = widget.type === 'filterWidget'
                 ? {
                       onFilterChange: handleFilterChange,
-                      initialFilters: activeFilters, // Pass current filters for initialization/sync
-                      maxAmount: maxExpenseAmount // <-- Pass the calculated max amount
+                      initialFilters: activeFilters, // Pass current filters
+                      maxAmount: maxExpenseAmount // Pass the calculated max amount
                   }
                 : {};
 
@@ -325,7 +330,6 @@ export default function DynamicDashboard() {
                 <div key={widget.id} className="widget-grid-item">
                     <WidgetWrapper titleKey={config.titleKey}>
                         <WidgetComponent
-                            // Visual widgets get the final filtered list
                             expenses={filteredExpenses}
                             isLoading={isLoadingData}
                             userId={userId}
