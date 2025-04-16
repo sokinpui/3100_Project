@@ -35,16 +35,66 @@ const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
 const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
 
 const WIDGET_COMPONENTS = {
-    overviewSummary: { component: OverviewSummaryWidget, titleKey: 'dynamicDashboard.overviewSummary', defaultLayout: { w: 4, h: 3, minW: 3, minH: 3 } },
-    categoryBreakdown: { component: CategoryBreakdownWidget, titleKey: 'dynamicDashboard.categoryBreakdown', defaultLayout: { w: 4, h: 6, minW: 3, minH: 5 } },
-    recentTransactions: { component: RecentTransactionsWidget, titleKey: 'dynamicDashboard.recentTransactions', defaultLayout: { w: 4, h: 6, minW: 3, minH: 5 } },
-    expenseTrend: { component: ExpenseTrendWidget, titleKey: 'dynamicDashboard.expenseTrend', defaultLayout: { w: 6, h: 6, minW: 4, minH: 4 } },
-    monthlyComparison: { component: MonthlyComparisonWidget, titleKey: 'dynamicDashboard.monthlyComparison', defaultLayout: { w: 6, h: 6, minW: 4, minH: 4 } },
-    topSpendingCategories: { component: TopSpendingCategoriesWidget, titleKey: 'dynamicDashboard.topSpendingCategories', defaultLayout: { w: 4, h: 6, minW: 3, minH: 5 } },
-    largestExpenses: { component: LargestExpensesWidget, titleKey: 'dynamicDashboard.largestExpenses', defaultLayout: { w: 4, h: 6, minW: 3, minH: 5 } },
-    averageDailySpend: { component: AverageDailySpendWidget, titleKey: 'dynamicDashboard.averageDailySpend', defaultLayout: { w: 4, h: 3, minW: 3, minH: 3 } },
-    categorySpendingTimeline: { component: CategorySpendingTimelineWidget, titleKey: 'dynamicDashboard.categorySpendingTimeline', defaultLayout: { w: 8, h: 7, minW: 5, minH: 5 } },
-    spendingGoalTracker: { component: SpendingGoalTrackerWidget, titleKey: 'dynamicDashboard.spendingGoal', defaultLayout: { w: 4, h: 5, minW: 3, minH: 4 } },
+  overviewSummary: {
+    component: OverviewSummaryWidget,
+    titleKey: 'dynamicDashboard.overviewSummary',
+    // Reduced min size - allows smaller display
+    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
+  },
+  categoryBreakdown: {
+    component: CategoryBreakdownWidget,
+    titleKey: 'dynamicDashboard.categoryBreakdown',
+    // Keep chart min size reasonable
+    defaultLayout: { w: 4, h: 6, minW: 3, minH: 4 }
+  },
+  recentTransactions: {
+    component: RecentTransactionsWidget,
+    titleKey: 'dynamicDashboard.recentTransactions',
+    // Allow list to be narrower and shorter
+    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+  },
+  expenseTrend: {
+    component: ExpenseTrendWidget,
+    titleKey: 'dynamicDashboard.expenseTrend',
+    // Keep chart min size reasonable
+    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
+  },
+  monthlyComparison: {
+    component: MonthlyComparisonWidget,
+    titleKey: 'dynamicDashboard.monthlyComparison',
+     // Keep chart min size reasonable
+    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
+  },
+  topSpendingCategories: {
+    component: TopSpendingCategoriesWidget,
+    titleKey: 'dynamicDashboard.topSpendingCategories',
+    // Allow table/list to be narrower and shorter
+    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+  },
+  largestExpenses: {
+    component: LargestExpensesWidget,
+    titleKey: 'dynamicDashboard.largestExpenses',
+     // Allow list to be narrower and shorter
+    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+  },
+  averageDailySpend: {
+    component: AverageDailySpendWidget,
+    titleKey: 'dynamicDashboard.averageDailySpend',
+     // Reduced min size - allows smaller display
+    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
+   },
+   categorySpendingTimeline: {
+     component: CategorySpendingTimelineWidget,
+     titleKey: 'dynamicDashboard.categorySpendingTimeline',
+     // Keep chart min size reasonable, maybe allow slightly shorter
+     defaultLayout: { w: 8, h: 7, minW: 4, minH: 4 }
+   },
+   spendingGoalTracker: {
+     component: SpendingGoalTrackerWidget,
+     titleKey: 'dynamicDashboard.spendingGoal',
+     // Allow narrower and shorter
+     defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 }
+   },
 };
 // --- End Constants ---
 
