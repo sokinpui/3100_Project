@@ -21,6 +21,7 @@ import LargestExpensesWidget from './widgets/LargestExpensesWidget';
 import AverageDailySpendWidget from './widgets/AverageDailySpendWidget';
 import CategorySpendingTimelineWidget from './widgets/CategorySpendingTimelineWidget';
 import SpendingGoalTrackerWidget from './widgets/SpendingGoalTrackerWidget';
+import FilterWidget from './widgets/FilterWidget';
 // --- End Import Widgets ---
 
 import AddWidgetDialog from './AddWidgetDialog';

@@ -18,6 +18,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
 import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 // --- End Import Icons ---
 import { useTranslation } from 'react-i18next';
 import T from '../../utils/T';
@@ -34,6 +35,7 @@ const AVAILABLE_WIDGETS = [
     { id: 'averageDailySpend', titleKey: 'dynamicDashboard.averageDailySpend', icon: <CalculateIcon /> },
     { id: 'categorySpendingTimeline', titleKey: 'dynamicDashboard.categorySpendingTimeline', icon: <StackedLineChartIcon /> },
     { id: 'spendingGoalTracker', titleKey: 'dynamicDashboard.spendingGoal', icon: <TrackChangesIcon /> },
+    { id: 'filterWidget', titleKey: 'dynamicDashboard.filterWidgetTitle', icon: <FilterAltIcon /> },
 ];
 // --- End Available Widgets ---
 
