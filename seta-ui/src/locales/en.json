@@ -87,7 +87,9 @@
         "selectPeriod": "Select Period",
         "selectPeriodTooltip": "Select the time period for the dashboard data",
         "startDate": "Start Date",
-        "endDate": "End Date"
+        "endDate": "End Date",
+        "currentQuarter": "Current Quarter",
+        "currentHalfYear": "Current Half Year"
     },
     "expenseManager": {
         "confirm": "Confirm",

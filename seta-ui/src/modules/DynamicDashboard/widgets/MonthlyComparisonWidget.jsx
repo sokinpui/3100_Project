@@ -37,7 +37,6 @@ export default function MonthlyComparisonWidget({ expenses, isLoading }) {
               monthYear: monthYear
            }))
           .sort((a, b) => a.monthYear.localeCompare(b.monthYear))
-          .slice(-6); // Show last 6 months for comparison (adjust as needed)
       }, [expenses]);
 
 

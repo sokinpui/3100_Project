@@ -87,7 +87,9 @@
         "selectPeriod": "选择时间段",
         "selectPeriodTooltip": "为仪表板数据选择时间段",
         "startDate": "开始日期",
-        "endDate": "结束日期"
+        "endDate": "结束日期",
+        "currentQuarter": "本季度",
+        "currentHalfYear": "本半年度"
     },
     "expenseManager": {
         "confirm": "确认",

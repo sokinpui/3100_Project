@@ -65,13 +65,14 @@ export default function DynamicDashboard() {
   const userId = localStorage.getItem('userId');
 
   // --- State ---
-  const [layouts, setLayouts] = useState({});
-  const [widgets, setWidgets] = useState([]);
-  const [allExpenses, setAllExpenses] = useState([]);
-  const [isLoadingData, setIsLoadingData] = useState(false);
-  const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [timePeriod, setTimePeriod] = useState(getInitialDatesForPreset('currentMonth'));
+    const [layouts, setLayouts] = useState({});
+    const [widgets, setWidgets] = useState([]);
+    const [allExpenses, setAllExpenses] = useState([]);
+    const [isLoadingData, setIsLoadingData] = useState(false);
+    const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+    // Initialize timePeriod state simply, will be set by selector's useEffect
+    const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
   // --- End State ---
 
   // --- Load Layout ---
@@ -253,13 +254,12 @@ export default function DynamicDashboard() {
   // --- Main Return ---
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5" component="h1"> <T>dynamicDashboard.title</T> </Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setIsAddWidgetDialogOpen(true)} > <T>dynamicDashboard.addWidget</T> </Button>
-       </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5" component="h1"> <T>dynamicDashboard.title</T> </Typography>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setIsAddWidgetDialogOpen(true)} > <T>dynamicDashboard.addWidget</T> </Button>
+      </Box>
 
        <TimePeriodSelectorWidget
-            initialPeriod='currentMonth'
             onPeriodChange={setTimePeriod}
        />
 
@@ -279,12 +279,10 @@ export default function DynamicDashboard() {
            </ResponsiveGridLayout>
        )}
 
-      <AddWidgetDialog
+     <AddWidgetDialog
         open={isAddWidgetDialogOpen}
         onClose={() => setIsAddWidgetDialogOpen(false)}
         onAddWidget={handleAddWidget}
-        // Pass existing widget types to prevent adding duplicates if needed
-        // existingWidgetTypes={widgets.map(w => w.type)}
       />
     </Container>
   );
