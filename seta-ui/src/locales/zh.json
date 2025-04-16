@@ -82,7 +82,10 @@
         "goalAmount": "目标金额",
         "setGoal": "设定",
         "addSelected": "添加选中",
-        "alreadyAdded": "已添加"
+        "manageWidgets": "管理小部件",
+        "selectAll": "全选",
+        "applyChanges": "应用更改",
+        "addSelected": "添加选中"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

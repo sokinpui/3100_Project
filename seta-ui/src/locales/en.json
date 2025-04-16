@@ -82,7 +82,10 @@
         "goalAmount": "Goal Amount",
         "setGoal": "Set",
         "addSelected": "Add Selected",
-        "alreadyAdded": "Already Added"
+        "manageWidgets": "Manage Widgets",
+        "selectAll": "Select All",
+        "applyChanges": "Apply Changes",
+        "addSelected": "Add Selected"
     },
     "timePeriods": {
         "last7days": "Last 7 Days",
