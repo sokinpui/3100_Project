@@ -26,6 +26,7 @@
     },
     "sidebar": {
         "appName": "SETA 应用",
+        "dynamicDashboard": "动态仪表板",
         "mainMenu": "主菜单",
         "dashboard": "仪表板",
         "expenseManager": "费用管理",
@@ -39,6 +40,36 @@
         "cancel": "取消",
         "logoutButton": "登出",
         "viewProfile": "查看个人资料"
+    },
+    "dynamicDashboard": {
+        "title": "动态仪表板",
+        "addWidget": "添加小部件",
+        "removeWidget": "移除小部件",
+        "totalExpenses": "总支出",
+        "categoryBreakdown": "分类明细",
+        "recentTransactions": "最近交易",
+        "expenseTrend": "支出趋势",
+        "emptyDashboard": "您的仪表板是空的。点击“添加小部件”开始。",
+        "overviewSummary": "概览总结",
+        "totalEntries": "总条目数",
+        "recentTransactions": "最近交易",
+        "noRecentTransactions": "未找到最近的交易。",
+        "noDescription": "无描述",
+        "expenseTrend": "支出趋势 (月度)",
+        "notEnoughDataForTrend": "数据不足，无法进行趋势分析。",
+        "monthlyComparison": "月度比较 (最近6个月)",
+        "noMonthlyData": "无月度数据可用。"
+    },
+    "timePeriods": {
+        "last7days": "最近 7 天",
+        "last30days": "最近 30 天",
+        "currentMonth": "本月",
+        "allTime": "所有时间",
+        "customRange": "自定义范围",
+        "selectPeriod": "选择时间段",
+        "selectPeriodTooltip": "为仪表板数据选择时间段",
+        "startDate": "开始日期",
+        "endDate": "结束日期"
     },
     "expenseManager": {
         "confirm": "确认",
@@ -103,7 +134,8 @@
         "category_entertainment": "娱乐",
         "category_personal_care": "个人护理",
         "category_shopping": "购物",
-        "category_othersSpecify": "其他 (请注明)"
+        "category_othersSpecify": "其他 (请注明)",
+        "category_unknown": "未分类"
     },
     "expenseReports": {
         "title": "费用报告",

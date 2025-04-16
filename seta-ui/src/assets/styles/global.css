@@ -1,4 +1,6 @@
 @import url('@fontsource/roboto/300.css');
+@import url('react-grid-layout/css/styles.css');
+@import url('react-resizable/css/styles.css');
 
 /* Global Styles */
 body {
@@ -81,3 +83,34 @@ body.dark-theme {
 }
 
 /* Add more selectors for your custom components as needed */
+
+/* Add these lines to your global CSS file */
+
+/* Optional custom styles for grid items (add if desired) */
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  border-radius: 4px;
+  background-color: #fff; /* Or use theme background */
+  overflow: hidden; /* Important for content clipping */
+}
+.react-grid-item.react-grid-placeholder {
+  background-color: rgba(0, 118, 210, 0.1);
+  border-radius: 4px;
+  border: 1px dashed rgba(0, 118, 210, 0.5);
+  opacity: 0.6;
+}
+/* Style resize handles if needed */
+/* .react-grid-item > .react-resizable-handle { ... } */
+
+/* Ensure Card inside grid item takes full height */
+.widget-grid-item .MuiCard-root {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.widget-grid-item .MuiCardContent-root {
+    flex-grow: 1;
+    overflow: auto; /* Allow content scrolling within widget */
+}

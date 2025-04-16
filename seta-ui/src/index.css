@@ -1,0 +1,21 @@
+/* src/index.css or similar */
+@import url('react-grid-layout/css/styles.css');
+@import url('react-resizable/css/styles.css');
+
+/* Optional: Add some custom styling */
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  border-radius: 4px;
+  background-color: #fff; /* Ensure background for content */
+  overflow: hidden; /* Prevent content spillover */
+}
+.react-grid-item.react-grid-placeholder {
+  background-color: rgba(0, 118, 210, 0.1); /* Placeholder color */
+  border-radius: 4px;
+  border: 1px dashed rgba(0, 118, 210, 0.5);
+}
+.react-grid-item > .react-resizable-handle {
+  /* Style resize handles if needed */
+}

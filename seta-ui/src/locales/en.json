@@ -26,6 +26,7 @@
     },
     "sidebar": {
         "appName": "SETA App",
+        "dynamicDashboard": "Dynamic Dashboard",
         "mainMenu": "Main Menu",
         "dashboard": "Dashboard",
         "expenseManager": "Expense Manager",
@@ -39,6 +40,36 @@
         "cancel": "Cancel",
         "logoutButton": "Logout",
         "viewProfile": "View Profile"
+    },
+    "dynamicDashboard": {
+        "title": "Dynamic Dashboard",
+        "addWidget": "Add Widget",
+        "removeWidget": "Remove Widget",
+        "totalExpenses": "Total Expenses",
+        "categoryBreakdown": "Category Breakdown",
+        "recentTransactions": "Recent Transactions",
+        "expenseTrend": "Expense Trend",
+        "emptyDashboard": "Your dashboard is empty. Click 'Add Widget' to get started.",
+        "overviewSummary": "Overview Summary",
+        "totalEntries": "Total Entries",
+        "recentTransactions": "Recent Transactions",
+        "noRecentTransactions": "No recent transactions found.",
+        "noDescription": "No description",
+        "expenseTrend": "Expense Trend (Monthly)",
+        "notEnoughDataForTrend": "Not enough data for trend analysis.",
+        "monthlyComparison": "Monthly Comparison (Last 6)",
+        "noMonthlyData": "No monthly data available."
+    },
+    "timePeriods": {
+        "last7days": "Last 7 Days",
+        "last30days": "Last 30 Days",
+        "currentMonth": "Current Month",
+        "allTime": "All Time",
+        "customRange": "Custom Range",
+        "selectPeriod": "Select Period",
+        "selectPeriodTooltip": "Select the time period for the dashboard data",
+        "startDate": "Start Date",
+        "endDate": "End Date"
     },
     "expenseManager": {
         "confirm": "Confirm",
@@ -101,7 +132,8 @@
         "category_entertainment": "Entertainment",
         "category_personal_care": "Personal Care",
         "category_shopping": "Shopping",
-        "category_othersSpecify": "Others (Specify)"
+        "category_othersSpecify": "Others (Specify)",
+         "category_unknown": "Uncategorized"
     },
     "expenseReports": {
         "title": "Expense Reports",
