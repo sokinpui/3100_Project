@@ -58,7 +58,25 @@
         "expenseTrend": "支出趋势 (月度)",
         "notEnoughDataForTrend": "数据不足，无法进行趋势分析。",
         "monthlyComparison": "月度比较 (最近6个月)",
-        "noMonthlyData": "无月度数据可用。"
+        "noMonthlyData": "无月度数据可用。",
+        "topSpendingCategories": "最高支出类别",
+        "category": "类别",
+        "amount": "金额",
+        "noTopCategories": "无可用类别支出数据。",
+        "largestExpenses": "最大单笔支出",
+        "noLargestExpenses": "无可用单笔支出数据。",
+        "averageDailySpend": "日均支出",
+        "perDay": "每天",
+        "basedOnDays": "基于天数:",
+        "notEnoughDataForAverage": "数据不足，无法计算平均值。",
+        "categorySpendingTimeline": "分类支出时间线",
+        "noTimelineData": "数据不足，无法显示时间线视图。",
+        "spendingGoal": "支出目标跟踪器",
+        "remaining": "剩余",
+        "overBudget": "超出预算",
+        "setSpendingGoal": "设定期间目标",
+        "goalAmount": "目标金额",
+        "setGoal": "设定"
     },
     "timePeriods": {
         "last7days": "最近 7 天",
@@ -135,7 +153,11 @@
         "category_personal_care": "个人护理",
         "category_shopping": "购物",
         "category_othersSpecify": "其他 (请注明)",
-        "category_unknown": "未分类"
+        "category_unknown": "未分类",
+        "category_foodAndDining": "餐饮",
+        "category_transportation": "交通",
+        "category_education": "教育",
+        "category_travel": "旅行"
     },
     "expenseReports": {
         "title": "费用报告",
