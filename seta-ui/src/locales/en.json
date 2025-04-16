@@ -85,7 +85,11 @@
         "manageWidgets": "Manage Widgets",
         "selectAll": "Select All",
         "applyChanges": "Apply Changes",
-        "addSelected": "Add Selected"
+        "addSelected": "Add Selected",
+        "filterWidgetTitle": "Data Filters",
+        "filterByCategory": "Filter by Category",
+        "filterByAmount": "Filter by Amount",
+        "amountRange": "Amount range"
     },
     "timePeriods": {
         "last7days": "Last 7 Days",

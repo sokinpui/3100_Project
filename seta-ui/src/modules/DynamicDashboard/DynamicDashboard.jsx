@@ -34,6 +34,8 @@ const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v1';
 const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
 const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
 
+const DEFAULT_MAX_AMOUNT = 1000;
+
 const WIDGET_COMPONENTS = {
   overviewSummary: {
     component: OverviewSummaryWidget,
@@ -95,6 +97,12 @@ const WIDGET_COMPONENTS = {
      // Allow narrower and shorter
      defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 }
    },
+   filterWidget: {
+       component: FilterWidget,
+       titleKey: 'dynamicDashboard.filterWidgetTitle',
+       // Adjust default/min size as needed
+       defaultLayout: { w: 3, h: 5, minW: 2, minH: 4, isResizable: true } // Filters might not need much height
+   },
 };
 // --- End Constants ---
 
@@ -111,6 +119,11 @@ export default function DynamicDashboard() {
     const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
+     const [activeFilters, setActiveFilters] = useState({
+        categories: [],
+        // Initialize range with default max, will be adjusted by FilterWidget based on prop
+        amountRange: [0, DEFAULT_MAX_AMOUNT]
+    });
     // --- End State ---
 
     // --- Load Layout ---
@@ -135,10 +148,62 @@ export default function DynamicDashboard() {
         const fetchExpenses = async () => { if (!userId) return; setIsLoadingData(true); try { const response = await axios.get(`${API_URL}/expenses/${userId}`); setAllExpenses(response.data || []); } catch (error) { console.error("Failed to load expenses", error); setAllExpenses([]); } finally { setIsLoadingData(false); } }; fetchExpenses();
     }, [userId]);
 
+    // --- Calculate Time-Period Filtered Expenses (intermediate step) ---
+    const timePeriodFilteredExpenses = useMemo(() => {
+        let expensesToFilter = allExpenses;
+        if (timePeriod && (timePeriod.startDate || timePeriod.endDate)) {
+            if (timePeriod.startDate && timePeriod.endDate) {
+                const interval = { start: timePeriod.startDate, end: timePeriod.endDate };
+                expensesToFilter = expensesToFilter.filter(expense => {
+                    try {
+                        const expenseDate = parseISO(expense.date);
+                        return isValid(expenseDate) && isWithinInterval(expenseDate, interval);
+                    } catch (e) { return false; }
+                });
+            } else {
+                expensesToFilter = [];
+            }
+        }
+        return expensesToFilter;
+    }, [allExpenses, timePeriod]);
+
+    // --- Calculate Max Amount based on Time-Period Filtered Data ---
+    const maxExpenseAmount = useMemo(() => {
+        if (!timePeriodFilteredExpenses || timePeriodFilteredExpenses.length === 0) {
+            return DEFAULT_MAX_AMOUNT; // Use default if no data in period
+        }
+        const max = timePeriodFilteredExpenses.reduce((maxVal, expense) => {
+            const amount = parseFloat(expense.amount) || 0;
+            return Math.max(maxVal, amount);
+        }, 0);
+        // Ensure a minimum sensible max for the slider if max is very low or 0
+        return Math.max(max, 100); // e.g., minimum max of $100
+    }, [timePeriodFilteredExpenses]);
+
     // --- Filter Expenses Based on Time Period ---
     const filteredExpenses = useMemo(() => {
-        if (!timePeriod || (!timePeriod.startDate && !timePeriod.endDate)) { return allExpenses; } if (!timePeriod.startDate || !timePeriod.endDate) { console.warn("Incomplete time period:", timePeriod); return []; } const interval = { start: timePeriod.startDate, end: timePeriod.endDate }; return allExpenses.filter(expense => { try { const expenseDate = parseISO(expense.date); return isValid(expenseDate) && isWithinInterval(expenseDate, interval); } catch (e) { console.error("Error parsing expense date for filtering:", expense.date, e); return false; } });
-    }, [allExpenses, timePeriod]);
+        let expensesToFilter = timePeriodFilteredExpenses; // Start with time-period filtered
+
+        // Category Filter
+        if (activeFilters.categories && activeFilters.categories.length > 0) {
+            expensesToFilter = expensesToFilter.filter(expense =>
+                activeFilters.categories.includes(expense.category_name)
+            );
+        }
+
+        // Amount Range Filter (using state set by the slider)
+        if (activeFilters.amountRange) {
+            const [minAmount, maxAmount] = activeFilters.amountRange;
+            expensesToFilter = expensesToFilter.filter(expense => {
+                const amount = parseFloat(expense.amount) || 0;
+                // Ensure maxAmount check uses the value from state, not the calculated max prop
+                return amount >= minAmount && amount <= maxAmount;
+            });
+        }
+
+        return expensesToFilter;
+
+    }, [timePeriodFilteredExpenses, activeFilters]);
     // --- End Filter Expenses ---
 
     // --- Layout Change Handler ---
@@ -218,6 +283,25 @@ export default function DynamicDashboard() {
     }, [widgets, addSingleWidget, removeSingleWidget]);
     // --- End Handler for Dialog Apply Changes ---
 
+    // --- Callback for Filter Widget ---
+    const handleFilterChange = useCallback((newFilters) => {
+        console.log("Filters updated:", newFilters);
+        // Ensure the amount range max doesn't exceed the calculated max for the period
+        const adjustedRange = [...newFilters.amountRange];
+        if (adjustedRange[1] > maxExpenseAmount) {
+            adjustedRange[1] = maxExpenseAmount;
+        }
+        if (adjustedRange[0] > adjustedRange[1]) { // Ensure min isn't > max
+             adjustedRange[0] = adjustedRange[1];
+        }
+
+        setActiveFilters(prev => ({
+             ...prev,
+             categories: newFilters.categories,
+             amountRange: adjustedRange
+        }));
+    }, [maxExpenseAmount]); // Add maxExpenseAmount dependency
+    // --- End Callback ---
 
     // --- Render Widgets ---
     const renderWidgets = () => {
@@ -226,18 +310,26 @@ export default function DynamicDashboard() {
             const config = WIDGET_COMPONENTS[widget.type];
             if (!config) { console.warn(`Widget type "${widget.type}" not found.`); return null; }
             const WidgetComponent = config.component;
+
+             // --- Pass onFilterChange only to FilterWidget ---
+            // Pass specific props to FilterWidget
+            const extraProps = widget.type === 'filterWidget'
+                ? {
+                      onFilterChange: handleFilterChange,
+                      initialFilters: activeFilters, // Pass current filters for initialization/sync
+                      maxAmount: maxExpenseAmount // <-- Pass the calculated max amount
+                  }
+                : {};
+
             return (
-                <div key={widget.id} className="widget-grid-item"> {/* Use unique ID */}
-                    <WidgetWrapper
-                        titleKey={config.titleKey}
-                        // No need to pass ID or remove handler if removal is only via dialog
-                        // widgetId={widget.id}
-                        // onRemoveWidget={() => removeSingleWidget(widget.id)}
-                    >
+                <div key={widget.id} className="widget-grid-item">
+                    <WidgetWrapper titleKey={config.titleKey}>
                         <WidgetComponent
+                            // Visual widgets get the final filtered list
                             expenses={filteredExpenses}
                             isLoading={isLoadingData}
                             userId={userId}
+                            {...extraProps}
                         />
                     </WidgetWrapper>
                 </div>
