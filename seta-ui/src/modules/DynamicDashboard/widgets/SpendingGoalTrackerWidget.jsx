@@ -1,18 +1,33 @@
 // src/modules/DynamicDashboard/widgets/SpendingGoalTrackerWidget.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { Box, Typography, LinearProgress, TextField, Button, Grid, Paper } from '@mui/material';
-import TrackChangesIcon from '@mui/icons-material/TrackChanges'; // Example Icon
+import TrackChangesIcon from '@mui/icons-material/TrackChanges';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 import T from '../../../utils/T';
 
-// Basic Example: Tracks a single, manually entered goal vs total expenses
-// In a real app, this would fetch goal data from the backend
+const GOAL_STORAGE_KEY = 'spendingGoalTrackerAmount_v1'; // localStorage key
+
 export default function SpendingGoalTrackerWidget({ expenses, isLoading }) {
-  const [goalAmount, setGoalAmount] = useState(1000); // Example goal, load from state/backend later
+  const { t } = useTranslation(); // Get t function
+
+  // --- Initialize state from localStorage ---
+  const [goalAmount, setGoalAmount] = useState(() => {
+      const savedGoal = localStorage.getItem(GOAL_STORAGE_KEY);
+      const parsedGoal = parseFloat(savedGoal);
+      return !isNaN(parsedGoal) && parsedGoal >= 0 ? parsedGoal : 1000; // Default 1000
+  });
+  // --- End Initialization ---
+
   const [tempGoal, setTempGoal] = useState(goalAmount.toString());
 
+  // Update tempGoal if goalAmount changes (e.g., loaded from storage after initial render)
+  useEffect(() => {
+      setTempGoal(goalAmount.toString());
+  }, [goalAmount]);
+
   const totalSpent = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-  const progress = goalAmount > 0 ? Math.min((totalSpent / goalAmount) * 100, 100) : 0; // Cap at 100%
-  const remaining = Math.max(0, goalAmount - totalSpent); // Don't show negative remaining
+  const progress = goalAmount > 0 ? Math.min((totalSpent / goalAmount) * 100, 100) : 0;
+  const remaining = Math.max(0, goalAmount - totalSpent);
 
   const handleGoalChange = (event) => {
     setTempGoal(event.target.value);
@@ -22,16 +37,18 @@ export default function SpendingGoalTrackerWidget({ expenses, isLoading }) {
       const newGoal = parseFloat(tempGoal);
       if (!isNaN(newGoal) && newGoal >= 0) {
           setGoalAmount(newGoal);
-          // Here you would also ideally save the goal to backend/localStorage
+          // --- Save to localStorage ---
+          localStorage.setItem(GOAL_STORAGE_KEY, newGoal.toString());
+          // --- End Save ---
       } else {
-          setTempGoal(goalAmount.toString()); // Reset if invalid input
+          // Reset temp input to current valid goal if input is invalid
+          setTempGoal(goalAmount.toString());
       }
   };
 
-  // Simple color logic for progress bar
   const getProgressColor = () => {
-      if (progress > 90) return 'error';
-      if (progress > 70) return 'warning';
+      if (progress >= 100) return 'error'; // Show error if goal met or exceeded
+      if (progress > 75) return 'warning';
       return 'primary';
   }
 
@@ -41,7 +58,7 @@ export default function SpendingGoalTrackerWidget({ expenses, isLoading }) {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           <TrackChangesIcon color="primary" sx={{ mr: 1 }}/>
           <Typography variant="subtitle1" fontWeight="medium">
-             <T>dynamicDashboard.spendingGoal</T> (Manual)
+             <T>dynamicDashboard.spendingGoal</T>
           </Typography>
         </Box>
         <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -54,11 +71,11 @@ export default function SpendingGoalTrackerWidget({ expenses, isLoading }) {
             sx={{ height: 8, borderRadius: 4, mb: 1 }}
         />
         <Typography variant="body2" color="text.secondary">
-            { goalAmount > totalSpent
+            { goalAmount >= totalSpent // Check if goal is met or not exceeded
                 ? `$${remaining.toFixed(2)} `
-                : `$${Math.abs(remaining).toFixed(2)} `
+                : `$${Math.abs(goalAmount - totalSpent).toFixed(2)} ` // Calculate overspent amount
             }
-            { goalAmount > totalSpent
+            { goalAmount >= totalSpent
                 ? <T>dynamicDashboard.remaining</T>
                 : <T>dynamicDashboard.overBudget</T>
             }
@@ -70,13 +87,17 @@ export default function SpendingGoalTrackerWidget({ expenses, isLoading }) {
         <Grid container spacing={1} alignItems="center">
             <Grid item xs>
                 <TextField
-                label={T('dynamicDashboard.goalAmount')}
-                value={tempGoal}
-                onChange={handleGoalChange}
-                size="small"
-                type="number"
-                fullWidth
-                InputProps={{ startAdornment: <Typography sx={{ mr: 0.5 }}>$</Typography> }}
+                    // Use t() for the label directly
+                    label={t('dynamicDashboard.goalAmount')}
+                    value={tempGoal}
+                    onChange={handleGoalChange}
+                    size="small"
+                    type="number"
+                    fullWidth
+                    InputProps={{
+                        startAdornment: <Typography sx={{ mr: 0.5 }}>$</Typography>,
+                        inputProps: { min: 0 } // Prevent negative numbers
+                    }}
                 />
             </Grid>
             <Grid item>
