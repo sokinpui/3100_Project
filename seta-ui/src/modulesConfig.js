@@ -3,7 +3,7 @@ import { lazy } from 'react';
 
 // Lazy load components for better performance and code splitting
 const Login = lazy(() => import('./login/Login'));
-const Dashboard = lazy(() => import('./modules/Dashboard/Dashboard'));
+// const Dashboard = lazy(() => import('./modules/Dashboard/Dashboard'));
 const DynamicDashboard = lazy(() => import('./modules/DynamicDashboard/DynamicDashboard')); // <-- Import new module
 const ExpenseManager = lazy(() => import('./modules/ExpenseManager/ExpenseManager'));
 const ExpenseReports = lazy(() => import('./modules/ExpenseReports')); // Assuming default export

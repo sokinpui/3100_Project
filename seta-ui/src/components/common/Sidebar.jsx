@@ -25,8 +25,7 @@ const collapsedWidth = 70;
 
 // --- Define Menu Items ---
 const menuItems = [
-  { text: 'sidebar.dashboard', icon: <DashboardIcon />, path: '/' },
-  { text: 'sidebar.dynamicDashboard', icon: <ViewQuiltIcon />, path: '/dynamic-dashboard' }, // <-- ADD THIS LINE
+  { text: 'sidebar.dashboard', icon: <DashboardIcon />, path: '/dynamic-dashboard' },
   { text: 'sidebar.newExpenseManager', icon: <AddCardIcon />, path: '/manage-expenses' },
   { text: 'sidebar.reports', icon: <AssessmentIcon />, path: '/reports' },
   { text: 'sidebar.settings', icon: <SettingsIcon />, path: '/settings' },

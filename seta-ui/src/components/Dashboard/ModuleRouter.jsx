@@ -2,7 +2,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense } from 'react';
 import LoadingSpinner from '../common/LoadingSpinner';
-import Dashboard from '../../modules/Dashboard/Dashboard';
+// import Dashboard from '../../modules/Dashboard';
 import Sidebar from '../common/Sidebar';
 
 export default function ModuleRouter({ modules }) {
@@ -50,11 +50,11 @@ export default function ModuleRouter({ modules }) {
         })}
 
         {/* This is for the root page */}
-        <Route
+      <Route
           path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Navigate to="/dynamic-dashboard" replace />
             </ProtectedRoute>
           }
         />
