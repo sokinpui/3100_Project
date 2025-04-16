@@ -41,6 +41,10 @@
         "logoutButton": "登出",
         "viewProfile": "查看个人资料"
     },
+    "common": {
+        "close": "关闭",
+        "cancel": "取消"
+    },
     "dynamicDashboard": {
         "title": "动态仪表板",
         "addWidget": "添加小部件",
@@ -57,7 +61,7 @@
         "noDescription": "无描述",
         "expenseTrend": "支出趋势 (月度)",
         "notEnoughDataForTrend": "数据不足，无法进行趋势分析。",
-        "monthlyComparison": "月度比较 (最近6个月)",
+        "monthlyComparison": "月度比较",
         "noMonthlyData": "无月度数据可用。",
         "topSpendingCategories": "最高支出类别",
         "category": "类别",
@@ -76,7 +80,9 @@
         "overBudget": "超出预算",
         "setSpendingGoal": "设定期间目标",
         "goalAmount": "目标金额",
-        "setGoal": "设定"
+        "setGoal": "设定",
+        "addSelected": "添加选中",
+        "alreadyAdded": "已添加"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

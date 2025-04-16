@@ -41,6 +41,10 @@
         "logoutButton": "Logout",
         "viewProfile": "View Profile"
     },
+    "common": {
+        "close": "Close",
+        "cancel": "Cancel"
+    },
     "dynamicDashboard": {
         "title": "Dynamic Dashboard",
         "addWidget": "Add Widget",
@@ -57,7 +61,7 @@
         "noDescription": "No description",
         "expenseTrend": "Expense Trend (Monthly)",
         "notEnoughDataForTrend": "Not enough data for trend analysis.",
-        "monthlyComparison": "Monthly Comparison (Last 6)",
+        "monthlyComparison": "Monthly Comparison",
         "noMonthlyData": "No monthly data available.",
         "topSpendingCategories": "Top Spending Categories",
         "category": "Category",
@@ -76,7 +80,9 @@
         "overBudget": "over budget",
         "setSpendingGoal": "Set Period Goal",
         "goalAmount": "Goal Amount",
-        "setGoal": "Set"
+        "setGoal": "Set",
+        "addSelected": "Add Selected",
+        "alreadyAdded": "Already Added"
     },
     "timePeriods": {
         "last7days": "Last 7 Days",

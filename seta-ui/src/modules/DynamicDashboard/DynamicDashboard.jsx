@@ -285,6 +285,7 @@ export default function DynamicDashboard() {
         open={isAddWidgetDialogOpen}
         onClose={() => setIsAddWidgetDialogOpen(false)}
         onAddWidget={handleAddWidget}
+        existingWidgetTypes={widgets.map(w => w.type)}
       />
     </Container>
   );
