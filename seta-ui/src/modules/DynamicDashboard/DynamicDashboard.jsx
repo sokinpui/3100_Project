@@ -31,6 +31,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 const API_URL = 'http://localhost:8000';
 const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v1';
 const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
+const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle'; // Define selector for handle
 
 const WIDGET_COMPONENTS = {
   // --- Existing Widgets ---
@@ -274,6 +275,7 @@ export default function DynamicDashboard() {
                onLayoutChange={handleLayoutChange}
                isDraggable isResizable
                draggableCancel={WIDGET_REMOVE_SELECTOR}
+               draggableHandle={WIDGET_DRAG_HANDLE_SELECTOR} // <-- Add handle selector
            >
                {renderWidgets()}
            </ResponsiveGridLayout>
