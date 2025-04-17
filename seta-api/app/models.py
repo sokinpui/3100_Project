@@ -1,7 +1,8 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Numeric, Date, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Numeric, Date, ForeignKey, Interval
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+import datetime
 
 # Database connection string (URL) to connect to your PostgreSQL database hosted on Supabase
 # Format: postgresql://username:password@host:port/database_name
@@ -69,28 +70,34 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Unique username for authentication, indexed for fast lookups
-    username = Column(String, unique=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False) # Added nullable=False for clarity
 
     # Unique email address, indexed for fast lookups
-    email = Column(String, unique=True, index=True)
-    
+    email = Column(String, unique=True, index=True, nullable=False) # Added nullable=False for clarity
+
     # Stored password hash (not the actual password)
     password_hash = Column(String, nullable=False)
-    
+
     # Optional user profile information
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     contact_number = Column(String, nullable=False)
 
-    # Flag to mark if user account is active
-    is_active = Column(Boolean, default=True)
+    # Flag to mark if user account is active - default to False until verified
+    is_active = Column(Boolean, default=False)
     # Flag to track if email has been verified
     email_verified = Column(Boolean, default=False)
+    # Store the verification token, unique and nullable
+    verification_token = Column(String, unique=True, index=True, nullable=True)
     # Timestamp of last user login
-    last_login = Column(DateTime(timezone=True), nullable=True)     # True for now, will change to False after frontend is developed
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    # Add these two columns for password reset
+    password_reset_token = Column(String, unique=True, index=True, nullable=True)
+    password_reset_token_expiry = Column(DateTime(timezone=True), nullable=True)
 
     # Optional: Create a relationship to allow easy access to user's expenses
     expenses = relationship("Expense", back_populates="user", cascade="all, delete")
+
 
 def get_db():
     """

@@ -22,10 +22,12 @@ import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
 
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const API_URL = "http://localhost:8000";
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const defaultSettings = {
     profile: {
@@ -45,16 +47,9 @@ export default function Settings() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [passwordErrors, setPasswordErrors] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetRequestLoading, setResetRequestLoading] = useState(false);
+  const [resetRequestError, setResetRequestError] = useState("");
 
   const [formErrors, setFormErrors] = useState({
     username: "",
@@ -169,38 +164,43 @@ export default function Settings() {
 
   const handleCloseSnackbar = () => setSnackbarOpen(false);
 
-  const changePassword = () => {
+  const openPasswordDialog = () => {
+    setResetEmailSent(false);
+    setResetRequestError('');
     setPasswordDialogOpen(true);
-    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    setPasswordErrors({ currentPassword: "", newPassword: "", confirmPassword: "" });
   };
 
   const handleClosePasswordDialog = () => setPasswordDialogOpen(false);
 
-  const handlePasswordDataChange = (field, value) => {
-    setPasswordData((prev) => ({ ...prev, [field]: value }));
-    if (passwordErrors[field]) {
-      setPasswordErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
+  const handleRequestPasswordReset = async () => {
+    setResetRequestLoading(true);
+    setResetRequestError('');
+    setResetEmailSent(false);
 
-  const submitPasswordChange = () => {
-    const newErrors = {};
-    if (!passwordData.currentPassword) newErrors.currentPassword = "Current password is required";
-    if (!passwordData.newPassword) newErrors.newPassword = "New password is required";
-    else if (passwordData.newPassword.length < 8) newErrors.newPassword = "Password must be at least 8 characters";
-    if (!passwordData.confirmPassword) newErrors.confirmPassword = "Please confirm your new password";
-    else if (passwordData.newPassword !== passwordData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
-
-    if (Object.keys(newErrors).length > 0) {
-      setPasswordErrors(newErrors);
+    const userEmail = settings.profile.email;
+    if (!userEmail) {
+      setResetRequestError('User email not found. Cannot send reset link.');
+      setResetRequestLoading(false);
       return;
     }
 
-    setPasswordDialogOpen(false);
-    setSnackbarMessage("Password changed successfully!");
-    setSnackbarSeverity("success");
-    setSnackbarOpen(true);
+    try {
+      const response = await axios.post(`${API_URL}/request-password-reset`, {
+        email: userEmail
+      });
+      setSnackbarMessage(response.data.message || "Password reset email request sent.");
+      setSnackbarSeverity("success");
+      setResetEmailSent(true);
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      const message = error.response?.data?.detail || "Failed to send password reset email. Please try again.";
+      setSnackbarMessage(message);
+      setSnackbarSeverity("error");
+      setResetRequestError(message);
+    } finally {
+      setResetRequestLoading(false);
+      setSnackbarOpen(true);
+    }
   };
 
   const validateProfileForm = () => {
@@ -291,7 +291,7 @@ export default function Settings() {
                   variant="outlined"
                   color="primary"
                   sx={{ mt: 1, borderRadius: 2, textTransform: "none" }}
-                  onClick={changePassword}
+                  onClick={openPasswordDialog}
                 >
                   {t('settings.changePassword')}
                 </Button>
@@ -328,45 +328,40 @@ export default function Settings() {
         <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: "100%" }}>{snackbarMessage}</Alert>
       </Snackbar>
 
-      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog}>
+      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
         <DialogTitle>{t('settings.passwordDialog.title')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{t('settings.passwordDialog.description')}</DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label={t('settings.passwordDialog.currentPassword')}
-            type="password"
-            fullWidth
-            value={passwordData.currentPassword}
-            onChange={(e) => handlePasswordDataChange("currentPassword", e.target.value)}
-            error={!!passwordErrors.currentPassword}
-            helperText={passwordErrors.currentPassword}
-          />
-          <TextField
-            margin="dense"
-            label={t('settings.passwordDialog.newPassword')}
-            type="password"
-            fullWidth
-            value={passwordData.newPassword}
-            onChange={(e) => handlePasswordDataChange("newPassword", e.target.value)}
-            error={!!passwordErrors.newPassword}
-            helperText={passwordErrors.newPassword}
-          />
-          <TextField
-            margin="dense"
-            label={t('settings.passwordDialog.confirmPassword')}
-            type="password"
-            fullWidth
-            value={passwordData.confirmPassword}
-            onChange={(e) => handlePasswordDataChange("confirmPassword", e.target.value)}
-            error={!!passwordErrors.confirmPassword}
-            helperText={passwordErrors.confirmPassword}
-          />
+          {!resetEmailSent ? (
+            <>
+              <DialogContentText sx={{ mb: 2 }}>
+                Click the button below to send a password reset link to your registered email address ({settings.profile.email || 'loading...'}).
+              </DialogContentText>
+              {resetRequestError && (
+                <Alert severity="error" sx={{ mb: 2 }}>{resetRequestError}</Alert>
+              )}
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Button
+                  onClick={handleRequestPasswordReset}
+                  color="primary"
+                  variant="contained"
+                  disabled={resetRequestLoading || !settings.profile.email}
+                >
+                  {resetRequestLoading ? "Sending..." : "Send Password Reset Email"}
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <DialogContentText sx={{ textAlign: 'center' }}>
+              <Alert severity="success">
+                Password reset instructions have been sent to your email. Please check your inbox (and spam folder).
+              </Alert>
+            </DialogContentText>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClosePasswordDialog} color="primary">{t('settings.passwordDialog.cancel')}</Button>
-          <Button onClick={submitPasswordChange} color="primary">{t('settings.passwordDialog.change')}</Button>
+          <Button onClick={handleClosePasswordDialog} color="primary">
+            {resetEmailSent ? "Close" : t('settings.passwordDialog.cancel')}
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

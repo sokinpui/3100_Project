@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
 import models
 from models import get_db, User, Expense
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone  # Add timezone here
 from pydantic import BaseModel, EmailStr, ConfigDict, validator, Field
 from typing import List, Optional
 import hashlib
@@ -17,6 +17,34 @@ from PyPDF2 import PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from fastapi.responses import FileResponse
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+import os  # Ideally use environment variables
+import logging
+
+# Configure basic logging (optional but good practice)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# --- Email Configuration ---
+# WARNING: Hardcoding credentials is insecure. Use environment variables in production.
+conf = ConnectionConfig(
+    MAIL_USERNAME="csci3100setaproject@gmail.com",  # os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD="xltj rskt qgxb idsx ",  # os.getenv("MAIL_PASSWORD") # NOTE: Added '.' as per user prompt
+    MAIL_FROM="csci3100setaproject@gmail.com",  # os.getenv("MAIL_FROM") # Just use the string directly
+    MAIL_PORT=587,
+    MAIL_SERVER="smtp.gmail.com",
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True
+)
+
+fm = FastMail(conf)
+
+# --- Base URLs ---
+API_BASE_URL = "http://localhost:8000"  # Backend URL (used in emails if needed)
+# !!! IMPORTANT: Set this to your React app's URL !!!
+FRONTEND_BASE_URL = "http://localhost:3000"  # Or your frontend's actual URL
 
 # Create a FastAPI application instance
 app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
@@ -125,6 +153,32 @@ class ImportResponse(BaseModel):
     skipped_rows: List[int] = []
     errors: List[str] = []
 
+class SignupResponse(BaseModel):
+    """Response model for signup."""
+    message: str
+    user: UserResponse
+
+class RequestPasswordResetPayload(BaseModel):
+    """Payload expected when requesting a password reset."""
+    email: EmailStr
+
+class ResetPasswordPayload(BaseModel):
+    """Payload expected when resetting the password using a token."""
+    new_password: str
+    confirm_password: str
+
+    @validator('confirm_password')
+    def passwords_match(cls, v, values, **kwargs):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError('Passwords do not match')
+        return v
+
+    @validator('new_password')
+    def password_strength(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        return v
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -139,6 +193,59 @@ def get_user_by_username(db: Session, username: str):
     """Get a user by username."""
     return db.query(models.User).filter(models.User.username == username).first()
 
+async def send_verification_email(email_to: str, username: str, token: str):
+    """Sends the verification email."""
+    verification_link = f"{API_BASE_URL}/verify-email/{token}"
+    html_content = f"""
+    <html>
+        <body>
+            <h1>Welcome to SETA, {username}!</h1>
+            <p>Thank you for signing up. Please click the link below to activate your account:</p>
+            <a href="{verification_link}">Activate Account</a>
+            <p>If you did not sign up for this account, you can ignore this email.</p>
+        </body>
+    </html>
+    """
+    message = MessageSchema(
+        subject="SETA Account Activation",
+        recipients=[email_to],
+        body=html_content,
+        subtype=MessageType.html
+    )
+    try:
+        await fm.send_message(message)
+        logger.info(f"Verification email sent to {email_to}")
+    except Exception as e:
+        logger.error(f"Error sending verification email to {email_to}: {e}", exc_info=True)
+
+async def send_password_reset_email(email_to: str, username: str, token: str):
+    """Sends the password reset email."""
+    reset_link = f"{FRONTEND_BASE_URL}/reset-password/{token}"
+    html_content = f"""
+    <html>
+        <body>
+            <h1>SETA Password Reset Request</h1>
+            <p>Hello {username},</p>
+            <p>You requested a password reset. Please click the link below to set a new password:</p>
+            <a href="{reset_link}">Reset Password</a>
+            <p>This link will expire in 1 hour.</p>
+            <p>If you did not request a password reset, please ignore this email.</p>
+        </body>
+    </html>
+    """
+    message = MessageSchema(
+        subject="SETA Password Reset",
+        recipients=[email_to],
+        body=html_content,
+        subtype=MessageType.html
+    )
+    try:
+        await fm.send_message(message)
+        logger.info(f"Password reset email sent successfully to {email_to}")
+    except Exception as e:
+        logger.error(f"Error sending password reset email to {email_to}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to send password reset email.")
+
 # --------- User Authentication Endpoints ---------
 
 @app.post("/login", response_model=UserResponse)
@@ -149,17 +256,24 @@ async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail="Incorrect username or password"
         )
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User account is disabled"
-        )
+
     if not verify_password(user_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User account is inactive. Please verify your email or contact support."
+        )
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email not verified. Please check your email for the activation link."
         )
 
     user.last_login = func.now()
@@ -168,29 +282,132 @@ async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
 
     return user
 
-@app.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
-    """Create a new user."""
+    """Create a new user and send verification email."""
     if get_user_by_username(db, user_data.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
+    existing_email = db.query(models.User).filter(models.User.email == user_data.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
 
     password_hash = hash_password(user_data.password)
+    verification_token = secrets.token_urlsafe(32)
+
     db_user = models.User(
         username=user_data.username,
         email=user_data.email,
         password_hash=password_hash,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        contact_number=user_data.contact_number
+        contact_number=user_data.contact_number,
+        email_verified=False,
+        verification_token=verification_token
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    try:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not create user account."
+        )
 
-    return db_user
+    await send_verification_email(db_user.email, db_user.username, verification_token)
+
+    return SignupResponse(
+        message="Signup successful. Please check your email to activate your account.",
+        user=UserResponse.model_validate(db_user)
+    )
+
+@app.get("/verify-email/{token}", status_code=status.HTTP_200_OK)
+async def verify_email(token: str, db: Session = Depends(get_db)):
+    """Verify user's email address using the provided token."""
+    user = db.query(models.User).filter(models.User.verification_token == token).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token."
+        )
+
+    if user.email_verified:
+        return {"message": "Email already verified. You can now log in."}
+
+    user.email_verified = True
+    user.verification_token = None
+    user.is_active = True
+    try:
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify email."
+        )
+
+    return {"message": "Email successfully verified. You can now log in."}
+
+@app.post("/request-password-reset", status_code=status.HTTP_200_OK)
+async def request_password_reset(payload: RequestPasswordResetPayload, db: Session = Depends(get_db)):
+    """Generates a password reset token and sends it via email."""
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+
+    if not user:
+        logger.warning(f"Password reset requested for non-existent email: {payload.email}")
+        return {"message": "If an account with this email exists, a password reset link has been sent."}
+
+    token = secrets.token_urlsafe(32)
+    # Ensure expiry time is timezone-aware (UTC) when setting it
+    expiry_time = datetime.now(timezone.utc) + timedelta(hours=1)  # Use timezone.utc
+
+    user.password_reset_token = token
+    user.password_reset_token_expiry = expiry_time
+
+    try:
+        db.commit()
+        await send_password_reset_email(user.email, user.username, token)
+        return {"message": "If an account with this email exists, a password reset link has been sent."}
+    except HTTPException as http_exc:
+        db.rollback()
+        raise http_exc
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database error during password reset request for {payload.email}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while processing the request.")
+
+@app.post("/reset-password/{token}", status_code=status.HTTP_200_OK)
+async def reset_password_with_token(token: str, payload: ResetPasswordPayload, db: Session = Depends(get_db)):
+    """Resets the user's password using a valid token."""
+    user = db.query(models.User).filter(models.User.password_reset_token == token).first()
+
+    # Compare expiry time with timezone-aware current time (UTC)
+    if not user or user.password_reset_token_expiry is None or user.password_reset_token_expiry < datetime.now(timezone.utc):  # Use timezone.utc here
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token."
+        )
+
+    user.password_hash = hash_password(payload.new_password)
+    user.password_reset_token = None
+    user.password_reset_token_expiry = None
+
+    try:
+        db.commit()
+        return {"message": "Password has been reset successfully. You can now log in with your new password."}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database error during password reset confirmation for token {token}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while resetting the password.")
 
 # --------- Expense Endpoints ---------
 
@@ -251,7 +468,7 @@ async def delete_bulk_expenses(request: BulkDeleteRequest, db: Session = Depends
         db.commit()
     except Exception as e:
         db.rollback()
-        print(f"Error during bulk delete: {e}")
+        logger.error(f"Error during bulk delete: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete expenses due to a database error."
@@ -555,8 +772,8 @@ async def update_user_profile(user_id: int, user_data: UserUpdate, db: Session =
     return user
 
 @app.put("/users/{user_id}/password", status_code=status.HTTP_200_OK)
-async def change_user_password(user_id: int, password_data: PasswordChange, db: Session = Depends(get_db)):
-    """Change user password."""
+async def change_user_password_with_current(user_id: int, password_data: PasswordChange, db: Session = Depends(get_db)):
+    """Change user password *if* they provide the current password."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
 
     if not user:

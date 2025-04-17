@@ -48,6 +48,13 @@ export const ModuleProvider = ({ children }) => {
       isPublic: true,
     },
     {
+      id: 'reset-password',
+      name: 'Reset Password',
+      path: '/reset-password/:token',
+      component: React.lazy(() => import('../modules/ResetPassword')),
+      isPublic: true,
+    },
+    {
       id: 'settings',
       name: 'Settings',
       path: '/settings',

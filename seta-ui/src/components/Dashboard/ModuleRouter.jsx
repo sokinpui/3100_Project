@@ -2,12 +2,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense } from 'react';
 import LoadingSpinner from '../common/LoadingSpinner';
-// import Dashboard from '../../modules/Dashboard';
 import Sidebar from '../common/Sidebar';
 
 export default function ModuleRouter({ modules }) {
   const loginTime = localStorage.getItem('loginTime');
-  const isAuthenticated = loginTime;
+  const isAuthenticated = !!loginTime; // Ensure boolean conversion
 
   const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? <Sidebar>{children}</Sidebar> : <Navigate to="/login" replace />;
@@ -17,47 +16,45 @@ export default function ModuleRouter({ modules }) {
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         {modules.map((module) => {
-          if (module.isPublic) {    {/* This is for the login route */}
-          {/* isAuthenticated: already logged in, if change url to /login will auto redirect back to root "/" */}
-          {/* else: direct to login page */}
+          if (module.isPublic) {
+            // Special handling for public routes:
+            // Only redirect logged-in users AWAY from login/signup
+            if (isAuthenticated && (module.path === '/login' || module.path === '/signup')) {
+              return (
+                <Route
+                  key={module.id}
+                  path={module.path}
+                  // Change redirect target to the main dashboard page
+                  element={<Navigate to="/dynamic-dashboard" replace />}
+                />
+              );
+            } else {
+              // Allow access to other public routes (like reset-password) regardless of auth status
+              return (
+                <Route
+                  key={module.id}
+                  path={module.path}
+                  element={<module.component />}
+                />
+              );
+            }
+          } else { // Protected routes
             return (
               <Route
                 key={module.id}
                 path={module.path}
                 element={
-                  isAuthenticated ? (
-                    <Navigate to="/" replace />
-                  ) : (
+                  <ProtectedRoute>
                     <module.component />
-                  )
+                  </ProtectedRoute>
                 }
               />
             );
           }
-
-          {/* This returns the side bar and other components (including PageNotFound) */}
-          return (
-            <Route
-              key={module.id}
-              path={module.path}
-              element={
-                <ProtectedRoute>
-                  <module.component />
-                </ProtectedRoute>
-              }
-            />
-          );
         })}
-
-        {/* This is for the root page */}
-      <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/dynamic-dashboard" replace />
-            </ProtectedRoute>
-          }
-        />
+        {/* Optional: Add a default route for authenticated users if '/' isn't handled */}
+        {/* If you uncomment this, make sure it also points to /dynamic-dashboard */}
+        {/* <Route path="/" element={isAuthenticated ? <Navigate to="/dynamic-dashboard" replace /> : <Navigate to="/login" replace />} /> */}
       </Routes>
     </Suspense>
   );

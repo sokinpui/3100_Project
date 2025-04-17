@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box, Paper, Typography, TextField, Button, Container, InputAdornment,
-  Alert, IconButton, Avatar, CircularProgress
+  Alert, IconButton, Avatar, CircularProgress, AlertTitle
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import {
@@ -30,15 +30,20 @@ export default function Signup() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
+  const [signupSuccessMessage, setSignupSuccessMessage] = useState(''); // State for success message
 
   const handleSignup = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      setSignupSuccessMessage(''); // Clear success message on new attempt with errors
       return;
     }
     setIsLoading(true);
+    setErrors({}); // Clear previous errors
+    setSignupSuccessMessage(''); // Clear previous success message
+
     try {
       const userData = {
         username: formData.username.toLowerCase(),
@@ -48,15 +53,23 @@ export default function Signup() {
         last_name: formData.last_name,
         contact_number: formData.contact_number
       };
-      await axios.post(`${API_URL}/signup`, userData);
-      localStorage.setItem('username', userData.username);
+      // The backend now returns a different structure
+      const response = await axios.post(`${API_URL}/signup`, userData);
       setIsLoading(false);
-      navigate('/login', { state: { message: 'Signup successful! Please log in.' } });
+      // Display success message from backend instead of navigating
+      setSignupSuccessMessage(response.data.message || 'Signup successful. Please check your email.');
     } catch (error) {
       setIsLoading(false);
+      setSignupSuccessMessage(''); // Clear success message on error
       if (error.response) {
-        if (error.response.status === 400 && error.response.data.detail.includes('Username already registered')) {
-          setErrors({ username: 'Username already exists' });
+        if (error.response.status === 400) {
+          if (error.response.data.detail.includes('Username already registered')) {
+            setErrors({ username: 'Username already exists' });
+          } else if (error.response.data.detail.includes('Email already registered')) {
+            setErrors({ email: 'Email already exists' });
+          } else {
+            setErrors({ general: error.response.data.detail || 'Signup failed. Please check your input.' });
+          }
         } else {
           setErrors({ general: error.response.data.detail || 'Signup failed. Please try again.' });
         }
@@ -142,208 +155,222 @@ export default function Signup() {
           </Typography>
         </Box>
 
+        {/* Display General Errors */}
         {errors.general && (
           <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
             {errors.general}
           </Alert>
         )}
-        {Object.values(errors).some(error => error) && !errors.general && (
-          <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
-            Please correct the errors in the form
+
+        {/* Display Success Message */}
+        {signupSuccessMessage && (
+          <Alert severity="success" sx={{ mb: 3, borderRadius: 1 }}>
+            <AlertTitle>Success</AlertTitle>
+            {signupSuccessMessage}
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSignup} noValidate>
-          <Grid container spacing={2}>
-            <Grid size={12}>
-              <TextField
-                required
-                fullWidth
-                id="username"
-                label="Username"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                error={!!errors.username}
-                helperText={errors.username}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccountCircle />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                required
-                fullWidth
-                id="first_name"
-                label="First Name"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleInputChange}
-                error={!!errors.first_name}
-                helperText={errors.first_name}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                required
-                fullWidth
-                id="last_name"
-                label="Last Name"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleInputChange}
-                error={!!errors.last_name}
-                helperText={errors.last_name}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                required
-                fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                error={!!errors.email}
-                helperText={errors.email}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                required
-                fullWidth
-                id="contact_number"
-                label="Contact Number"
-                name="contact_number"
-                value={formData.contact_number}
-                onChange={handleInputChange}
-                error={!!errors.contact_number}
-                helperText={errors.contact_number}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                required
-                fullWidth
-                id="password"
-                label="Password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={handleInputChange}
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => handleTogglePassword('password')} edge="end">
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                required
-                fullWidth
-                id="rePassword"
-                label="Confirm Password"
-                name="rePassword"
-                type={showRePassword ? "text" : "password"}
-                value={formData.rePassword}
-                onChange={handleInputChange}
-                error={!!errors.rePassword}
-                helperText={errors.rePassword}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => handleTogglePassword('rePassword')} edge="end">
-                        {showRePassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
+        {/* Display Validation Errors Summary (Optional) */}
+        {Object.values(errors).some(error => error) && !errors.general && !signupSuccessMessage && (
+          <Alert severity="warning" sx={{ mb: 3, borderRadius: 1 }}>
+            Please correct the errors in the form.
+          </Alert>
+        )}
 
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{
-              mt: 4,
-              mb: 2,
-              py: 1.2,
-              borderRadius: 1,
-              fontWeight: 'bold',
-              textTransform: 'none',
-              fontSize: '1rem',
-            }}
-            disabled={isLoading}
-          >
-            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
-          </Button>
+        {/* Only show the form if signup wasn't just successful */}
+        {!signupSuccessMessage && (
+          <Box component="form" onSubmit={handleSignup} noValidate>
+            <Grid container spacing={2}>
+              <Grid size={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  error={!!errors.username}
+                  helperText={errors.username}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccountCircle />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  required
+                  fullWidth
+                  id="first_name"
+                  label="First Name"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleInputChange}
+                  error={!!errors.first_name}
+                  helperText={errors.first_name}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  required
+                  fullWidth
+                  id="last_name"
+                  label="Last Name"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleInputChange}
+                  error={!!errors.last_name}
+                  helperText={errors.last_name}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="contact_number"
+                  label="Contact Number"
+                  name="contact_number"
+                  value={formData.contact_number}
+                  onChange={handleInputChange}
+                  error={!!errors.contact_number}
+                  helperText={errors.contact_number}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="password"
+                  label="Password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => handleTogglePassword('password')} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid size={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="rePassword"
+                  label="Confirm Password"
+                  name="rePassword"
+                  type={showRePassword ? "text" : "password"}
+                  value={formData.rePassword}
+                  onChange={handleInputChange}
+                  error={!!errors.rePassword}
+                  helperText={errors.rePassword}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => handleTogglePassword('rePassword')} edge="end">
+                          {showRePassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            </Grid>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Button
-              variant="text"
-              onClick={() => navigate('/login')}
-              sx={{ textTransform: 'none' }}
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 4,
+                mb: 2,
+                py: 1.2,
+                borderRadius: 1,
+                fontWeight: 'bold',
+                textTransform: 'none',
+                fontSize: '1rem',
+              }}
+              disabled={isLoading}
             >
-              Already have an account? Sign in
+              {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
             </Button>
-            <IconButton onClick={handleToggleTheme} aria-label="toggle theme">
-              {themeMode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
           </Box>
+        )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: signupSuccessMessage ? 0 : 2, mb: 2 }}>
+          <Button
+            variant="text"
+            onClick={() => navigate('/login')}
+            sx={{ textTransform: 'none' }}
+          >
+            {signupSuccessMessage ? 'Proceed to Login' : 'Already have an account? Sign in'}
+          </Button>
+          <IconButton onClick={handleToggleTheme} aria-label="toggle theme">
+            {themeMode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
         </Box>
       </Paper>
     </Container>

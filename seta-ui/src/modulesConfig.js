@@ -74,6 +74,14 @@ export const appModules = [
     component: React.lazy(() => import('./components/common/PageNotFound')),
     icon: <ErrorIcon />,
   },
+  {
+    id: 'reset-password',
+    name: 'Reset Password', // Name used internally or potentially for titles
+    path: '/reset-password/:token', // Route with token parameter
+    component: React.lazy(() => import('./modules/ResetPassword')), // Path to your new component
+    isPublic: true, // Accessible without login
+    // icon: <LockResetIcon />, // Optional: Icon if you ever need to reference it
+  },
 ];
 
 export const sidebarMenuItems = appModules
