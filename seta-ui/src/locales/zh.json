@@ -65,7 +65,10 @@
     },
     "common": {
         "close": "关闭",
-        "cancel": "取消"
+        "cancel": "取消",
+        "Income": "收入",
+        "Expenses": "支出",
+        "All Time": "所有时间"
     },
     "dynamicDashboard": {
         "title": "动态仪表板",
@@ -81,7 +84,7 @@
         "recentTransactions": "最近交易",
         "noRecentTransactions": "未找到最近的交易。",
         "noDescription": "无描述",
-        "expenseTrend": "支出趋势 (月度)",
+        "expenseTrend": "支出趋势",
         "notEnoughDataForTrend": "数据不足，无法进行趋势分析。",
         "monthlyComparison": "月度比较",
         "noMonthlyData": "无月度数据可用。",
@@ -111,7 +114,25 @@
         "filterWidgetTitle": "数据筛选器",
         "filterByCategory": "按类别筛选",
         "filterByAmount": "按金额筛选",
-        "amountRange": "金额范围"
+        "amountRange": "金额范围",
+        "upcomingBillsTitle": "即将到来的账单",
+        "budgetOverviewTitle": "预算概览",
+        "miniCalendarTitle": "支出日历",
+        "goalProgressTitle": "目标进度",
+        "netCashFlowTitle": "净现金流",
+        "accountBalanceTitle": "账户余额",
+        "upcomingBillsPlaceholder": "即将到来的账单数据将在此处显示。",
+        "budgetOverviewPlaceholder": "预算概览将在此处显示。",
+        "miniCalendarPlaceholder": "支出日历热图将在此处显示。",
+        "goalProgressPlaceholder": "目标进度将在此处显示。",
+        "netCashFlowPlaceholder": "净现金流需要收入跟踪功能。",
+        "accountBalancePlaceholder": "账户余额跟踪将在此处显示。",
+        "fetchError": "加载此小部件数据失败。",
+        "noUpcomingBills": "未来 14 天内没有即将到来的账单。",
+        "noBudgetsSet": "尚未设置任何预算。",
+        "overBudgetBy": "超出预算",
+        "noGoalsSet": "尚未设置任何财务目标。",
+        "noAccountsSetup": "尚未设置任何账户。"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

@@ -1,107 +1,170 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Numeric, Date, ForeignKey
+# app/models.py
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Numeric, Date, ForeignKey, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base # Use this if you are on older SQLAlchemy, otherwise use DeclarativeBase
+# from sqlalchemy.orm import DeclarativeBase # Use this for modern SQLAlchemy
 from sqlalchemy.sql import func
+import enum
 
-# Database connection string (URL) to connect to your PostgreSQL database hosted on Supabase
-# Format: postgresql://username:password@host:port/database_name
+# Database connection string
 DATABASE_URL = "postgresql://postgres.wuakwojmykjicsgwcwgr:postgres123.@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
 
-# Create a SQLAlchemy engine instance which manages connections to the database
+# Create engine
 engine = create_engine(DATABASE_URL)
 
-# Create a base class for declarative class definitions
-# This is the foundation for defining SQLAlchemy ORM models
-Base = declarative_base()
+# Create base class (adjust import based on your SQLAlchemy version)
+# class Base(DeclarativeBase): # Modern SQLAlchemy
+#     pass
+Base = declarative_base() # Older SQLAlchemy
 
+# --- New Enum for Frequency ---
+class FrequencyEnum(enum.Enum):
+    daily = "daily"
+    weekly = "weekly"
+    monthly = "monthly"
+    quarterly = "quarterly"
+    yearly = "yearly"
+    one_time = "one_time"
 
-# Create all tables in the database that don't yet exist
-# This runs CREATE TABLE statements for all models defined above
-Base.metadata.create_all(bind=engine)
-
-# Create a session factory which will be used to create database sessions
-# Sessions are used to interact with the database (add, query, update, delete)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
+# --- Define Models (Expense, Income, RecurringExpense, Budget, Goal, Account, User) ---
+# (Keep all your model definitions exactly as they were in the previous step)
 
 class Expense(Base):
-    """
-    Expense model representing the 'expenses' table in the database.
-    Each attribute maps to a column in the table.
-    """
-    __tablename__ = "expenses"  # Name of the table in the database
-
-    # Primary key column with auto-increment
+    __tablename__ = "expenses"
     id = Column(Integer, primary_key=True, index=True)
-
-    # Foreign key to link expenses to a user (not enforced at database level here)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-
-    # Expense amount stored as a Numeric type (for precise decimal values)
     amount = Column(Numeric)
-
-    # Date of the expense
     date = Column(Date)
-
-    # Category of the expense (e.g., 'Food', 'Transport', etc.)
     category_name = Column(String)
-
-    # Additional details about the expense
     description = Column(String)
-
-    # server_default=func.now() sets the creation time automatically
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # onupdate=func.now() updates this timestamp whenever the record is modified
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True) # Added account link
+    # Relationships defined below after all classes are defined
 
-    # Optional: Create a relationship to allow easy access to the user object
-    user = relationship("User", back_populates="expenses")
+class Income(Base):
+    __tablename__ = "income"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    amount = Column(Numeric, nullable=False)
+    date = Column(Date, nullable=False)
+    source = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True) # Added account link
+    # Relationships defined below
+
+class RecurringExpense(Base):
+    __tablename__ = "recurring_expenses"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    amount = Column(Numeric, nullable=False)
+    category_name = Column(String, nullable=False)
+    frequency = Column(SQLAlchemyEnum(FrequencyEnum), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=True)
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True) # Added account link
+    # Relationships defined below
+
+class Budget(Base):
+    __tablename__ = "budgets"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    category_name = Column(String, nullable=False)
+    amount_limit = Column(Numeric, nullable=False)
+    period = Column(SQLAlchemyEnum(FrequencyEnum), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Relationships defined below
+
+class Goal(Base):
+    __tablename__ = "goals"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    target_amount = Column(Numeric, nullable=False)
+    current_amount = Column(Numeric, default=0.0)
+    target_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Relationships defined below
+
+class Account(Base):
+    __tablename__ = "accounts"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    account_type = Column(String, nullable=False)
+    starting_balance = Column(Numeric, default=0.0)
+    balance_date = Column(Date, nullable=False)
+    currency = Column(String, default='USD')
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Relationships defined below
 
 class User(Base):
-    """
-    User model representing the 'users' table in the database.
-    Stores user authentication and profile information.
-    """
     __tablename__ = "users"
-
-    # Primary key with auto-increment
     id = Column(Integer, primary_key=True, index=True)
-
-    # Unique username for authentication, indexed for fast lookups
     username = Column(String, unique=True, index=True)
-
-    # Unique email address, indexed for fast lookups
     email = Column(String, unique=True, index=True)
-    
-    # Stored password hash (not the actual password)
     password_hash = Column(String, nullable=False)
-    
-    # Optional user profile information
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     contact_number = Column(String, nullable=False)
-
-    # Flag to mark if user account is active
     is_active = Column(Boolean, default=True)
-    # Flag to track if email has been verified
     email_verified = Column(Boolean, default=False)
-    # Timestamp of last user login
-    last_login = Column(DateTime(timezone=True), nullable=True)     # True for now, will change to False after frontend is developed
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    # Relationships defined below
 
-    # Optional: Create a relationship to allow easy access to user's expenses
-    expenses = relationship("Expense", back_populates="user", cascade="all, delete")
+# --- Define Relationships After All Classes ---
+User.expenses = relationship("Expense", order_by=Expense.id, back_populates="user", cascade="all, delete")
+User.income = relationship("Income", order_by=Income.id, back_populates="user", cascade="all, delete")
+User.recurring_expenses = relationship("RecurringExpense", order_by=RecurringExpense.id, back_populates="user", cascade="all, delete")
+User.budgets = relationship("Budget", order_by=Budget.id, back_populates="user", cascade="all, delete")
+User.goals = relationship("Goal", order_by=Goal.id, back_populates="user", cascade="all, delete")
+User.accounts = relationship("Account", order_by=Account.id, back_populates="user", cascade="all, delete")
 
+Expense.user = relationship("User", back_populates="expenses")
+Expense.account = relationship("Account", back_populates="expenses")
+
+Income.user = relationship("User", back_populates="income")
+Income.account = relationship("Account", back_populates="income")
+
+RecurringExpense.user = relationship("User", back_populates="recurring_expenses")
+# Note: RecurringExpense doesn't directly back-populate to Account in this simple model
+
+Budget.user = relationship("User", back_populates="budgets")
+
+Goal.user = relationship("User", back_populates="goals")
+
+Account.user = relationship("User", back_populates="accounts")
+Account.expenses = relationship("Expense", order_by=Expense.date, back_populates="account")
+Account.income = relationship("Income", order_by=Income.date, back_populates="account")
+# --- End Relationships ---
+
+
+# Create session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Dependency function
 def get_db():
-    """
-    Dependency function for FastAPI to get a database session.
-    Creates a new session for each request and closes it when done.
-    
-    Yields:
-        Session: A SQLAlchemy session object for database operations
-    """
     db = SessionLocal()
     try:
-        yield db  # The session is used in the FastAPI route handler
+        yield db
     finally:
-        db.close()  # Ensures the session is closed even if exceptions occur
+        db.close()
+
+# --- Create Tables ---
+# This line should be executed to create the tables in the database
+# Run `python app/models.py` from your terminal after defining models
+# if __name__ == "__main__":
+#     print("Creating database tables...")
+#     Base.metadata.create_all(bind=engine)
+#     print("Tables created (if they didn't exist).")

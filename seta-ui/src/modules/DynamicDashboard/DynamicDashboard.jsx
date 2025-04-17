@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
 import { parseISO, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, isValid } from 'date-fns';
 
-// --- Keep Widget Imports ---
+// --- Existing Widget Imports ---
 import WidgetWrapper from './widgets/WidgetWrapper';
 import OverviewSummaryWidget from './widgets/OverviewSummaryWidget';
 import CategoryBreakdownWidget from './widgets/CategoryBreakdownWidget';
@@ -22,6 +22,13 @@ import AverageDailySpendWidget from './widgets/AverageDailySpendWidget';
 import CategorySpendingTimelineWidget from './widgets/CategorySpendingTimelineWidget';
 import SpendingGoalTrackerWidget from './widgets/SpendingGoalTrackerWidget';
 import FilterWidget from './widgets/FilterWidget';
+// --- Import NEW Placeholder Widgets ---
+import UpcomingBillsWidget from './widgets/UpcomingBillsWidget';
+import BudgetOverviewWidget from './widgets/BudgetOverviewWidget';
+import MiniCalendarWidget from './widgets/MiniCalendarWidget';
+import GoalProgressWidget from './widgets/GoalProgressWidget';
+import NetCashFlowWidget from './widgets/NetCashFlowWidget';
+import AccountBalanceWidget from './widgets/AccountBalanceWidget';
 // --- End Import Widgets ---
 
 import AddWidgetDialog from './AddWidgetDialog';
@@ -30,7 +37,7 @@ import T from '../../utils/T';
 // --- Keep Constants ---
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const API_URL = 'http://localhost:8000';
-const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v1';
+const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v2'; // <-- Increment version if layout structure changes significantly
 const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
 const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
 
@@ -38,76 +45,54 @@ const DEFAULT_MAX_AMOUNT = 1000;
 
 const DEFAULT_FILTERS = {
     categories: [],
-    amountRange: [0, DEFAULT_MAX_AMOUNT] // Use the default max initially
+    amountRange: [0, DEFAULT_MAX_AMOUNT]
 };
 
+// --- Updated WIDGET_COMPONENTS ---
 const WIDGET_COMPONENTS = {
-  overviewSummary: {
-    component: OverviewSummaryWidget,
-    titleKey: 'dynamicDashboard.overviewSummary',
-    // Reduced min size - allows smaller display
-    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
+  // Existing Widgets (keep adjusted layouts)
+  overviewSummary: { component: OverviewSummaryWidget, titleKey: 'dynamicDashboard.overviewSummary', defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } },
+  filterWidget: { component: FilterWidget, titleKey: 'dynamicDashboard.filterWidgetTitle', defaultLayout: { w: 3, h: 5, minW: 2, minH: 4, isResizable: true } },
+  categoryBreakdown: { component: CategoryBreakdownWidget, titleKey: 'dynamicDashboard.categoryBreakdown', defaultLayout: { w: 4, h: 6, minW: 3, minH: 4 } },
+  recentTransactions: { component: RecentTransactionsWidget, titleKey: 'dynamicDashboard.recentTransactions', defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 } },
+  expenseTrend: { component: ExpenseTrendWidget, titleKey: 'dynamicDashboard.expenseTrend', defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } },
+  monthlyComparison: { component: MonthlyComparisonWidget, titleKey: 'dynamicDashboard.monthlyComparison', defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } },
+  topSpendingCategories: { component: TopSpendingCategoriesWidget, titleKey: 'dynamicDashboard.topSpendingCategories', defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 } },
+  largestExpenses: { component: LargestExpensesWidget, titleKey: 'dynamicDashboard.largestExpenses', defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 } },
+  averageDailySpend: { component: AverageDailySpendWidget, titleKey: 'dynamicDashboard.averageDailySpend', defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } },
+  categorySpendingTimeline: { component: CategorySpendingTimelineWidget, titleKey: 'dynamicDashboard.categorySpendingTimeline', defaultLayout: { w: 8, h: 7, minW: 4, minH: 4 } },
+  spendingGoalTracker: { component: SpendingGoalTrackerWidget, titleKey: 'dynamicDashboard.spendingGoal', defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 } },
+  // --- NEW Widgets ---
+  upcomingBills: {
+    component: UpcomingBillsWidget,
+    titleKey: 'dynamicDashboard.upcomingBillsTitle',
+    defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 } // List-like
   },
-  filterWidget: {
-      component: FilterWidget,
-      titleKey: 'dynamicDashboard.filterWidgetTitle',
-      // Adjust default/min size as needed
-      defaultLayout: { w: 3, h: 5, minW: 2, minH: 4, isResizable: true } // Filters might not need much height
+  budgetOverview: {
+    component: BudgetOverviewWidget,
+    titleKey: 'dynamicDashboard.budgetOverviewTitle',
+    defaultLayout: { w: 5, h: 6, minW: 3, minH: 4 } // Needs space for bars/summaries
   },
-  categoryBreakdown: {
-    component: CategoryBreakdownWidget,
-    titleKey: 'dynamicDashboard.categoryBreakdown',
-    // Keep chart min size reasonable
-    defaultLayout: { w: 4, h: 6, minW: 3, minH: 4 }
+  miniCalendar: {
+    component: MiniCalendarWidget,
+    titleKey: 'dynamicDashboard.miniCalendarTitle',
+    defaultLayout: { w: 4, h: 6, minW: 3, minH: 4 } // Squarish
   },
-  recentTransactions: {
-    component: RecentTransactionsWidget,
-    titleKey: 'dynamicDashboard.recentTransactions',
-    // Allow list to be narrower and shorter
-    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+  goalProgress: {
+    component: GoalProgressWidget,
+    titleKey: 'dynamicDashboard.goalProgressTitle',
+    defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 } // Similar to goal tracker
   },
-  expenseTrend: {
-    component: ExpenseTrendWidget,
-    titleKey: 'dynamicDashboard.expenseTrend',
-    // Keep chart min size reasonable
-    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
+  netCashFlow: {
+    component: NetCashFlowWidget,
+    titleKey: 'dynamicDashboard.netCashFlowTitle',
+    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } // Simple summary
   },
-  monthlyComparison: {
-    component: MonthlyComparisonWidget,
-    titleKey: 'dynamicDashboard.monthlyComparison',
-     // Keep chart min size reasonable
-    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
+  accountBalance: {
+    component: AccountBalanceWidget,
+    titleKey: 'dynamicDashboard.accountBalanceTitle',
+    defaultLayout: { w: 5, h: 5, minW: 3, minH: 3 } // Might show multiple accounts
   },
-  topSpendingCategories: {
-    component: TopSpendingCategoriesWidget,
-    titleKey: 'dynamicDashboard.topSpendingCategories',
-    // Allow table/list to be narrower and shorter
-    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
-  },
-  largestExpenses: {
-    component: LargestExpensesWidget,
-    titleKey: 'dynamicDashboard.largestExpenses',
-     // Allow list to be narrower and shorter
-    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
-  },
-  averageDailySpend: {
-    component: AverageDailySpendWidget,
-    titleKey: 'dynamicDashboard.averageDailySpend',
-     // Reduced min size - allows smaller display
-    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
-   },
-   categorySpendingTimeline: {
-     component: CategorySpendingTimelineWidget,
-     titleKey: 'dynamicDashboard.categorySpendingTimeline',
-     // Keep chart min size reasonable, maybe allow slightly shorter
-     defaultLayout: { w: 8, h: 7, minW: 4, minH: 4 }
-   },
-   spendingGoalTracker: {
-     component: SpendingGoalTrackerWidget,
-     titleKey: 'dynamicDashboard.spendingGoal',
-     // Allow narrower and shorter
-     defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 }
-   },
 };
 // --- End Constants ---
 
@@ -116,40 +101,57 @@ export default function DynamicDashboard() {
     const { t } = useTranslation();
     const userId = localStorage.getItem('userId');
 
-    // --- State ---
+    // --- State (Keep existing state) ---
     const [layouts, setLayouts] = useState({});
-    const [widgets, setWidgets] = useState([]); // Stores { id: uuid, type: string }[]
+    const [widgets, setWidgets] = useState([]);
     const [allExpenses, setAllExpenses] = useState([]);
-    const [isLoadingData, setIsLoadingData] = useState(false);
+    const [isLoadingData, setIsLoadingData] = useState(false); // Primarily for expenses now
     const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
     const [activeFilters, setActiveFilters] = useState(DEFAULT_FILTERS);
     // --- End State ---
 
-    // --- Load Layout ---
+    // --- Load Layout (Keep existing logic) ---
     useEffect(() => {
         const savedData = localStorage.getItem(LAYOUT_STORAGE_KEY);
         if (savedData) { try { const parsedData = JSON.parse(savedData); if (parsedData.widgets && parsedData.layouts) { const validWidgets = parsedData.widgets.filter(w => WIDGET_COMPONENTS[w.type]); const validLayouts = {}; Object.keys(parsedData.layouts).forEach(bp => { validLayouts[bp] = parsedData.layouts[bp].filter(l => validWidgets.some(w => w.id === l.i)); }); setWidgets(validWidgets); setLayouts(validLayouts); } else { initializeDefaultLayout(); } } catch (e) { console.error("Failed to parse saved layout", e); initializeDefaultLayout(); } } else { initializeDefaultLayout(); }
         setIsMounted(true);
     }, []);
 
-    // --- Initialize Default ---
+    // --- Initialize Default (Keep existing logic) ---
     const initializeDefaultLayout = () => {
-        const initialWidgets = [ { id: uuidv4(), type: 'overviewSummary' }, { id: uuidv4(), type: 'categoryBreakdown' }, { id: uuidv4(), type: 'recentTransactions' }, { id: uuidv4(), type: 'expenseTrend' }, ]; setWidgets(initialWidgets); const initialLgLayout = initialWidgets.map((widget, index) => ({ i: widget.id, x: (index % 3) * 4, y: Math.floor(index / 3) * 6, ...WIDGET_COMPONENTS[widget.type].defaultLayout, })); setLayouts({ lg: initialLgLayout });
+        // Maybe include some of the new widgets by default? Example:
+        const initialWidgets = [
+            { id: uuidv4(), type: 'overviewSummary' },
+            { id: uuidv4(), type: 'categoryBreakdown' },
+            { id: uuidv4(), type: 'recentTransactions' },
+            { id: uuidv4(), type: 'expenseTrend' },
+            // { id: uuidv4(), type: 'upcomingBills' }, // Example: Add upcoming bills by default
+            // { id: uuidv4(), type: 'miniCalendar' }, // Example: Add mini calendar by default
+        ];
+        setWidgets(initialWidgets);
+        const initialLgLayout = initialWidgets.map((widget, index) => ({
+            i: widget.id,
+            x: (index % 3) * 4, // Adjust layout algorithm if more defaults are added
+            y: Math.floor(index / 3) * 6,
+            ...WIDGET_COMPONENTS[widget.type].defaultLayout,
+        }));
+        setLayouts({ lg: initialLgLayout });
     };
 
-    // --- Save Layout ---
+    // --- Save Layout (Keep existing logic) ---
     useEffect(() => {
         if (isMounted && widgets.length > 0) { try { const dataToSave = JSON.stringify({ layouts, widgets }); localStorage.setItem(LAYOUT_STORAGE_KEY, dataToSave); } catch (e) { console.error("Failed to save dashboard layout", e); } } else if (isMounted && widgets.length === 0) { localStorage.removeItem(LAYOUT_STORAGE_KEY); }
     }, [layouts, widgets, isMounted]);
 
-    // --- Fetch ALL Expenses ---
+    // --- Fetch ALL Expenses (Keep existing logic) ---
+    // Note: Other data (recurring, budgets, etc.) will be fetched within individual widgets
     useEffect(() => {
-        const fetchExpenses = async () => { if (!userId) return; setIsLoadingData(true); try { const response = await axios.get(`${API_URL}/expenses/${userId}`); setAllExpenses(response.data || []); } catch (error) { console.error("Failed to load expenses", error); setAllExpenses([]); } finally { setIsLoadingData(false); } }; fetchExpenses();
+        const fetchExpenses = async () => { if (!userId) return; setIsLoadingData(true); try { const response = await axios.get(`${API_URL}/expenses/${userId}`); setAllExpenses(response.data || []); } catch (error) { console.error("Failed to load expenses", error); setAllExpenses([]); /* TODO: Show error to user */ } finally { setIsLoadingData(false); } }; fetchExpenses();
     }, [userId]);
 
-    // --- Calculate Time-Period Filtered Expenses (intermediate step) ---
+    // --- Calculate Time-Period Filtered Expenses (Keep existing logic) ---
     const timePeriodFilteredExpenses = useMemo(() => {
         let expensesToFilter = allExpenses;
         if (timePeriod && (timePeriod.startDate || timePeriod.endDate)) {
@@ -162,26 +164,29 @@ export default function DynamicDashboard() {
                     } catch (e) { return false; }
                 });
             } else {
-                expensesToFilter = [];
+                 // If only one date is set, maybe default to showing nothing or handle differently?
+                 // For now, require both dates for custom range filtering.
+                 // Presets handle their own ranges. 'All time' uses allExpenses.
+                 if (timePeriod.startDate && !timePeriod.endDate) expensesToFilter = []; // Or handle as needed
+                 if (!timePeriod.startDate && timePeriod.endDate) expensesToFilter = []; // Or handle as needed
             }
         }
         return expensesToFilter;
     }, [allExpenses, timePeriod]);
 
-    // --- Calculate Max Amount based on Time-Period Filtered Data ---
+    // --- Calculate Max Amount (Keep existing logic) ---
     const maxExpenseAmount = useMemo(() => {
         if (!timePeriodFilteredExpenses || timePeriodFilteredExpenses.length === 0) {
-            return DEFAULT_MAX_AMOUNT; // Use default if no data in period
+            return DEFAULT_MAX_AMOUNT;
         }
         const max = timePeriodFilteredExpenses.reduce((maxVal, expense) => {
             const amount = parseFloat(expense.amount) || 0;
             return Math.max(maxVal, amount);
         }, 0);
-        // Ensure a minimum sensible max for the slider if max is very low or 0
-        return Math.max(max, 100); // e.g., minimum max of $100
+        return Math.max(max, 100);
     }, [timePeriodFilteredExpenses]);
 
-    // --- Filter Expenses Based on Time Period ---
+    // --- Apply Active Filters (Keep existing logic) ---
     const filteredExpenses = useMemo(() => {
         let expensesToFilter = timePeriodFilteredExpenses; // Start with time-period filtered
 
@@ -192,12 +197,11 @@ export default function DynamicDashboard() {
             );
         }
 
-        // Amount Range Filter (using state set by the slider)
+        // Amount Range Filter
         if (activeFilters.amountRange) {
             const [minAmount, maxAmount] = activeFilters.amountRange;
             expensesToFilter = expensesToFilter.filter(expense => {
                 const amount = parseFloat(expense.amount) || 0;
-                // Ensure maxAmount check uses the value from state, not the calculated max prop
                 return amount >= minAmount && amount <= maxAmount;
             });
         }
@@ -207,47 +211,37 @@ export default function DynamicDashboard() {
     }, [timePeriodFilteredExpenses, activeFilters]);
     // --- End Filter Expenses ---
 
-    // --- Layout Change Handler ---
+    // --- Layout Change Handler (Keep existing logic) ---
     const handleLayoutChange = useCallback((layout, allLayouts) => {
-        if (isMounted && JSON.stringify(allLayouts) !== JSON.stringify(layouts)) { setLayouts(allLayouts); }
+        // Prevent updates during initial mount before layout is stable
+        if (isMounted && JSON.stringify(allLayouts) !== JSON.stringify(layouts)) {
+             setLayouts(allLayouts);
+        }
     }, [isMounted, layouts]);
 
-    // --- Add Widget (Helper Function) ---
-    // Adds a single widget type, generating a unique ID
+
+    // --- Add/Remove Widget Helpers (Keep existing logic) ---
     const addSingleWidget = useCallback((widgetType) => {
         const widgetConfig = WIDGET_COMPONENTS[widgetType];
-        if (!widgetConfig) {
-            console.warn(`Attempted to add unknown widget type: ${widgetType}`);
-            return;
-        }
-        // Note: This simple version allows multiple widgets of the same type.
-        // Add a check here using `widgets.some(w => w.type === widgetType)` if you want to prevent duplicates.
-
-        const newWidget = { id: uuidv4(), type: widgetType }; // Generate unique ID
-        console.log("Adding widget:", newWidget); // Debug log
+        if (!widgetConfig) return;
+        const newWidget = { id: uuidv4(), type: widgetType };
         setWidgets(prev => [...prev, newWidget]);
-
-        // Add layout item for the new widget instance
         setLayouts(prevLayouts => {
             const newLayouts = { ...prevLayouts };
-            const breakpoints = Object.keys(prevLayouts).length > 0 ? Object.keys(prevLayouts) : ['lg']; // Default to 'lg' if empty
+            const breakpoints = Object.keys(prevLayouts).length > 0 ? Object.keys(prevLayouts) : ['lg'];
             breakpoints.forEach(breakpoint => {
                 const currentBreakpointLayout = newLayouts[breakpoint] || [];
                 const maxY = Math.max(0, ...currentBreakpointLayout.map(item => item.y + item.h));
                 newLayouts[breakpoint] = [
                     ...currentBreakpointLayout,
-                    // Use the unique newWidget.id for the layout item 'i'
                     { i: newWidget.id, x: 0, y: maxY, ...widgetConfig.defaultLayout }
                 ];
             });
             return newLayouts;
         });
-    }, []); // Removed widgets dependency unless checking for duplicates
+    }, []);
 
-    // --- Remove Widget (Helper Function) ---
-    // Removes a widget instance based on its unique ID (UUID)
     const removeSingleWidget = useCallback((widgetInstanceId) => {
-        console.log("Removing widget instance ID:", widgetInstanceId); // Debug log
         setWidgets(prev => prev.filter(widget => widget.id !== widgetInstanceId));
         setLayouts(prevLayouts => {
             const newLayouts = {};
@@ -258,51 +252,33 @@ export default function DynamicDashboard() {
         });
     }, []);
 
-    // --- Handler for Dialog Apply Changes ---
+    // --- Handler for Dialog Apply Changes (Keep existing logic) ---
     const handleApplyWidgetChanges = useCallback((desiredStates) => {
-        console.log("Applying changes with desired states:", desiredStates);
         const currentWidgetsMap = new Map(widgets.map(w => [w.type, w.id]));
-
-        // Determine widgets to add and remove
         Object.entries(desiredStates).forEach(([widgetType, shouldBePresent]) => {
             const isCurrentlyPresent = currentWidgetsMap.has(widgetType);
-
             if (shouldBePresent && !isCurrentlyPresent) {
-                console.log("Decision: Add widget type", widgetType);
                 addSingleWidget(widgetType);
             } else if (!shouldBePresent && isCurrentlyPresent) {
                 const instanceIdToRemove = currentWidgetsMap.get(widgetType);
-                console.log(`Decision: Remove widget type ${widgetType} with instance ID ${instanceIdToRemove}`);
                 if (instanceIdToRemove) {
                      removeSingleWidget(instanceIdToRemove);
-                     // --- RESET FILTERS IF FILTER WIDGET IS REMOVED ---
                      if (widgetType === 'filterWidget') {
-                         console.log("Filter widget removed, resetting active filters.");
-                         // Reset state using the default constant
-                         // We pass maxExpenseAmount here so the reset range is relevant
-                         setActiveFilters({
+                         setActiveFilters({ // Reset filters if filter widget removed
                              categories: [],
                              amountRange: [0, maxExpenseAmount]
                          });
                      }
-                     // --- END RESET ---
-                } else {
-                    console.error(`Could not find instance ID for widget type ${widgetType} to remove.`);
                 }
             }
         });
+    }, [widgets, addSingleWidget, removeSingleWidget, maxExpenseAmount]); // Added maxExpenseAmount dependency
 
-    }, [widgets, addSingleWidget, removeSingleWidget, maxExpenseAmount]);
-    // --- End Handler for Dialog Apply Changes ---
-
-    // --- Callback for Filter Widget ---
+    // --- Callback for Filter Widget (Keep existing logic) ---
     const handleFilterChange = useCallback((newFilters) => {
-        console.log("Filters updated:", newFilters);
-        // Clamp range on update
         const adjustedRange = [...newFilters.amountRange];
         if (adjustedRange[1] > maxExpenseAmount) adjustedRange[1] = maxExpenseAmount;
         if (adjustedRange[0] > adjustedRange[1]) adjustedRange[0] = adjustedRange[1];
-
         setActiveFilters(prev => ({
              ...prev,
              categories: newFilters.categories,
@@ -311,29 +287,55 @@ export default function DynamicDashboard() {
     }, [maxExpenseAmount]);
     // --- End Callback ---
 
-    // --- Render Widgets ---
+
+    // --- Render Widgets (Logic remains the same, passes standard props) ---
     const renderWidgets = () => {
         return widgets.map((widget) => {
             const config = WIDGET_COMPONENTS[widget.type];
-            if (!config) { /* ... */ return null; }
+            if (!config) {
+                console.warn(`Widget config not found for type: ${widget.type}`);
+                return null; // Skip rendering if config is missing
+            }
             const WidgetComponent = config.component;
 
+            // Props passed down to ALL widgets
+            const commonWidgetProps = {
+                // Pass filtered expenses relevant to the time period and filters
+                expenses: filteredExpenses,
+                // Pass the global loading state (primarily for initial expense load)
+                // Individual widgets might have their own internal loading states
+                isLoading: isLoadingData,
+                userId: userId,
+                // Pass the current time period and filters if widgets need them directly
+                timePeriod: timePeriod,
+                activeFilters: activeFilters,
+            };
+
+            // Specific props for the FilterWidget
             const extraProps = widget.type === 'filterWidget'
                 ? {
                       onFilterChange: handleFilterChange,
-                      initialFilters: activeFilters, // Pass current filters
-                      maxAmount: maxExpenseAmount // Pass the calculated max amount
+                      initialFilters: activeFilters,
+                      maxAmount: maxExpenseAmount
                   }
                 : {};
 
+             // --- Pass remove callback to WidgetWrapper ---
+             const handleRemoveThisWidget = () => removeSingleWidget(widget.id);
+
+
             return (
+                // Use the unique widget instance ID (widget.id) as the key for the grid item div
                 <div key={widget.id} className="widget-grid-item">
-                    <WidgetWrapper titleKey={config.titleKey}>
+                     {/* Pass the widget instance ID and remove callback */}
+                    <WidgetWrapper
+                        titleKey={config.titleKey}
+                        widgetId={widget.id}
+                        onRemoveWidget={handleRemoveThisWidget}
+                    >
                         <WidgetComponent
-                            expenses={filteredExpenses}
-                            isLoading={isLoadingData}
-                            userId={userId}
-                            {...extraProps}
+                            {...commonWidgetProps} // Spread common props
+                            {...extraProps}      // Spread specific props
                         />
                     </WidgetWrapper>
                 </div>
@@ -348,25 +350,30 @@ export default function DynamicDashboard() {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h5" component="h1"> <T>dynamicDashboard.title</T> </Typography>
                 <Button variant="contained" startIcon={<AddIcon />} onClick={() => setIsAddWidgetDialogOpen(true)} >
-                    {/* Updated button text */}
                     <T>dynamicDashboard.manageWidgets</T>
                 </Button>
             </Box>
 
+            {/* Time Period Selector remains outside the grid */}
             <TimePeriodSelectorWidget onPeriodChange={setTimePeriod} />
 
             {!isMounted ? ( <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
             ) : widgets.length === 0 ? ( <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 5, border: '1px dashed grey', borderRadius: 1, minHeight: 200 }}> <Typography color="text.secondary"> <T>dynamicDashboard.emptyDashboard</T> </Typography> </Box>
             ) : (
                 <ResponsiveGridLayout
-                    className="layout" layouts={layouts}
+                    className="layout"
+                    layouts={layouts}
                     breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                     cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-                    rowHeight={50} margin={[15, 15]} containerPadding={[10, 10]}
+                    rowHeight={50} // Adjust base row height if needed
+                    margin={[15, 15]}
+                    containerPadding={[10, 10]}
                     onLayoutChange={handleLayoutChange}
-                    isDraggable isResizable
-                    draggableCancel={WIDGET_REMOVE_SELECTOR}
-                    draggableHandle={WIDGET_DRAG_HANDLE_SELECTOR}
+                    isDraggable
+                    isResizable
+                    draggableCancel={WIDGET_REMOVE_SELECTOR} // Class to prevent dragging
+                    draggableHandle={WIDGET_DRAG_HANDLE_SELECTOR} // Class for the drag handle (on WidgetWrapper header)
+                    useCSSTransforms={true} // Generally smoother performance
                 >
                     {renderWidgets()}
                 </ResponsiveGridLayout>
@@ -375,9 +382,7 @@ export default function DynamicDashboard() {
             <AddWidgetDialog
                 open={isAddWidgetDialogOpen}
                 onClose={() => setIsAddWidgetDialogOpen(false)}
-                // REMOVE onAddWidget and onRemoveExistingWidget
-                onApplyChanges={handleApplyWidgetChanges} // <-- Pass the new handler
-                // Pass current widget types for initial checkbox state
+                onApplyChanges={handleApplyWidgetChanges}
                 existingWidgetTypes={widgets.map(w => w.type)}
             />
         </Container>

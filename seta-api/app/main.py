@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
 import models
-from models import get_db, User, Expense
+# from models import get_db, User, Expense
+from models import get_db, User, Expense, Income, RecurringExpense, Budget, Goal, Account, FrequencyEnum
 from datetime import date, datetime
 from pydantic import BaseModel, EmailStr, ConfigDict, validator, Field
 from typing import List, Optional
@@ -35,6 +36,81 @@ async def read_root():
     return {"message": "Welcome to SETA API", "version": "1.0"}
 
 # --------- Pydantic Models ---------
+
+class IncomeBase(BaseModel):
+    amount: float
+    date: date
+    source: str
+    description: Optional[str] = None
+    account_id: Optional[int] = None
+
+class IncomeCreate(IncomeBase):
+    user_id: int
+
+class IncomeResponse(IncomeBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class RecurringExpenseBase(BaseModel):
+    name: str
+    amount: float
+    category_name: str
+    frequency: FrequencyEnum
+    start_date: date
+    end_date: Optional[date] = None
+    description: Optional[str] = None
+    account_id: Optional[int] = None
+
+class RecurringExpenseResponse(RecurringExpenseBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class BudgetBase(BaseModel):
+    category_name: str
+    amount_limit: float
+    period: FrequencyEnum
+    start_date: date
+    end_date: Optional[date] = None
+
+class BudgetResponse(BudgetBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class GoalBase(BaseModel):
+    name: str
+    target_amount: float
+    current_amount: float = 0.0
+    target_date: Optional[date] = None
+
+class GoalResponse(GoalBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class AccountBase(BaseModel):
+    name: str
+    account_type: str
+    starting_balance: float = 0.0
+    balance_date: date
+    currency: str = 'USD'
+
+class AccountResponse(AccountBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
 
 class ExpenseBase(BaseModel):
     """Base expense model with common attributes."""
@@ -499,6 +575,60 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
 
     else:
         raise HTTPException(status_code=400, detail="Unsupported format. Use json, csv, xlsx, or pdf")
+
+# --------- New Income Endpoints ---------
+
+@app.get("/income/{user_id}", response_model=List[IncomeResponse])
+async def get_user_income(user_id: int, db: Session = Depends(get_db)):
+    """Get all income records for a user."""
+    income_records = db.query(models.Income).filter(models.Income.user_id == user_id).all()
+    return income_records
+
+@app.post("/income", response_model=IncomeResponse, status_code=status.HTTP_201_CREATED)
+async def create_income(income_data: IncomeCreate, db: Session = Depends(get_db)):
+    """Create a new income record."""
+    user = db.query(models.User).filter(models.User.id == income_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_income = models.Income(**income_data.dict())
+    db.add(db_income)
+    db.commit()
+    db.refresh(db_income)
+    return db_income
+
+# --------- New Recurring Expense Endpoints ---------
+
+@app.get("/recurring/{user_id}", response_model=List[RecurringExpenseResponse])
+async def get_user_recurring_expenses(user_id: int, db: Session = Depends(get_db)):
+    """Get all recurring expense rules for a user."""
+    # TODO: Add logic to calculate next due dates based on frequency/start_date
+    recurring = db.query(models.RecurringExpense).filter(models.RecurringExpense.user_id == user_id).all()
+    return recurring
+
+# --------- New Budget Endpoints ---------
+
+@app.get("/budgets/{user_id}", response_model=List[BudgetResponse])
+async def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
+    """Get all budget rules for a user."""
+    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).all()
+    return budgets
+
+# --------- New Goal Endpoints ---------
+
+@app.get("/goals/{user_id}", response_model=List[GoalResponse])
+async def get_user_goals(user_id: int, db: Session = Depends(get_db)):
+    """Get all financial goals for a user."""
+    goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).all()
+    return goals
+
+# --------- New Account Endpoints ---------
+
+@app.get("/accounts/{user_id}", response_model=List[AccountResponse])
+async def get_user_accounts(user_id: int, db: Session = Depends(get_db)):
+    """Get all accounts for a user."""
+    accounts = db.query(models.Account).filter(models.Account.user_id == user_id).all()
+    return accounts
 
 # --------- User Settings Endpoints ---------
 

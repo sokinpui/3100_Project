@@ -44,7 +44,10 @@
     },
     "common": {
         "close": "Close",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "Income": "Income",
+        "Expenses": "Expenses",
+        "All Time": "All Time"
     },
     "expenseImport": {
         "title": "Import Expenses from CSV",
@@ -81,7 +84,7 @@
         "recentTransactions": "Recent Transactions",
         "noRecentTransactions": "No recent transactions found.",
         "noDescription": "No description",
-        "expenseTrend": "Expense Trend (Monthly)",
+        "expenseTrend": "Expense Trend",
         "notEnoughDataForTrend": "Not enough data for trend analysis.",
         "monthlyComparison": "Monthly Comparison",
         "noMonthlyData": "No monthly data available.",
@@ -111,7 +114,25 @@
         "filterWidgetTitle": "Data Filters",
         "filterByCategory": "Filter by Category",
         "filterByAmount": "Filter by Amount",
-        "amountRange": "Amount range"
+        "amountRange": "Amount range",
+        "upcomingBillsTitle": "Upcoming Bills",
+        "budgetOverviewTitle": "Budget Overview",
+        "miniCalendarTitle": "Spending Calendar",
+        "goalProgressTitle": "Goal Progress",
+        "netCashFlowTitle": "Net Cash Flow",
+        "accountBalanceTitle": "Account Balances",
+        "upcomingBillsPlaceholder": "Upcoming bills data will be shown here.",
+        "budgetOverviewPlaceholder": "Budget overview will be shown here.",
+        "miniCalendarPlaceholder": "Spending calendar heatmap will be shown here.",
+        "goalProgressPlaceholder": "Goal progress will be shown here.",
+        "netCashFlowPlaceholder": "Net cash flow requires income tracking.",
+        "accountBalancePlaceholder": "Account balance tracking will be shown here.",
+        "fetchError": "Failed to load data for this widget.",
+        "noUpcomingBills": "No upcoming bills found in the next 14 days.",
+        "noBudgetsSet": "No budgets have been set up yet.",
+        "overBudgetBy": "Over budget by",
+        "noGoalsSet": "No financial goals have been set up yet.",
+        "noAccountsSetup": "No accounts have been set up yet."
     },
     "timePeriods": {
         "last7days": "Last 7 Days",
