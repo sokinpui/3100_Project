@@ -15,3 +15,5 @@ venv/
 *.env
 .env.*
 *.log
+
+test_user_data_summary.json
