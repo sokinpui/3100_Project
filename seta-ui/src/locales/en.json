@@ -39,11 +39,33 @@
         "logoutMessage": "Are you sure you want to log out of your account?",
         "cancel": "Cancel",
         "logoutButton": "Logout",
-        "viewProfile": "View Profile"
+        "viewProfile": "View Profile",
+        "importExpenses": "Import Expenses"
     },
     "common": {
         "close": "Close",
         "cancel": "Cancel"
+    },
+    "expenseImport": {
+        "title": "Import Expenses from CSV",
+        "description": "Upload a CSV file to bulk import your expenses. Ensure the file has the correct columns and format.",
+        "requiredHeadersInfo": "Required columns:",
+        "optionalHeadersInfo": " Optional column:",
+        "dateFormatInfo": " Date format must be",
+        "selectFile": "Select CSV File",
+        "uploadAndProcess": "Upload and Process",
+        "processing": "Processing...",
+        "fileSelected": "File selected:",
+        "noFileSelected": "No file selected. Please select a CSV file to upload.",
+        "invalidFileType": "Invalid file type. Please select a .csv file.",
+        "importSuccess": "Import successful!",
+        "importCompleteWithError": "Import completed with errors.",
+        "importFailed": "Import failed.",
+        "apiError": "An error occurred during upload. Please check the file or try again.",
+        "importedCount": "{{count}} expenses imported successfully.",
+        "skippedCount": "{{count}} rows skipped due to errors.",
+        "validationError": "CSV validation failed: {{details}}",
+        "parsingError": "Error parsing CSV file: {{details}}"
     },
     "dynamicDashboard": {
         "title": "Dynamic Dashboard",

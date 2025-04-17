@@ -1,22 +1,22 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi import FastAPI, Depends, HTTPException, status, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
 import models
 from models import get_db, User, Expense
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, validator, Field
 from typing import List, Optional
 import hashlib
 import secrets
 import string
-
-from fastapi.responses import FileResponse
+import csv
 import io
 import pandas as pd
 from PyPDF2 import PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from fastapi.responses import FileResponse
 
 # Create a FastAPI application instance
 app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
@@ -111,6 +111,20 @@ class PaginatedExpenseResponse(BaseModel):
     total_count: int
     expenses: List[ExpenseResponse]
 
+class ImportExpenseItem(BaseModel):
+    """Model for a single expense item within an import request (without user_id)."""
+    amount: float
+    date: date
+    category_name: str
+    description: Optional[str] = None
+
+class ImportResponse(BaseModel):
+    """Response model for the import operation."""
+    message: str
+    imported_count: int
+    skipped_rows: List[int] = []
+    errors: List[str] = []
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -150,11 +164,9 @@ async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
 
     user.last_login = func.now()
     db.commit()
-    db.refresh(user) # Refresh to get updated last_login if needed by response
+    db.refresh(user)
 
-    # Pydantic will now correctly serialize the 'user' ORM object
-    # into a UserResponse model because from_attributes=True is set.
-    return user # No need for UserResponse.from_orm(user) explicitly here
+    return user
 
 @app.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
@@ -178,9 +190,7 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
 
-    # Pydantic will correctly serialize db_user here too
     return db_user
-
 
 # --------- Expense Endpoints ---------
 
@@ -188,9 +198,7 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 async def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get all expenses for a user."""
     expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).all()
-    # Pydantic will correctly serialize the list of ORM objects
-    # because ExpenseResponse has from_attributes=True
-    return expenses # No need for list comprehension with .from_orm()
+    return expenses
 
 @app.post("/expenses", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
 async def create_expense(expense_data: CreateExpense, db: Session = Depends(get_db)):
@@ -236,36 +244,20 @@ async def delete_expense(expense_id: int, db: Session = Depends(get_db)):
 async def delete_bulk_expenses(request: BulkDeleteRequest, db: Session = Depends(get_db)):
     """Delete multiple expenses by their IDs efficiently."""
     if not request.expense_ids:
-        # Handle empty list case if necessary, maybe return early or raise 400
-        return None # Or raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No expense IDs provided")
+        return None
 
-    # Construct the delete query directly
-    delete_query = db.query(models.Expense).filter(models.Expense.id.in_(request.expense_ids))
-
-    # Execute the bulk delete operation
-    # synchronize_session=False is generally faster for bulk deletes.
-    # It tells SQLAlchemy not to try and reconcile the session state with the deleted rows.
-    # Use 'fetch' if you need to access attributes of deleted objects *after* delete,
-    # or None/False if you don't. False is usually the most performant.
     try:
-        deleted_count = delete_query.delete(synchronize_session=False)
+        deleted_count = db.query(models.Expense).filter(models.Expense.id.in_(request.expense_ids)).delete(synchronize_session=False)
         db.commit()
     except Exception as e:
-        db.rollback() # Rollback on error
-        print(f"Error during bulk delete: {e}") # Log the error
+        db.rollback()
+        print(f"Error during bulk delete: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete expenses due to a database error."
         )
 
-    # Optional: Check if the number of deleted rows matches the input count
-    # This might be useful for verification but adds complexity if partial success is okay
-    # if deleted_count != len(request.expense_ids):
-    #     print(f"Warning: Expected to delete {len(request.expense_ids)} expenses, but deleted {deleted_count}.")
-        # Decide how to handle this: maybe log, maybe raise a specific error if needed.
-        # For now, we'll assume success if no exception occurred.
-
-    return None # Return 204 No Content on success
+    return None
 
 @app.put("/expenses/{expense_id}", response_model=ExpenseResponse)
 async def update_expense(expense_id: int, expense_data: CreateExpense, db: Session = Depends(get_db)):
@@ -288,6 +280,131 @@ async def update_expense(expense_id: int, expense_data: CreateExpense, db: Sessi
     db.refresh(expense)
 
     return expense
+
+@app.post("/expenses/import/{user_id}", response_model=ImportResponse)
+async def import_expenses_from_csv(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Imports expenses for a user from an uploaded CSV file."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    try:
+        contents = await file.read()
+        try:
+            decoded_content = contents.decode('utf-8')
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid file encoding. Please use UTF-8.")
+        csv_data = io.StringIO(decoded_content)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading file: {e}")
+    finally:
+        await file.close()
+
+    expected_headers = ['date', 'amount', 'category_name', 'description']
+    imported_count = 0
+    skipped_rows = []
+    errors = []
+    expenses_to_add = []
+
+    try:
+        reader = csv.DictReader(csv_data)
+        reader_headers_lower = {h.lower().strip() for h in reader.fieldnames or []}
+        required_headers_lower = {'date', 'amount', 'category_name'}
+        if not required_headers_lower.issubset(reader_headers_lower):
+            missing = required_headers_lower - reader_headers_lower
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required CSV columns: {', '.join(missing)}. Required: date, amount, category_name."
+            )
+
+        header_map = {
+            expected.lower(): actual
+            for expected in expected_headers
+            for actual in (reader.fieldnames or [])
+            if expected.lower() == actual.lower().strip()
+        }
+
+        for i, row in enumerate(reader):
+            line_number = i + 2
+            try:
+                mapped_row = {
+                    'date': row.get(header_map.get('date')),
+                    'amount': row.get(header_map.get('amount')),
+                    'category_name': row.get(header_map.get('category_name')),
+                    'description': row.get(header_map.get('description'))
+                }
+
+                if not mapped_row['date'] or not mapped_row['amount'] or not mapped_row['category_name']:
+                    raise ValueError("Missing required value(s) (date, amount, category_name)")
+
+                try:
+                    expense_date = datetime.strptime(mapped_row['date'], '%Y-%m-%d').date()
+                except ValueError:
+                    raise ValueError(f"Invalid date format: '{mapped_row['date']}'. Use YYYY-MM-DD.")
+
+                try:
+                    amount = float(mapped_row['amount'])
+                    if amount <= 0:
+                        raise ValueError("Amount must be positive.")
+                except (ValueError, TypeError):
+                    raise ValueError(f"Invalid amount value: '{mapped_row['amount']}'. Must be a positive number.")
+
+                category_name = mapped_row['category_name'].strip()
+                if not category_name:
+                    raise ValueError("Category name cannot be empty.")
+
+                description = mapped_row['description'].strip() if mapped_row['description'] else None
+
+                db_expense = models.Expense(
+                    user_id=user_id,
+                    amount=amount,
+                    date=expense_date,
+                    category_name=category_name,
+                    description=description
+                )
+                expenses_to_add.append(db_expense)
+
+            except ValueError as ve:
+                errors.append(f"Row {line_number}: {ve}")
+                skipped_rows.append(line_number)
+            except Exception as e:
+                errors.append(f"Row {line_number}: Unexpected error - {e}")
+                skipped_rows.append(line_number)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error parsing CSV: {e}")
+
+    if expenses_to_add:
+        try:
+            db.add_all(expenses_to_add)
+            db.commit()
+            imported_count = len(expenses_to_add)
+        except Exception as e:
+            db.rollback()
+            errors.append(f"Database commit failed: {e}")
+            imported_count = 0
+
+    status_message = "Import completed."
+    if errors:
+        status_message = "Import completed with errors."
+    if imported_count == 0 and errors:
+        status_message = "Import failed. See errors."
+
+    return ImportResponse(
+        message=status_message,
+        imported_count=imported_count,
+        skipped_rows=skipped_rows,
+        errors=errors
+    )
 
 @app.get("/expenses/{user_id}/report")
 async def generate_expense_report(user_id: int, format: str = "json", db: Session = Depends(get_db)):
@@ -363,11 +480,11 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
         y -= 20
 
         for exp in expense_data:
-            if y < 50:  # New page if near bottom
+            if y < 50:
                 c.showPage()
                 y = height - 40
             line = f"{exp['date']}  {exp['category_name']}  ${exp['amount']}  {exp['description'] or '-'}  {exp['created_at']}"
-            c.drawString(30, y, line[:100])  # Truncate if too long
+            c.drawString(30, y, line[:100])
             y -= 20
 
         c.showPage()
@@ -470,4 +587,3 @@ async def get_total_expenses(user_id: int, db: Session = Depends(get_db)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-

@@ -1,56 +1,85 @@
 // src/modulesConfig.js
-import { lazy } from 'react';
-
-// Lazy load components for better performance and code splitting
-const Login = lazy(() => import('./login/Login'));
-// const Dashboard = lazy(() => import('./modules/Dashboard/Dashboard'));
-const DynamicDashboard = lazy(() => import('./modules/DynamicDashboard/DynamicDashboard')); // <-- Import new module
-const ExpenseManager = lazy(() => import('./modules/ExpenseManager/ExpenseManager'));
-const ExpenseReports = lazy(() => import('./modules/ExpenseReports')); // Assuming default export
-const Settings = lazy(() => import('./modules/Settings')); // Assuming default export
-// Import PageNotFound if you intend to use it as a route component
-// const PageNotFound = lazy(() => import('./components/common/PageNotFound'));
+import React from 'react';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AddCardIcon from '@mui/icons-material/AddCard';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LoginIcon from '@mui/icons-material/Login';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ErrorIcon from '@mui/icons-material/Error';
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 
 export const appModules = [
-  // Public route definition
   {
     id: 'login',
+    name: 'Login',
     path: '/login',
-    component: Login,
-    isPublic: true // Flag for public access
+    component: React.lazy(() => import('./login/Login')),
+    isPublic: true,
+    icon: <LoginIcon />,
   },
-  // Authenticated routes (will be wrapped by Sidebar via ProtectedRoute)
-  // Note: ModuleRouter.jsx handles '/' separately, so this might not be strictly needed here
-  // unless you want Dashboard to be part of the dynamic mapping too.
-  // {
-  //   id: 'dashboard',
-  //   path: '/', // Redundant with the explicit '/' route in ModuleRouter? Check usage.
-  //   component: Dashboard
-  // },
   {
-    id: 'dynamic-dashboard', // Unique ID
-    path: '/dynamic-dashboard', // URL path for the module
-    component: DynamicDashboard // The component to render
+    id: 'signup',
+    name: 'Signup',
+    path: '/signup',
+    component: React.lazy(() => import('./login/Signup')),
+    isPublic: true,
+    icon: <PersonAddIcon />,
+  },
+  {
+    id: 'dynamic-dashboard',
+    name: 'sidebar.dynamicDashboard',
+    path: '/dynamic-dashboard',
+    component: React.lazy(() => import('./modules/DynamicDashboard/DynamicDashboard')),
+    isProtected: true,
+    icon: <ViewQuiltIcon />,
   },
   {
     id: 'manage-expenses',
+    name: 'sidebar.newExpenseManager',
     path: '/manage-expenses',
-    component: ExpenseManager
+    component: React.lazy(() => import('./modules/ExpenseManager/ExpenseManager')),
+    isProtected: true,
+    icon: <AddCardIcon />,
   },
   {
-    id: 'reports',
+    id: 'expense-import',
+    name: 'sidebar.importExpenses',
+    path: '/import-expenses',
+    component: React.lazy(() => import('./modules/ExpenseImport/ExpenseImport')),
+    isProtected: true,
+    icon: <ImportExportIcon />,
+  },
+  {
+    id: 'expense-report',
+    name: 'sidebar.reports',
     path: '/reports',
-    component: ExpenseReports
+    component: React.lazy(() => import('./modules/ExpenseReports')),
+    isProtected: true,
+    icon: <AssessmentIcon />,
   },
   {
     id: 'settings',
+    name: 'sidebar.settings',
     path: '/settings',
-    component: Settings
+    component: React.lazy(() => import('./modules/Settings')),
+    isProtected: true,
+    icon: <SettingsIcon />,
   },
-  // Example: Catch-all route for 404, rendered within ProtectedRoute if placed here
-  // {
-  //   id: 'not-found',
-  //   path: '*', // Matches any path not matched above
-  //   component: PageNotFound
-  // }
+  {
+    id: 'page-not-found',
+    name: 'Page Not Found',
+    path: '*',
+    component: React.lazy(() => import('./components/common/PageNotFound')),
+    icon: <ErrorIcon />,
+  },
 ];
+
+export const sidebarMenuItems = appModules
+  .filter(module => module.isProtected && module.icon)
+  .map(module => ({
+    text: module.name,
+    icon: module.icon,
+    path: module.path,
+  }));

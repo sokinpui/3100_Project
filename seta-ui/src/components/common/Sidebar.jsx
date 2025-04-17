@@ -5,6 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext.jsx';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import { changeLanguage } from '../../locales/i18n';
 import T from '../../utils/T.jsx';
+import { sidebarMenuItems } from '../../modulesConfig';
 
 import {
   Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
@@ -13,24 +14,13 @@ import {
 } from '@mui/material';
 
 import {
-  Dashboard as DashboardIcon, AddCard as AddCardIcon, Assessment as AssessmentIcon,
-  Settings as SettingsIcon, Logout as LogoutIcon, AccountCircle as AccountCircleIcon,
   ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
   ColorLens as ColorLensIcon, Language as LanguageIcon,
-  ViewQuilt as ViewQuiltIcon, // <-- Import icon for Dynamic Dashboard
+  Logout as LogoutIcon, AccountCircle as AccountCircleIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
 const collapsedWidth = 70;
-
-// --- Define Menu Items ---
-const menuItems = [
-  { text: 'sidebar.dashboard', icon: <DashboardIcon />, path: '/dynamic-dashboard' },
-  { text: 'sidebar.newExpenseManager', icon: <AddCardIcon />, path: '/manage-expenses' },
-  { text: 'sidebar.reports', icon: <AssessmentIcon />, path: '/reports' },
-  { text: 'sidebar.settings', icon: <SettingsIcon />, path: '/settings' },
-];
-// --- End Define Menu Items ---
 
 export default function Sidebar({ children }) {
   const navigate = useNavigate();
@@ -84,10 +74,8 @@ export default function Sidebar({ children }) {
     handleLanguageClose();
   };
 
-  // --- Drawer Content ---
   const drawer = (
     <Box sx={{ overflow: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header Box */}
       <Box
         sx={{
           height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -107,11 +95,8 @@ export default function Sidebar({ children }) {
         </IconButton>
       </Box>
 
-      {/* Main List Area */}
       <List sx={{ flexGrow: 1, px: open ? 2 : 0.5, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        {/* Top Section (Theme, Lang, Nav Items) */}
         <Box>
-          {/* Theme Control */}
           <ListItem disablePadding sx={{ mt: 0.5 }}>
             <Tooltip title={open ? '' : <T>settings.themeLabel</T>} placement="right" arrow>
               <ListItemButton onClick={handleThemeClick} sx={{ justifyContent: open ? 'initial' : 'center', borderRadius: '8px', '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' }, py: open ? 1 : 1.5 }}>
@@ -128,7 +113,6 @@ export default function Sidebar({ children }) {
             <MenuItem onClick={() => handleThemeChange('system')}><T>settings.systemDefault</T></MenuItem>
           </Menu>
 
-          {/* Language Control */}
           <ListItem disablePadding sx={{ mt: 0.5 }}>
             <Tooltip title={open ? '' : <T>settings.language</T>} placement="right" arrow>
               <ListItemButton onClick={handleLanguageClick} sx={{ justifyContent: open ? 'initial' : 'center', borderRadius: '8px', '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' }, py: open ? 1 : 1.5 }}>
@@ -146,12 +130,11 @@ export default function Sidebar({ children }) {
 
           <Divider sx={{ my: 2, borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)' }} />
 
-          {/* Navigation Items */}
-          {menuItems.map((item) => ( // <-- Iterate over defined menuItems
-            <ListItem key={item.path} disablePadding sx={{ mt: 0.5 }}> {/* Use path or text as key */}
+          {sidebarMenuItems.map((item) => (
+            <ListItem key={item.path} disablePadding sx={{ mt: 0.5 }}>
               <Tooltip title={open ? '' : <T>{item.text}</T>} placement="right" arrow>
                 <ListItemButton
-                  onClick={() => navigate(item.path)} // <-- Use path from item
+                  onClick={() => navigate(item.path)}
                   sx={{
                     justifyContent: open ? 'initial' : 'center', borderRadius: '8px',
                     backgroundColor: isActive(item.path) ? (isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.12)') : 'transparent',
@@ -160,7 +143,7 @@ export default function Sidebar({ children }) {
                   }}
                 >
                   <ListItemIcon sx={{ color: isActive(item.path) ? 'primary.main' : (isDarkMode ? 'text.primary' : 'text.secondary'), minWidth: open ? '40px' : '0px', mr: open ? 'auto' : 'auto', justifyContent: 'center' }}>
-                    {item.icon} {/* <-- Use icon from item */}
+                    {item.icon}
                   </ListItemIcon>
                   {open && <ListItemText primary={<T>{item.text}</T>} slotProps={{ primary: { sx: { fontWeight: isActive(item.path) ? 'medium' : 'normal', color: isDarkMode ? 'text.primary' : 'inherit' } } }} />}
                 </ListItemButton>
@@ -169,9 +152,7 @@ export default function Sidebar({ children }) {
           ))}
         </Box>
 
-        {/* Bottom Section (Account, Logout) */}
         <Box>
-          {/* Logout Item */}
           <ListItem disablePadding sx={{ mt: 0.5 }}>
             <Tooltip title={open ? '' : <T>sidebar.logout</T>} placement="right" arrow>
               <ListItemButton onClick={handleLogoutClick} sx={{ justifyContent: open ? 'initial' : 'center', borderRadius: '8px', '&:hover': { backgroundColor: isDarkMode ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.08)' }, py: open ? 1 : 1.5 }}>
@@ -183,8 +164,7 @@ export default function Sidebar({ children }) {
             </Tooltip>
           </ListItem>
 
-          {/* Account Info */}
-          {open ? ( /* Expanded View */
+          {open ? (
             <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="top">
               <Box onClick={() => navigate('/settings')} sx={{ borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`, px: 2, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer', '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' } }}>
                 <Avatar sx={{ width: 38, height: 38, flexShrink: 0, bgcolor: 'primary.main', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}> <AccountCircleIcon /> </Avatar>
@@ -194,7 +174,7 @@ export default function Sidebar({ children }) {
                 </Box>
               </Box>
             </Tooltip>
-          ) : ( /* Collapsed View */
+          ) : (
             <Tooltip title={<T>sidebar.viewProfile</T>} arrow placement="right">
               <Box onClick={() => navigate('/settings')} sx={{ borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`, py: 2, display: 'flex', justifyContent: 'center', cursor: 'pointer', '&:hover': { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)' } }}>
                 <Avatar sx={{ width: 38, height: 38, bgcolor: 'primary.main', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}> <AccountCircleIcon /> </Avatar>
@@ -204,7 +184,6 @@ export default function Sidebar({ children }) {
         </Box>
       </List>
 
-      {/* Logout Confirmation Dialog */}
       <Dialog open={logoutDialogOpen} onClose={handleDialogClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description" slotProps={{ elevation: 3, sx: { borderRadius: 2, p: 1 } }}>
         <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}><T>sidebar.confirmLogout</T></DialogTitle>
         <DialogContent> <DialogContentText id="alert-dialog-description"><T>sidebar.logoutMessage</T></DialogContentText> </DialogContent>
@@ -215,9 +194,7 @@ export default function Sidebar({ children }) {
       </Dialog>
     </Box>
   );
-  // --- End Drawer Content ---
 
-  // --- Main Component Return ---
   return (
     <Box sx={{ display: 'flex' }}>
       <Drawer
@@ -244,10 +221,8 @@ export default function Sidebar({ children }) {
           transition: 'width 0.2s ease-in-out',
         }}
       >
-        {/* The actual page content (routed component) is rendered here */}
         {children}
       </Box>
     </Box>
   );
-  // --- End Main Component Return ---
 }
