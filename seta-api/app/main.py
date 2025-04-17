@@ -894,6 +894,155 @@ async def delete_bulk_income(request: BulkIncomeDeleteRequest, db: Session = Dep
 
     return None # Return 204 No Content on success
 
+@app.post("/income/import/{user_id}", response_model=ImportResponse)
+async def import_income_from_csv(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Imports income records for a user from an uploaded CSV file."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    try:
+        contents = await file.read()
+        try:
+            decoded_content = contents.decode('utf-8')
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid file encoding. Please use UTF-8.")
+        csv_data = io.StringIO(decoded_content)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading file: {e}")
+    finally:
+        await file.close()
+
+    # Define expected headers for income import
+    expected_income_headers = ['date', 'amount', 'source', 'description', 'account_id']
+    imported_count = 0
+    skipped_rows = []
+    errors = []
+    income_to_add = []
+
+    try:
+        reader = csv.DictReader(csv_data)
+        reader_headers_lower = {h.lower().strip() for h in reader.fieldnames or []}
+        # Define required headers for income
+        required_headers_lower = {'date', 'amount', 'source'}
+        if not required_headers_lower.issubset(reader_headers_lower):
+            missing = required_headers_lower - reader_headers_lower
+            raise HTTPException(
+                status_code=400,
+                # Update error message for income
+                detail=f"Missing required CSV columns: {', '.join(missing)}. Required: date, amount, source."
+            )
+
+        # Map expected headers (case-insensitive) to actual headers found
+        header_map = {
+            expected.lower(): actual
+            for expected in expected_income_headers
+            for actual in (reader.fieldnames or [])
+            if expected.lower() == actual.lower().strip()
+        }
+
+        for i, row in enumerate(reader):
+            line_number = i + 2
+            try:
+                # Map row data using found headers
+                mapped_row = {
+                    'date': row.get(header_map.get('date')),
+                    'amount': row.get(header_map.get('amount')),
+                    'source': row.get(header_map.get('source')),
+                    'description': row.get(header_map.get('description')),
+                    'account_id': row.get(header_map.get('account_id'))
+                }
+
+                # --- Income Specific Validation ---
+                if not mapped_row['date'] or not mapped_row['amount'] or not mapped_row['source']:
+                    raise ValueError("Missing required value(s) (date, amount, source)")
+
+                try:
+                    income_date = datetime.strptime(mapped_row['date'], '%Y-%m-%d').date()
+                except ValueError:
+                    raise ValueError(f"Invalid date format: '{mapped_row['date']}'. Use YYYY-MM-DD.")
+
+                try:
+                    amount = float(mapped_row['amount'])
+                    if amount <= 0:
+                        raise ValueError("Amount must be positive.")
+                except (ValueError, TypeError):
+                    raise ValueError(f"Invalid amount value: '{mapped_row['amount']}'. Must be a positive number.")
+
+                source = mapped_row['source'].strip()
+                if not source:
+                    raise ValueError("Source cannot be empty.")
+
+                description = mapped_row['description'].strip() if mapped_row['description'] else None
+
+                account_id_str = mapped_row['account_id'].strip() if mapped_row['account_id'] else None
+                account_id = None
+                if account_id_str:
+                    try:
+                        account_id = int(account_id_str)
+                        # Optional: Validate if account exists for the user
+                        account = db.query(models.Account.id).filter(models.Account.id == account_id, models.Account.user_id == user_id).first()
+                        if not account:
+                            raise ValueError(f"Account ID '{account_id}' not found for this user.")
+                    except ValueError:
+                         raise ValueError(f"Invalid Account ID: '{account_id_str}'. Must be a number.")
+                # --- End Income Specific Validation ---
+
+                # Create Income model instance
+                db_income = models.Income(
+                    user_id=user_id,
+                    amount=amount,
+                    date=income_date,
+                    source=source,
+                    description=description,
+                    account_id=account_id # Assign validated account_id or None
+                )
+                income_to_add.append(db_income)
+
+            except ValueError as ve:
+                errors.append(f"Row {line_number}: {ve}")
+                skipped_rows.append(line_number)
+            except Exception as e:
+                errors.append(f"Row {line_number}: Unexpected error - {e}")
+                skipped_rows.append(line_number)
+
+    except HTTPException:
+        raise # Re-raise validation errors from header check
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error parsing CSV: {e}")
+
+    # Bulk insert valid income records
+    if income_to_add:
+        try:
+            db.add_all(income_to_add)
+            db.commit()
+            imported_count = len(income_to_add)
+        except Exception as e:
+            db.rollback()
+            errors.append(f"Database commit failed for income records: {e}")
+            imported_count = 0 # Reset count if commit fails
+
+    # Determine final status message
+    status_message = "Income import completed."
+    if errors:
+        status_message = "Income import completed with errors."
+    if imported_count == 0 and errors:
+        status_message = "Income import failed. See errors."
+
+    return ImportResponse(
+        message=status_message,
+        imported_count=imported_count,
+        skipped_rows=skipped_rows,
+        errors=errors
+    )
+
 # --------- New Recurring Expense Endpoints ---------
 
 @app.get("/recurring/{user_id}", response_model=List[RecurringExpenseResponse])

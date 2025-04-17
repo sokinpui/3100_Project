@@ -218,6 +218,27 @@
         "validationError": "CSV validation failed: {{details}}",
         "parsingError": "Error parsing CSV file: {{details}}"
     },
+    "incomeImport": {
+        "title": "Import Income from CSV",
+        "description": "Upload a CSV file to bulk import your income records. Ensure the file has the correct columns and format.",
+        "requiredHeadersInfo": "Required columns:",
+        "optionalHeadersInfo": " Optional columns:",
+        "dateFormatInfo": " Date format must be",
+        "selectFile": "Select CSV File",
+        "uploadAndProcess": "Upload and Process",
+        "processing": "Processing...",
+        "fileSelected": "File selected:",
+        "noFileSelected": "No file selected. Please select a CSV file to upload.",
+        "invalidFileType": "Invalid file type. Please select a .csv file.",
+        "importSuccess": "Import successful!",
+        "importCompleteWithError": "Import completed with errors.",
+        "importFailed": "Import failed.",
+        "apiError": "An error occurred during upload. Please check the file or try again.",
+        "importedCount": "{{count}} income records imported successfully.",
+        "skippedCount": "{{count}} rows skipped due to errors.",
+        "validationError": "CSV validation failed: {{details}}",
+        "parsingError": "Error parsing CSV file: {{details}}"
+    },
     "dynamicDashboard": {
         "title": "Dynamic Dashboard",
         "addWidget": "Add Widget",
