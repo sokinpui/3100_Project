@@ -75,6 +75,7 @@ class IncomeBase(BaseModel):
 class IncomeCreate(IncomeBase):
     user_id: int
 
+
 class IncomeResponse(IncomeBase):
     id: int
     user_id: int
@@ -230,6 +231,12 @@ class ImportResponse(BaseModel):
     errors: List[str] = []
 
 class RecurringExpenseCreate(RecurringExpenseBase):
+    user_id: int
+
+class BudgetCreate(BudgetBase):
+    user_id: int
+
+class GoalCreate(GoalBase):
     user_id: int
 
 class SignupResponse(BaseModel):
@@ -1085,6 +1092,90 @@ async def delete_recurring_expense(recurring_id: int, db: Session = Depends(get_
     # Optional: Add check if user owns this rule
 
     db.delete(rec_expense)
+    db.commit()
+    return None
+
+@app.get("/budgets/{user_id}", response_model=List[BudgetResponse])
+async def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
+    """Get all budget rules for a user."""
+    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).order_by(models.Budget.category_name).all()
+    return budgets
+
+# --- ADD POST ENDPOINT ---
+@app.post("/budgets", response_model=BudgetResponse, status_code=status.HTTP_201_CREATED)
+async def create_budget(budget_data: BudgetCreate, db: Session = Depends(get_db)):
+    """Create a new budget rule."""
+    user = db.query(models.User).filter(models.User.id == budget_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # TODO: Add validation - e.g., ensure amount_limit > 0, check for overlapping budgets for same category/period?
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = budget_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = budget_data.dict(exclude={'user_id'}) # Fallback
+
+    db_budget = models.Budget(user_id=budget_data.user_id, **create_data)
+    db.add(db_budget)
+    db.commit()
+    db.refresh(db_budget)
+    return db_budget
+
+# --- ADD DELETE ENDPOINT ---
+@app.delete("/budgets/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_budget(budget_id: int, db: Session = Depends(get_db)):
+    """Delete a budget rule."""
+    budget = db.query(models.Budget).filter(models.Budget.id == budget_id).first()
+    if not budget:
+        raise HTTPException(status_code=404, detail="Budget rule not found")
+    # Optional: Check user ownership
+    db.delete(budget)
+    db.commit()
+    return None
+
+
+# --------- New Goal Endpoints ---------
+
+@app.get("/goals/{user_id}", response_model=List[GoalResponse])
+async def get_user_goals(user_id: int, db: Session = Depends(get_db)):
+    """Get all financial goals for a user."""
+    goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).order_by(models.Goal.target_date.asc().nulls_last(), models.Goal.name).all() # Sort
+    return goals
+
+# --- ADD POST ENDPOINT ---
+@app.post("/goals", response_model=GoalResponse, status_code=status.HTTP_201_CREATED)
+async def create_goal(goal_data: GoalCreate, db: Session = Depends(get_db)):
+    """Create a new financial goal."""
+    user = db.query(models.User).filter(models.User.id == goal_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # TODO: Add validation - e.g., target_amount > 0?
+
+    # Use model_dump for Pydantic v2+
+    try:
+        # Ensure current_amount is handled if not provided in request (defaults in model)
+        create_data = goal_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = goal_data.dict(exclude={'user_id'}) # Fallback
+
+    db_goal = models.Goal(user_id=goal_data.user_id, **create_data)
+    db.add(db_goal)
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
+
+# --- ADD DELETE ENDPOINT ---
+@app.delete("/goals/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_goal(goal_id: int, db: Session = Depends(get_db)):
+    """Delete a financial goal."""
+    goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    # Optional: Check user ownership
+    db.delete(goal)
     db.commit()
     return None
 

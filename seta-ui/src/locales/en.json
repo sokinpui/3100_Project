@@ -43,7 +43,8 @@
         "importExpenses": "Import Expenses",
         "accounts": "Accounts",
         "income": "Income",
-        "recurring": "Recurring Items"
+        "recurring": "Recurring Items",
+        "planning": "Planning"
     },
     "common": {
         "close": "Close",
@@ -57,6 +58,52 @@
         "cancel": "Cancel",
         "confirm": "Confirm",
         "createdAt": "Created At"
+    },
+    "planningManager": {
+        "title": "Financial Planning",
+        "budgetsTab": "Budgets",
+        "goalsTab": "Goals"
+    },
+    "budgetManager": {
+        "fetchError": "Failed to load budgets.",
+        "addSuccess": "Budget added successfully!",
+        "addError": "Failed to add budget.",
+        "deleteSuccess": "Budget '{{name}}' deleted successfully!",
+        "deleteError": "Failed to delete budget.",
+        "fillRequired": "Please fill in Category, Amount Limit, Period, and Start Date.",
+        "addTitle": "Add New Budget",
+        "amountLimit": "Amount Limit",
+        "period": "Period",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "endDateOptional": "End Date (Optional)",
+        "addButton": "Add Budget",
+        "listTitle": "Budget Rules",
+        "deleteTitle": "Delete Budget Rule",
+        "deleteConfirmText": "Are you sure you want to delete the budget for '{{name}}'? This action cannot be undone."
+    },
+    "goalManager": {
+        "fetchError": "Failed to load goals.",
+        "addSuccess": "Goal added successfully!",
+        "addError": "Failed to add goal.",
+        "deleteSuccess": "Goal '{{name}}' deleted successfully!",
+        "deleteError": "Failed to delete goal.",
+        "fillRequired": "Please fill in Goal Name and Target Amount.",
+        "addTitle": "Add New Goal",
+        "goalName": "Goal Name (e.g., Vacation Fund)",
+        "targetAmount": "Target Amount",
+        "targetAmountPositive": "Target Amount must be greater than zero.",
+        "currentAmount": "Current Amount",
+        "currentAmountOptional": "Current Amount (Optional)",
+        "currentAmountHelper": "How much you've saved so far.",
+        "currentAmountExceedsTarget": "Current amount cannot exceed target amount.",
+        "targetDate": "Target Date",
+        "targetDateOptional": "Target Date (Optional)",
+        "progress": "Progress",
+        "addButton": "Add Goal",
+        "listTitle": "Financial Goals",
+        "deleteTitle": "Delete Goal",
+        "deleteConfirmText": "Are you sure you want to delete the goal '{{name}}'? This action cannot be undone."
     },
     "recurringManager": {
         "title": "Manage Recurring Transactions",

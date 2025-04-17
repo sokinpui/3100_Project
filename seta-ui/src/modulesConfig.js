@@ -12,6 +12,7 @@ import ImportExportIcon from '@mui/icons-material/ImportExport';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import SavingIcon from '@mui/icons-material/Assessment';
 
 export const appModules = [
   {
@@ -77,6 +78,14 @@ export const appModules = [
     component: React.lazy(() => import('./modules/RecurringManager/RecurringManager')), // New component path
     isProtected: true,
     icon: <EventRepeatIcon />, // Use the icon
+  },
+  {
+    id: 'planning', // New ID for combined module
+    name: 'sidebar.planning', // New translation key
+    path: '/planning', // New path
+    component: React.lazy(() => import('./modules/PlanningManager/PlanningManager')), // New component path
+    isProtected: true,
+    icon: <AssessmentIcon />, // Choose an icon
   },
   {
     id: 'accounts', // New ID
