@@ -298,7 +298,13 @@
         "noBudgetsSet": "尚未设置任何预算。",
         "overBudgetBy": "超出预算",
         "noGoalsSet": "尚未设置任何财务目标。",
-        "noAccountsSetup": "尚未设置任何账户。"
+        "noAccountsSetup": "尚未设置任何账户。",
+        "totalExpenses": "总支出",
+        "totalEntries": "总条目",
+        "totalIncome": "总收入",
+        "netFlow": "净流量",
+        "incomeEntries": "收入条目",
+        "Entries": "条目"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

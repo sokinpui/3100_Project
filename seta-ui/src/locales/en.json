@@ -303,7 +303,13 @@
         "noBudgetsSet": "No budgets have been set up yet.",
         "overBudgetBy": "Over budget by",
         "noGoalsSet": "No financial goals have been set up yet.",
-        "noAccountsSetup": "No accounts have been set up yet."
+        "noAccountsSetup": "No accounts have been set up yet.",
+        "totalExpenses": "Total Expenses",
+        "totalEntries": "Total Entries",
+        "totalIncome": "Total Income",
+        "netFlow": "Net Flow",
+        "incomeEntries": "Income Entries",
+        "Entries": "Entries"
     },
     "timePeriods": {
         "last7days": "Last 7 Days",
