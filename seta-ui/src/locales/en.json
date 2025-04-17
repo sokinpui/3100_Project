@@ -44,7 +44,9 @@
         "accounts": "Accounts",
         "income": "Income",
         "recurring": "Recurring Items",
-        "planning": "Planning"
+        "planning": "Planning",
+        "recurring": "Recurring Items",
+        "accounts": "Accounts"
     },
     "common": {
         "close": "Close",
@@ -373,16 +375,17 @@
         "category_unknown": "Uncategorized"
     },
     "expenseReports": {
-        "title": "Expense Reports",
-        "description": "Download your expense history as a CSV, EXCEL or PDF file. The report includes all your recorded expenses with details such as date, category, amount, and description.",
-        "descriptionMultipleFormats": "Download your expense history in various formats. The report includes all your recorded expenses with details such as date, category, amount, and description.",
-        "errorLoading": "Failed to load expenses. Please try again.",
-        "totalRecords": "Total Records: ",
-        "downloadButton": "Download Expense Report",
+        "title": "Generate Reports",
+        "description": "Download your financial data history, including expenses, income, recurring items, budgets, goals, and accounts.",
+        "descriptionMultipleFormats": "Download your comprehensive financial history in various formats. The report includes expenses, income, recurring items, budgets, goals, and accounts.",
+        "errorLoading": "Failed to load report data. Please try again.",
+        "totalRecords": "Total Records Found (All Types): ",
+        "downloadButton": "Download Report",
         "downloadCSV": "CSV",
         "downloadExcel": "Excel",
         "downloadPDF": "PDF",
-        "loading": "Loading..."
+        "loading": "Loading report data...",
+        "noDataToExport": "No data available to export."
     },
     "dashboard": {
         "overview": {

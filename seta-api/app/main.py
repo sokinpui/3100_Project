@@ -81,7 +81,7 @@ class IncomeResponse(IncomeBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True) # Use this for Pydantic v2
 
 class RecurringExpenseBase(BaseModel):
     name: str
@@ -98,7 +98,7 @@ class RecurringExpenseResponse(RecurringExpenseBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BudgetBase(BaseModel):
     category_name: str
@@ -112,7 +112,7 @@ class BudgetResponse(BudgetBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class GoalBase(BaseModel):
     name: str
@@ -125,7 +125,7 @@ class GoalResponse(GoalBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AccountBase(BaseModel):
     name: str
@@ -139,7 +139,7 @@ class AccountResponse(AccountBase):
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ExpenseBase(BaseModel):
     """Base expense model with common attributes."""
@@ -153,14 +153,11 @@ class CreateExpense(ExpenseBase):
     user_id: int
 
 class ExpenseResponse(ExpenseBase):
-    """Response model for expenses."""
     id: int
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserBase(BaseModel):
     """Base user model with common attributes."""
@@ -286,6 +283,17 @@ class BulkGoalDeleteRequest(BaseModel):
 class BulkAccountDeleteRequest(BaseModel):
     """Model for bulk account delete requests."""
     account_ids: List[int]
+
+class AllDataReportResponse(BaseModel):
+    """Response model containing all data types for reporting."""
+    user_info: UserResponse # Include basic user info
+    expenses: List[ExpenseResponse]
+    income: List[IncomeResponse]
+    recurring_expenses: List[RecurringExpenseResponse]
+    budgets: List[BudgetResponse]
+    goals: List[GoalResponse]
+    accounts: List[AccountResponse]
+    generated_at: datetime
 
 # --------- Helper Functions ---------
 
@@ -1401,6 +1409,54 @@ async def get_total_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get total expenses for a user."""
     total = db.query(func.sum(models.Expense.amount)).filter(models.Expense.user_id == user_id).scalar() or 0
     return {"total": float(total)}
+
+# --- UNIFIED REPORT ENDPOINT ---
+@app.get("/reports/{user_id}/all", response_model=AllDataReportResponse)
+async def get_all_user_data_for_report(user_id: int, db: Session = Depends(get_db)):
+    """Fetches all relevant data for a user for comprehensive reporting."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Fetch all data types
+    expenses_orm = db.query(models.Expense).filter(models.Expense.user_id == user_id).order_by(models.Expense.date.desc()).all()
+    income_orm = db.query(models.Income).filter(models.Income.user_id == user_id).order_by(models.Income.date.desc()).all()
+    recurring_expenses_orm = db.query(models.RecurringExpense).filter(models.RecurringExpense.user_id == user_id).order_by(models.RecurringExpense.name.asc()).all()
+    budgets_orm = db.query(models.Budget).filter(models.Budget.user_id == user_id).order_by(models.Budget.category_name.asc()).all()
+    goals_orm = db.query(models.Goal).filter(models.Goal.user_id == user_id).order_by(models.Goal.name.asc()).all()
+    accounts_orm = db.query(models.Account).filter(models.Account.user_id == user_id).order_by(models.Account.name.asc()).all()
+
+    # --- FIX: Explicitly validate/convert ORM lists to Pydantic model lists ---
+    try:
+        expenses_response = [ExpenseResponse.model_validate(exp) for exp in expenses_orm]
+        income_response = [IncomeResponse.model_validate(inc) for inc in income_orm]
+        recurring_response = [RecurringExpenseResponse.model_validate(rec) for rec in recurring_expenses_orm]
+        budgets_response = [BudgetResponse.model_validate(bud) for bud in budgets_orm]
+        goals_response = [GoalResponse.model_validate(goal) for goal in goals_orm]
+        accounts_response = [AccountResponse.model_validate(acc) for acc in accounts_orm]
+        user_info_response = UserResponse.model_validate(user)
+    except Exception as e:
+         # Log the detailed validation error if needed
+        logger.error(f"Pydantic validation error during report generation for user {user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error processing report data."
+        )
+    # --- END FIX ---
+
+    return AllDataReportResponse(
+        user_info=user_info_response,
+        expenses=expenses_response,
+        income=income_response,
+        recurring_expenses=recurring_response,
+        budgets=budgets_response,
+        goals=goals_response,
+        accounts=accounts_response,
+        generated_at=datetime.now(timezone.utc) # Use timezone aware datetime
+    )
 
 if __name__ == "__main__":
     import uvicorn
