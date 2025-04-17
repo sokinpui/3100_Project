@@ -267,6 +267,26 @@ class ResetPasswordPayload(BaseModel):
 class AccountCreate(AccountBase):
     user_id: int
 
+class BulkIncomeDeleteRequest(BaseModel):
+    """Model for bulk income delete requests."""
+    income_ids: List[int]
+
+class BulkRecurringDeleteRequest(BaseModel):
+    """Model for bulk recurring expense delete requests."""
+    recurring_ids: List[int]
+
+class BulkBudgetDeleteRequest(BaseModel):
+    """Model for bulk budget delete requests."""
+    budget_ids: List[int]
+
+class BulkGoalDeleteRequest(BaseModel):
+    """Model for bulk goal delete requests."""
+    goal_ids: List[int]
+
+class BulkAccountDeleteRequest(BaseModel):
+    """Model for bulk account delete requests."""
+    account_ids: List[int]
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -810,7 +830,7 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
 @app.get("/income/{user_id}", response_model=List[IncomeResponse])
 async def get_user_income(user_id: int, db: Session = Depends(get_db)):
     """Get all income records for a user."""
-    income_records = db.query(models.Income).filter(models.Income.user_id == user_id).all()
+    income_records = db.query(models.Income).filter(models.Income.user_id == user_id).order_by(models.Income.date.desc()).all() # Keep sorting
     return income_records
 
 @app.post("/income", response_model=IncomeResponse, status_code=status.HTTP_201_CREATED)
@@ -820,36 +840,255 @@ async def create_income(income_data: IncomeCreate, db: Session = Depends(get_db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    db_income = models.Income(**income_data.dict())
+    # Optional: Check if account_id exists if provided
+    if income_data.account_id:
+        account = db.query(models.Account).filter(models.Account.id == income_data.account_id, models.Account.user_id == income_data.user_id).first()
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Account with id {income_data.account_id} not found for this user.")
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = income_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = income_data.dict(exclude={'user_id'}) # Fallback for Pydantic v1
+
+    db_income = models.Income(user_id=income_data.user_id, **create_data)
     db.add(db_income)
     db.commit()
     db.refresh(db_income)
     return db_income
+
+@app.delete("/income/{income_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_income(income_id: int, db: Session = Depends(get_db)):
+    """Delete an income record."""
+    income_record = db.query(models.Income).filter(models.Income.id == income_id).first()
+    if not income_record:
+        raise HTTPException(status_code=404, detail="Income record not found")
+
+    # Optional: Add check if user owns this income record before deleting
+
+    db.delete(income_record)
+    db.commit()
+    return None
+
+# --- ADD THIS NEW ENDPOINT ---
+@app.post("/income/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bulk_income(request: BulkIncomeDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple income records by their IDs efficiently."""
+    if not request.income_ids:
+        return None # Nothing to delete
+
+    try:
+        # Perform the bulk delete operation
+        deleted_count = db.query(models.Income).filter(models.Income.id.in_(request.income_ids)).delete(synchronize_session=False)
+        db.commit()
+        logger.info(f"Bulk deleted {deleted_count} income records.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error during bulk income delete: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete income records due to a database error."
+        )
+    # Optional: Check if deleted_count matches len(request.income_ids) if needed
+
+    return None # Return 204 No Content on success
 
 # --------- New Recurring Expense Endpoints ---------
 
 @app.get("/recurring/{user_id}", response_model=List[RecurringExpenseResponse])
 async def get_user_recurring_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get all recurring expense rules for a user."""
-    # TODO: Add logic to calculate next due dates based on frequency/start_date
-    recurring = db.query(models.RecurringExpense).filter(models.RecurringExpense.user_id == user_id).all()
+    recurring = db.query(models.RecurringExpense).filter(
+        models.RecurringExpense.user_id == user_id
+    ).order_by(
+        models.RecurringExpense.start_date.desc() # Keep sorting
+    ).all()
     return recurring
+
+@app.post("/recurring", response_model=RecurringExpenseResponse, status_code=status.HTTP_201_CREATED)
+async def create_recurring_expense(rec_data: RecurringExpenseCreate, db: Session = Depends(get_db)):
+    """Create a new recurring expense rule."""
+    user = db.query(models.User).filter(models.User.id == rec_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Optional: Check if account_id exists if provided
+    if rec_data.account_id:
+        account = db.query(models.Account).filter(models.Account.id == rec_data.account_id, models.Account.user_id == rec_data.user_id).first()
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Account with id {rec_data.account_id} not found for this user.")
+
+    # Validate frequency enum
+    if not isinstance(rec_data.frequency, FrequencyEnum):
+         raise HTTPException(status_code=400, detail=f"Invalid frequency value: {rec_data.frequency}")
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = rec_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = rec_data.dict(exclude={'user_id'}) # Fallback
+
+    db_rec = models.RecurringExpense(user_id=rec_data.user_id, **create_data)
+    db.add(db_rec)
+    db.commit()
+    db.refresh(db_rec)
+    return db_rec
+
+@app.delete("/recurring/{recurring_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recurring_expense(recurring_id: int, db: Session = Depends(get_db)):
+    """Delete a recurring expense rule."""
+    rec_expense = db.query(models.RecurringExpense).filter(models.RecurringExpense.id == recurring_id).first()
+    if not rec_expense:
+        raise HTTPException(status_code=404, detail="Recurring expense rule not found")
+
+    # Optional: Add check if user owns this rule
+
+    db.delete(rec_expense)
+    db.commit()
+    return None
+
+# --- ADD THIS NEW ENDPOINT ---
+@app.post("/recurring/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bulk_recurring(request: BulkRecurringDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple recurring expense rules by their IDs efficiently."""
+    if not request.recurring_ids:
+        return None # Nothing to delete
+
+    try:
+        # Perform the bulk delete operation
+        deleted_count = db.query(models.RecurringExpense).filter(models.RecurringExpense.id.in_(request.recurring_ids)).delete(synchronize_session=False)
+        db.commit()
+        logger.info(f"Bulk deleted {deleted_count} recurring expense rules.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error during bulk recurring delete: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete recurring rules due to a database error."
+        )
+
+    return None # Return 204 No Content on success
 
 # --------- New Budget Endpoints ---------
 
 @app.get("/budgets/{user_id}", response_model=List[BudgetResponse])
 async def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
     """Get all budget rules for a user."""
-    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).all()
+    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).order_by(models.Budget.category_name).all()
     return budgets
+
+@app.post("/budgets", response_model=BudgetResponse, status_code=status.HTTP_201_CREATED)
+async def create_budget(budget_data: BudgetCreate, db: Session = Depends(get_db)):
+    """Create a new budget rule."""
+    user = db.query(models.User).filter(models.User.id == budget_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = budget_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = budget_data.dict(exclude={'user_id'}) # Fallback
+
+    db_budget = models.Budget(user_id=budget_data.user_id, **create_data)
+    db.add(db_budget)
+    db.commit()
+    db.refresh(db_budget)
+    return db_budget
+
+@app.delete("/budgets/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_budget(budget_id: int, db: Session = Depends(get_db)):
+    """Delete a budget rule."""
+    budget = db.query(models.Budget).filter(models.Budget.id == budget_id).first()
+    if not budget:
+        raise HTTPException(status_code=404, detail="Budget rule not found")
+    # Optional: Check user ownership
+    db.delete(budget)
+    db.commit()
+    return None
+
+# --- ADD THIS NEW ENDPOINT ---
+@app.post("/budgets/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bulk_budgets(request: BulkBudgetDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple budget rules by their IDs efficiently."""
+    if not request.budget_ids:
+        return None # Nothing to delete
+
+    try:
+        # Perform the bulk delete operation
+        deleted_count = db.query(models.Budget).filter(models.Budget.id.in_(request.budget_ids)).delete(synchronize_session=False)
+        db.commit()
+        logger.info(f"Bulk deleted {deleted_count} budget rules.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error during bulk budget delete: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete budget rules due to a database error."
+        )
+
+    return None # Return 204 No Content on success
 
 # --------- New Goal Endpoints ---------
 
 @app.get("/goals/{user_id}", response_model=List[GoalResponse])
 async def get_user_goals(user_id: int, db: Session = Depends(get_db)):
     """Get all financial goals for a user."""
-    goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).all()
+    goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).order_by(models.Goal.target_date.asc().nulls_last(), models.Goal.name).all() # Keep sorting
     return goals
+
+@app.post("/goals", response_model=GoalResponse, status_code=status.HTTP_201_CREATED)
+async def create_goal(goal_data: GoalCreate, db: Session = Depends(get_db)):
+    """Create a new financial goal."""
+    user = db.query(models.User).filter(models.User.id == goal_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = goal_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = goal_data.dict(exclude={'user_id'}) # Fallback
+
+    db_goal = models.Goal(user_id=goal_data.user_id, **create_data)
+    db.add(db_goal)
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
+
+@app.delete("/goals/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_goal(goal_id: int, db: Session = Depends(get_db)):
+    """Delete a financial goal."""
+    goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    # Optional: Check user ownership
+    db.delete(goal)
+    db.commit()
+    return None
+
+# --- ADD THIS NEW ENDPOINT ---
+@app.post("/goals/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bulk_goals(request: BulkGoalDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple financial goals by their IDs efficiently."""
+    if not request.goal_ids:
+        return None # Nothing to delete
+
+    try:
+        # Perform the bulk delete operation
+        deleted_count = db.query(models.Goal).filter(models.Goal.id.in_(request.goal_ids)).delete(synchronize_session=False)
+        db.commit()
+        logger.info(f"Bulk deleted {deleted_count} goals.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error during bulk goal delete: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete goals due to a database error."
+        )
+
+    return None # Return 204 No Content on success
 
 # --------- New Account Endpoints ---------
 
@@ -858,6 +1097,77 @@ async def get_user_accounts(user_id: int, db: Session = Depends(get_db)):
     """Get all accounts for a user."""
     accounts = db.query(models.Account).filter(models.Account.user_id == user_id).all()
     return accounts
+
+@app.post("/accounts", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)
+async def create_account(account_data: AccountCreate, db: Session = Depends(get_db)):
+    """Create a new account for a user."""
+    user = db.query(models.User).filter(models.User.id == account_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not account_data.balance_date:
+         raise HTTPException(status_code=400, detail="Balance date is required")
+
+    try:
+        # Use model_dump for Pydantic v2
+        create_data = account_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        # Fallback for Pydantic v1
+        create_data = account_data.dict(exclude={'user_id'})
+
+    db_account = models.Account(user_id=account_data.user_id, **create_data)
+    db.add(db_account)
+    db.commit()
+    db.refresh(db_account)
+    return db_account
+
+@app.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(account_id: int, db: Session = Depends(get_db)):
+    """Delete an account."""
+    account = db.query(models.Account).filter(models.Account.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    # Optional: Add check if user owns this account before deleting
+
+    db.delete(account)
+    db.commit()
+    return None
+
+# --- ADD THIS NEW ENDPOINT ---
+@app.post("/accounts/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bulk_accounts(request: BulkAccountDeleteRequest, db: Session = Depends(get_db)):
+    """Delete multiple accounts by their IDs efficiently."""
+    if not request.account_ids:
+        return None # Nothing to delete
+
+    # --- IMPORTANT: Check for related data before deleting ---
+    # Check if any expenses, income, or recurring items are linked to these accounts
+    related_expenses = db.query(models.Expense.id).filter(models.Expense.account_id.in_(request.account_ids)).limit(1).first()
+    related_income = db.query(models.Income.id).filter(models.Income.account_id.in_(request.account_ids)).limit(1).first()
+    related_recurring = db.query(models.RecurringExpense.id).filter(models.RecurringExpense.account_id.in_(request.account_ids)).limit(1).first()
+
+    if related_expenses or related_income or related_recurring:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, # 409 Conflict is appropriate here
+            detail="Cannot delete account(s) because they are linked to existing expenses, income, or recurring transactions. Please reassign or delete those first."
+        )
+    # --- End related data check ---
+
+    try:
+        # Perform the bulk delete operation
+        deleted_count = db.query(models.Account).filter(models.Account.id.in_(request.account_ids)).delete(synchronize_session=False)
+        db.commit()
+        logger.info(f"Bulk deleted {deleted_count} accounts.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error during bulk account delete: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete accounts due to a database error."
+        )
+
+    return None # Return 204 No Content on success
 
 # --------- User Settings Endpoints ---------
 
@@ -942,242 +1252,6 @@ async def get_total_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get total expenses for a user."""
     total = db.query(func.sum(models.Expense.amount)).filter(models.Expense.user_id == user_id).scalar() or 0
     return {"total": float(total)}
-
-# --------- New Account Endpoints ---------
-
-@app.get("/accounts/{user_id}", response_model=List[AccountResponse])
-async def get_user_accounts(user_id: int, db: Session = Depends(get_db)):
-    """Get all accounts for a user."""
-    accounts = db.query(models.Account).filter(models.Account.user_id == user_id).all()
-    return accounts
-
-# --- ADD THIS ENDPOINT ---
-@app.post("/accounts", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)
-async def create_account(account_data: AccountCreate, db: Session = Depends(get_db)):
-    """Create a new account for a user."""
-    user = db.query(models.User).filter(models.User.id == account_data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if not account_data.balance_date:
-         raise HTTPException(status_code=400, detail="Balance date is required")
-
-    # --- FIX IS HERE ---
-    # Create dict excluding user_id for model creation
-    # Use model_dump for Pydantic v2+ (which you likely have based on version 2.10.6)
-    # If you were on Pydantic v1, you would use .dict()
-    try:
-        # Use model_dump for Pydantic v2
-        create_data = account_data.model_dump(exclude={'user_id'})
-    except AttributeError:
-        # Fallback for Pydantic v1 if needed, though unlikely based on your requirements
-        create_data = account_data.dict(exclude={'user_id'})
-    # --- END FIX ---
-
-
-    # Now create_data contains all fields from AccountBase but not user_id
-    db_account = models.Account(user_id=account_data.user_id, **create_data)
-    db.add(db_account)
-    db.commit()
-    db.refresh(db_account)
-    return db_account
-
-# --- Add Delete Endpoint (Basic) ---
-@app.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_account(account_id: int, db: Session = Depends(get_db)):
-    """Delete an account."""
-    account = db.query(models.Account).filter(models.Account.id == account_id).first()
-    if not account:
-        raise HTTPException(status_code=404, detail="Account not found")
-
-    # Optional: Add check if user owns this account before deleting
-
-    db.delete(account)
-    db.commit()
-    return None
-
-@app.get("/income/{user_id}", response_model=List[IncomeResponse])
-async def get_user_income(user_id: int, db: Session = Depends(get_db)):
-    """Get all income records for a user."""
-    income_records = db.query(models.Income).filter(models.Income.user_id == user_id).order_by(models.Income.date.desc()).all() # Added sorting
-    return income_records
-
-@app.post("/income", response_model=IncomeResponse, status_code=status.HTTP_201_CREATED)
-async def create_income(income_data: IncomeCreate, db: Session = Depends(get_db)):
-    """Create a new income record."""
-    user = db.query(models.User).filter(models.User.id == income_data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Optional: Check if account_id exists if provided
-    if income_data.account_id:
-        account = db.query(models.Account).filter(models.Account.id == income_data.account_id, models.Account.user_id == income_data.user_id).first()
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Account with id {income_data.account_id} not found for this user.")
-
-    # Use model_dump for Pydantic v2+
-    try:
-        create_data = income_data.model_dump(exclude={'user_id'})
-    except AttributeError:
-        create_data = income_data.dict(exclude={'user_id'}) # Fallback for Pydantic v1
-
-    db_income = models.Income(user_id=income_data.user_id, **create_data)
-    db.add(db_income)
-    db.commit()
-    db.refresh(db_income)
-    return db_income
-
-# --- ADD THIS DELETE ENDPOINT ---
-@app.delete("/income/{income_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_income(income_id: int, db: Session = Depends(get_db)):
-    """Delete an income record."""
-    income_record = db.query(models.Income).filter(models.Income.id == income_id).first()
-    if not income_record:
-        raise HTTPException(status_code=404, detail="Income record not found")
-
-    # Optional: Add check if user owns this income record before deleting
-
-    db.delete(income_record)
-    db.commit()
-    return None
-
-@app.get("/recurring/{user_id}", response_model=List[RecurringExpenseResponse])
-async def get_user_recurring_expenses(user_id: int, db: Session = Depends(get_db)):
-    """Get all recurring expense rules for a user."""
-    recurring = db.query(models.RecurringExpense).filter(
-        models.RecurringExpense.user_id == user_id
-    ).order_by(
-        models.RecurringExpense.start_date.desc() # Sort by start date
-    ).all()
-    return recurring
-
-# --- ADD POST ENDPOINT ---
-@app.post("/recurring", response_model=RecurringExpenseResponse, status_code=status.HTTP_201_CREATED)
-async def create_recurring_expense(rec_data: RecurringExpenseCreate, db: Session = Depends(get_db)):
-    """Create a new recurring expense rule."""
-    user = db.query(models.User).filter(models.User.id == rec_data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Optional: Check if account_id exists if provided
-    if rec_data.account_id:
-        account = db.query(models.Account).filter(models.Account.id == rec_data.account_id, models.Account.user_id == rec_data.user_id).first()
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Account with id {rec_data.account_id} not found for this user.")
-
-    # Validate frequency enum
-    if not isinstance(rec_data.frequency, FrequencyEnum):
-         raise HTTPException(status_code=400, detail=f"Invalid frequency value: {rec_data.frequency}")
-
-    # Use model_dump for Pydantic v2+
-    try:
-        create_data = rec_data.model_dump(exclude={'user_id'})
-    except AttributeError:
-        create_data = rec_data.dict(exclude={'user_id'}) # Fallback
-
-    db_rec = models.RecurringExpense(user_id=rec_data.user_id, **create_data)
-    db.add(db_rec)
-    db.commit()
-    db.refresh(db_rec)
-    return db_rec
-
-# --- ADD DELETE ENDPOINT ---
-@app.delete("/recurring/{recurring_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_recurring_expense(recurring_id: int, db: Session = Depends(get_db)):
-    """Delete a recurring expense rule."""
-    rec_expense = db.query(models.RecurringExpense).filter(models.RecurringExpense.id == recurring_id).first()
-    if not rec_expense:
-        raise HTTPException(status_code=404, detail="Recurring expense rule not found")
-
-    # Optional: Add check if user owns this rule
-
-    db.delete(rec_expense)
-    db.commit()
-    return None
-
-@app.get("/budgets/{user_id}", response_model=List[BudgetResponse])
-async def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
-    """Get all budget rules for a user."""
-    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).order_by(models.Budget.category_name).all()
-    return budgets
-
-# --- ADD POST ENDPOINT ---
-@app.post("/budgets", response_model=BudgetResponse, status_code=status.HTTP_201_CREATED)
-async def create_budget(budget_data: BudgetCreate, db: Session = Depends(get_db)):
-    """Create a new budget rule."""
-    user = db.query(models.User).filter(models.User.id == budget_data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # TODO: Add validation - e.g., ensure amount_limit > 0, check for overlapping budgets for same category/period?
-
-    # Use model_dump for Pydantic v2+
-    try:
-        create_data = budget_data.model_dump(exclude={'user_id'})
-    except AttributeError:
-        create_data = budget_data.dict(exclude={'user_id'}) # Fallback
-
-    db_budget = models.Budget(user_id=budget_data.user_id, **create_data)
-    db.add(db_budget)
-    db.commit()
-    db.refresh(db_budget)
-    return db_budget
-
-# --- ADD DELETE ENDPOINT ---
-@app.delete("/budgets/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_budget(budget_id: int, db: Session = Depends(get_db)):
-    """Delete a budget rule."""
-    budget = db.query(models.Budget).filter(models.Budget.id == budget_id).first()
-    if not budget:
-        raise HTTPException(status_code=404, detail="Budget rule not found")
-    # Optional: Check user ownership
-    db.delete(budget)
-    db.commit()
-    return None
-
-
-# --------- New Goal Endpoints ---------
-
-@app.get("/goals/{user_id}", response_model=List[GoalResponse])
-async def get_user_goals(user_id: int, db: Session = Depends(get_db)):
-    """Get all financial goals for a user."""
-    goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).order_by(models.Goal.target_date.asc().nulls_last(), models.Goal.name).all() # Sort
-    return goals
-
-# --- ADD POST ENDPOINT ---
-@app.post("/goals", response_model=GoalResponse, status_code=status.HTTP_201_CREATED)
-async def create_goal(goal_data: GoalCreate, db: Session = Depends(get_db)):
-    """Create a new financial goal."""
-    user = db.query(models.User).filter(models.User.id == goal_data.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # TODO: Add validation - e.g., target_amount > 0?
-
-    # Use model_dump for Pydantic v2+
-    try:
-        # Ensure current_amount is handled if not provided in request (defaults in model)
-        create_data = goal_data.model_dump(exclude={'user_id'})
-    except AttributeError:
-        create_data = goal_data.dict(exclude={'user_id'}) # Fallback
-
-    db_goal = models.Goal(user_id=goal_data.user_id, **create_data)
-    db.add(db_goal)
-    db.commit()
-    db.refresh(db_goal)
-    return db_goal
-
-# --- ADD DELETE ENDPOINT ---
-@app.delete("/goals/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_goal(goal_id: int, db: Session = Depends(get_db)):
-    """Delete a financial goal."""
-    goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    # Optional: Check user ownership
-    db.delete(goal)
-    db.commit()
-    return None
 
 if __name__ == "__main__":
     import uvicorn

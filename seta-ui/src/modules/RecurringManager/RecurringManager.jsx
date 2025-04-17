@@ -1,3 +1,4 @@
+// src/modules/RecurringManager/RecurringManager.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, CircularProgress, Box, Typography } from '@mui/material';
 import axios from 'axios';
@@ -34,11 +35,16 @@ export default function RecurringManager() {
         description: '',
         account_id: ''
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false); // For add/update
 
-    // State for delete confirmation
+    // State for delete confirmation (single)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null); // Store { id: number, name: string }
+
+    // State for bulk delete
+    const [selectedRecurringIds, setSelectedRecurringIds] = useState([]);
+    const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false); // Loading state for bulk delete
 
     const showNotification = (message, severity = 'success') => {
         setNotification({ open: true, message, severity });
@@ -123,7 +129,7 @@ export default function RecurringManager() {
                 user_id: parseInt(userId),
                 amount: parseFloat(formData.amount) || 0,
                 start_date: formData.start_date ? formData.start_date.format('YYYY-MM-DD') : null,
-                end_date: formData.end_date ? formData.end_date.format('YYYY-MM-DD') : null, // Handle optional end date
+                end_date: formData.end_date ? formData.end_date.format('YYYY-MM-DD') : null,
                 account_id: formData.account_id ? parseInt(formData.account_id) : null,
             };
 
@@ -142,7 +148,7 @@ export default function RecurringManager() {
         }
     };
 
-     // --- Delete Handlers ---
+     // --- Single Delete Handlers ---
     const handleOpenDeleteDialog = (recItem) => {
         setItemToDelete(recItem);
         setDeleteDialogOpen(true);
@@ -150,11 +156,13 @@ export default function RecurringManager() {
 
     const handleCancelDelete = () => {
         setDeleteDialogOpen(false);
+        setBulkDeleteDialogOpen(false); // Also close bulk delete dialog
         setItemToDelete(null);
     };
 
     const handleConfirmDelete = async () => {
         if (!itemToDelete?.id) return;
+        // Use isSubmitting for single delete loading state
         setIsSubmitting(true);
 
         try {
@@ -167,9 +175,42 @@ export default function RecurringManager() {
             const apiError = err.response?.data?.detail || t('recurringManager.deleteError');
             showNotification(apiError, 'error');
         } finally {
-            setIsSubmitting(false);
+            setIsSubmitting(false); // Reset single delete loading state
         }
     };
+
+     // --- Bulk Delete Handlers ---
+    const handleSelectionChange = (newSelection) => {
+        setSelectedRecurringIds(newSelection);
+    };
+
+    const handleBulkDelete = () => { // Triggered by button in RecurringList
+        if (selectedRecurringIds.length === 0) return;
+        setBulkDeleteDialogOpen(true); // Open confirmation dialog
+    };
+
+    const handleConfirmBulkDelete = async () => {
+        setIsBulkDeleting(true); // Set loading true for bulk delete operation
+        try {
+            // IMPORTANT: Update API endpoint when created
+            await axios.post(`${API_URL}/recurring/bulk/delete`, { recurring_ids: selectedRecurringIds });
+            // Update state optimistically
+            setRecurringList(prev => prev.filter(item => !selectedRecurringIds.includes(item.id)));
+            // TODO: Add specific translation key for bulk delete success
+            showNotification(t('recurringManager.bulkDeleteSuccess', { count: selectedRecurringIds.length }), 'success');
+            setSelectedRecurringIds([]); // Clear selection
+        } catch (error) {
+            // TODO: Add specific translation key for bulk delete failure
+            showNotification(t('recurringManager.bulkDeleteError'), 'error');
+            console.error("Bulk delete recurring error:", error.response?.data || error.message);
+        } finally {
+            setBulkDeleteDialogOpen(false);
+            setIsBulkDeleting(false); // Set loading false
+        }
+    };
+
+    // --- Determine if any delete operation is in progress ---
+    const isDeleting = (isSubmitting && !!itemToDelete) || isBulkDeleting;
 
 
     return (
@@ -187,7 +228,7 @@ export default function RecurringManager() {
                 handleChange={handleChange}
                 handleDateChange={handleDateChange}
                 handleSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
+                isSubmitting={isSubmitting} // Pass add/update submitting state
             />
 
             {error && !isLoading && (
@@ -205,10 +246,15 @@ export default function RecurringManager() {
                     recurringList={recurringList}
                     accounts={accounts}
                     handleOpenDeleteDialog={handleOpenDeleteDialog}
-                    isDeleting={isSubmitting && !!itemToDelete}
+                    isDeleting={isDeleting} // Pass combined deleting state
+                    // Bulk delete props
+                    onSelectionChange={handleSelectionChange}
+                    handleBulkDelete={handleBulkDelete}
+                    selectedRecurringIds={selectedRecurringIds}
                 />
             )}
 
+            {/* Single Delete Confirmation Dialog */}
              <ConfirmationDialog
                 open={deleteDialogOpen}
                 onClose={handleCancelDelete}
@@ -217,7 +263,22 @@ export default function RecurringManager() {
                 contentText={t('recurringManager.deleteConfirmText', { name: itemToDelete?.name || 'this item' })}
                 confirmText={t('common.delete')}
                 cancelText={t('common.cancel')}
-                isLoading={isSubmitting && !!itemToDelete}
+                isLoading={isSubmitting && !!itemToDelete} // Loading for single delete
+                confirmButtonColor="error"
+            />
+
+             {/* Bulk Delete Confirmation Dialog */}
+             <ConfirmationDialog
+                open={bulkDeleteDialogOpen}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmBulkDelete}
+                // TODO: Add specific translation key
+                title={t('recurringManager.deleteMultipleTitle')}
+                 // TODO: Add specific translation key
+                contentText={t('recurringManager.confirmBulkDeleteRecurring', { count: selectedRecurringIds.length })}
+                confirmText={t('common.delete')}
+                cancelText={t('common.cancel')}
+                isLoading={isBulkDeleting} // Loading for bulk delete
                 confirmButtonColor="error"
             />
         </Container>

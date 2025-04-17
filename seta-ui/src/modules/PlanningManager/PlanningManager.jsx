@@ -1,3 +1,4 @@
+// src/modules/PlanningManager/PlanningManager.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Box, Tabs, Tab, Typography, CircularProgress } from '@mui/material';
 import axios from 'axios';
@@ -23,7 +24,7 @@ function TabPanel(props) {
             {...other}
         >
             {value === index && (
-                <Box sx={{ pt: 3 }}> {/* Add padding top to content */}
+                <Box sx={{ pt: 3 }}>
                     {children}
                 </Box>
             )}
@@ -38,19 +39,25 @@ export default function PlanningManager() {
 
     const [budgets, setBudgets] = useState([]);
     const [goals, setGoals] = useState([]);
-    const [accounts, setAccounts] = useState([]); // Needed for budget/goal forms potentially
+    const [accounts, setAccounts] = useState([]);
 
     const [isLoadingBudgets, setIsLoadingBudgets] = useState(false);
     const [isLoadingGoals, setIsLoadingGoals] = useState(false);
     const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
 
-    const [error, setError] = useState(null); // General error display
+    const [error, setError] = useState(null);
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
-    // --- Delete Dialog State ---
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null); // { type: 'budget' | 'goal', id: number, name: string }
-    const [isDeleting, setIsDeleting] = useState(false);
+    // --- Delete Dialog State (Combined) ---
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // Single delete confirmation
+    const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false); // Bulk delete confirmation
+    const [itemToDelete, setItemToDelete] = useState(null); // { type: 'budget' | 'goal', id: number, name: string } for single delete
+    const [deleteType, setDeleteType] = useState(null); // 'budget' or 'goal' - for bulk dialog context
+
+    // --- Bulk Delete Specific State ---
+    const [selectedBudgetIds, setSelectedBudgetIds] = useState([]);
+    const [selectedGoalIds, setSelectedGoalIds] = useState([]); // Added for goals
+    const [isDeleting, setIsDeleting] = useState(false); // Combined loading state for ANY delete
 
     const showNotification = (message, severity = 'success') => {
         setNotification({ open: true, message, severity });
@@ -78,13 +85,13 @@ export default function PlanningManager() {
         finally { setIsLoadingGoals(false); }
     }, [userId, t]);
 
-     const fetchAccounts = useCallback(async () => { // Fetch accounts if needed by forms
+     const fetchAccounts = useCallback(async () => {
         if (!userId) return;
         setIsLoadingAccounts(true);
         try {
             const response = await axios.get(`${API_URL}/accounts/${userId}`);
             setAccounts(response.data || []);
-        } catch (err) { console.error("Fetch accounts error:", err); } // Less critical error
+        } catch (err) { console.error("Fetch accounts error:", err); }
         finally { setIsLoadingAccounts(false); }
     }, [userId]);
 
@@ -97,47 +104,46 @@ export default function PlanningManager() {
 
     // --- CRUD Handlers ---
     const handleAddBudget = async (budgetData) => {
-        // Logic similar to AccountManager handleSubmit for POST /budgets
-        // Requires isSubmitting state if adding directly here
+        setIsDeleting(true);
         try {
              await axios.post(`${API_URL}/budgets`, budgetData);
              showNotification(t('budgetManager.addSuccess'), 'success');
-             fetchBudgets(); // Refresh
-             return true; // Indicate success
+             fetchBudgets();
+             return true;
         } catch (err) {
              console.error("Add budget error:", err.response?.data || err.message);
              const apiError = err.response?.data?.detail || t('budgetManager.addError');
              showNotification(apiError, 'error');
-             return false; // Indicate failure
+             return false;
+        } finally {
+            setIsDeleting(false);
         }
     };
 
     const handleAddGoal = async (goalData) => {
-         // Logic similar to AccountManager handleSubmit for POST /goals
+         setIsDeleting(true);
          try {
              await axios.post(`${API_URL}/goals`, goalData);
              showNotification(t('goalManager.addSuccess'), 'success');
-             fetchGoals(); // Refresh
+             fetchGoals();
              return true;
         } catch (err) {
              console.error("Add goal error:", err.response?.data || err.message);
              const apiError = err.response?.data?.detail || t('goalManager.addError');
              showNotification(apiError, 'error');
              return false;
+        } finally {
+             setIsDeleting(false);
         }
     };
 
+    // --- Single Delete ---
     const handleOpenDeleteDialog = (type, item) => {
-        setItemToDelete({ type, id: item.id, name: item.category_name || item.name }); // Store type, id, name
+        setItemToDelete({ type, id: item.id, name: item.category_name || item.name });
         setDeleteDialogOpen(true);
     };
 
-     const handleCancelDelete = () => {
-        setDeleteDialogOpen(false);
-        setItemToDelete(null);
-    };
-
-    const handleConfirmDelete = async () => {
+    const handleConfirmSingleDelete = async () => {
         if (!itemToDelete?.id || !itemToDelete?.type) return;
         setIsDeleting(true);
         const { type, id, name } = itemToDelete;
@@ -159,13 +165,108 @@ export default function PlanningManager() {
         }
     };
 
+    // --- Budget Bulk Delete ---
+     const handleBudgetSelectionChange = (newSelection) => {
+        setSelectedBudgetIds(newSelection);
+    };
+
+    const handleBulkDeleteBudget = () => {
+        if (selectedBudgetIds.length === 0) return;
+        setDeleteType('budget');
+        setBulkDeleteDialogOpen(true);
+    };
+
+    // --- Goal Bulk Delete ---
+    const handleGoalSelectionChange = (newSelection) => { // New handler
+        setSelectedGoalIds(newSelection);
+    };
+
+    const handleBulkDeleteGoal = () => { // New handler
+        if (selectedGoalIds.length === 0) return;
+        setDeleteType('goal'); // Set context for the dialog
+        setBulkDeleteDialogOpen(true);
+    };
+
+
+    // --- Combined Bulk Delete Confirmation ---
+    const handleConfirmBulkDelete = async () => {
+        setIsDeleting(true);
+        let idsToDelete, url, successMsgKey, errorMsgKey, fetchFunction, payloadKey;
+
+        if (deleteType === 'budget') {
+            idsToDelete = selectedBudgetIds;
+            url = `${API_URL}/budgets/bulk/delete`;
+            payloadKey = 'budget_ids'; // Key expected by backend
+            successMsgKey = 'budgetManager.bulkDeleteSuccess';
+            errorMsgKey = 'budgetManager.bulkDeleteError';
+            fetchFunction = fetchBudgets;
+        } else if (deleteType === 'goal') {
+            idsToDelete = selectedGoalIds;
+            url = `${API_URL}/goals/bulk/delete`; // New endpoint
+            payloadKey = 'goal_ids'; // Key expected by backend
+            successMsgKey = 'goalManager.bulkDeleteSuccess'; // Add this key
+            errorMsgKey = 'goalManager.bulkDeleteError';     // Add this key
+            fetchFunction = fetchGoals;
+        } else {
+             setIsDeleting(false);
+             handleCancelDelete();
+             return; // Should not happen
+        }
+
+        try {
+            // Send data with the correct key
+            await axios.post(url, { [payloadKey]: idsToDelete });
+            showNotification(t(successMsgKey, { count: idsToDelete.length }), 'success');
+            if (deleteType === 'budget') setSelectedBudgetIds([]);
+            if (deleteType === 'goal') setSelectedGoalIds([]); // Clear goal selection
+            fetchFunction(); // Refresh the correct list
+            handleCancelDelete(); // Close dialog
+        } catch (err) {
+            console.error(`Bulk delete ${deleteType} error:`, err.response?.data || err.message);
+            const apiError = err.response?.data?.detail || t(errorMsgKey);
+            showNotification(apiError, 'error');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // --- Cancel Delete Dialog ---
+     const handleCancelDelete = () => {
+        setDeleteDialogOpen(false);
+        setBulkDeleteDialogOpen(false);
+        setItemToDelete(null);
+        setDeleteType(null);
+    };
+
     // --- Tab Handling ---
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
-        setError(null); // Clear general errors on tab switch
+        setError(null);
     };
 
-    const isLoading = isLoadingBudgets || isLoadingGoals || isLoadingAccounts;
+    const isOverallLoading = isLoadingBudgets || isLoadingGoals || isLoadingAccounts;
+
+    // Determine text/title for the currently open dialog
+    let dialogTitle = '';
+    let dialogContentText = '';
+    let dialogConfirmHandler = null;
+
+    if (deleteDialogOpen && itemToDelete) {
+        dialogTitle = t(itemToDelete.type === 'budget' ? 'budgetManager.deleteTitle' : 'goalManager.deleteTitle');
+        dialogContentText = t(itemToDelete.type === 'budget' ? 'budgetManager.deleteConfirmText' : 'goalManager.deleteConfirmText', { name: itemToDelete.name || 'this item' });
+        dialogConfirmHandler = handleConfirmSingleDelete;
+    } else if (bulkDeleteDialogOpen) {
+        if (deleteType === 'budget') {
+            dialogTitle = t('budgetManager.deleteMultipleTitle');
+            dialogContentText = t('budgetManager.confirmBulkDeleteBudgets', { count: selectedBudgetIds.length });
+            dialogConfirmHandler = handleConfirmBulkDelete;
+        } else if (deleteType === 'goal') {
+            dialogTitle = t('goalManager.deleteMultipleTitle'); // Add this key
+            dialogContentText = t('goalManager.confirmBulkDeleteGoals', { count: selectedGoalIds.length }); // Add this key
+            dialogConfirmHandler = handleConfirmBulkDelete;
+        }
+    }
+
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -186,35 +287,45 @@ export default function PlanningManager() {
                      <Typography color="error" align="center">{error}</Typography>
                 </Box>
             )}
-             {isLoading && (
+             {isOverallLoading && (
                  <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
                     <CircularProgress />
                 </Box>
              )}
 
             <TabPanel value={activeTab} index={0}>
-                {!isLoading && <BudgetView
+                {!isOverallLoading && <BudgetView
                     budgets={budgets}
-                    accounts={accounts} // Pass accounts if needed by form/list
+                    accounts={accounts}
                     onAddBudget={handleAddBudget}
                     onDeleteBudget={(item) => handleOpenDeleteDialog('budget', item)}
+                    isDeleting={isDeleting}
+                    selectedBudgetIds={selectedBudgetIds}
+                    onSelectionChange={handleBudgetSelectionChange}
+                    onBulkDelete={handleBulkDeleteBudget}
                 />}
             </TabPanel>
             <TabPanel value={activeTab} index={1}>
-                 {!isLoading && <GoalView
+                 {!isOverallLoading && <GoalView
                     goals={goals}
-                    accounts={accounts} // Pass accounts if needed
+                    accounts={accounts}
                     onAddGoal={handleAddGoal}
                     onDeleteGoal={(item) => handleOpenDeleteDialog('goal', item)}
+                    isDeleting={isDeleting}
+                    // Add bulk delete props for GoalView
+                    selectedGoalIds={selectedGoalIds}
+                    onSelectionChange={handleGoalSelectionChange}
+                    onBulkDelete={handleBulkDeleteGoal}
                 />}
             </TabPanel>
 
+            {/* Combined Confirmation Dialog */}
             <ConfirmationDialog
-                open={deleteDialogOpen}
+                open={deleteDialogOpen || bulkDeleteDialogOpen}
                 onClose={handleCancelDelete}
-                onConfirm={handleConfirmDelete}
-                title={t(itemToDelete?.type === 'budget' ? 'budgetManager.deleteTitle' : 'goalManager.deleteTitle')}
-                contentText={t(itemToDelete?.type === 'budget' ? 'budgetManager.deleteConfirmText' : 'goalManager.deleteConfirmText', { name: itemToDelete?.name || 'this item' })}
+                onConfirm={dialogConfirmHandler}
+                title={dialogTitle}
+                contentText={dialogContentText}
                 confirmText={t('common.delete')}
                 cancelText={t('common.cancel')}
                 isLoading={isDeleting}

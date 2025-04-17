@@ -80,7 +80,12 @@
         "addButton": "Add Budget",
         "listTitle": "Budget Rules",
         "deleteTitle": "Delete Budget Rule",
-        "deleteConfirmText": "Are you sure you want to delete the budget for '{{name}}'? This action cannot be undone."
+        "deleteConfirmText": "Are you sure you want to delete the budget for '{{name}}'? This action cannot be undone.",
+        "deleteSelected": "Delete Selected",
+        "deleteMultipleTitle": "Delete Multiple Budget Rules",
+        "confirmBulkDeleteBudgets": "Are you sure you want to delete the selected {{count}} budget rule(s)? This action cannot be undone.",
+        "bulkDeleteSuccess": "{{count}} budget rule(s) deleted successfully!",
+        "bulkDeleteError": "Failed to delete selected budget rules."
     },
     "goalManager": {
         "fetchError": "Failed to load goals.",
@@ -103,7 +108,12 @@
         "addButton": "Add Goal",
         "listTitle": "Financial Goals",
         "deleteTitle": "Delete Goal",
-        "deleteConfirmText": "Are you sure you want to delete the goal '{{name}}'? This action cannot be undone."
+        "deleteConfirmText": "Are you sure you want to delete the goal '{{name}}'? This action cannot be undone.",
+        "deleteSelected": "Delete Selected",
+        "deleteMultipleTitle": "Delete Multiple Goals",
+        "confirmBulkDeleteGoals": "Are you sure you want to delete the selected {{count}} goal(s)? This action cannot be undone.",
+        "bulkDeleteSuccess": "{{count}} goal(s) deleted successfully!",
+        "bulkDeleteError": "Failed to delete selected goals."
     },
     "recurringManager": {
         "title": "Manage Recurring Transactions",
@@ -131,7 +141,12 @@
         "addButton": "Add Recurring Item",
         "listTitle": "Recurring Items List",
         "deleteTitle": "Delete Recurring Item",
-        "deleteConfirmText": "Are you sure you want to delete the recurring item '{{name}}'? This action cannot be undone."
+        "deleteConfirmText": "Are you sure you want to delete the recurring item '{{name}}'? This action cannot be undone.",
+        "deleteSelected": "Delete Selected",
+        "deleteMultipleTitle": "Delete Multiple Recurring Items",
+        "confirmBulkDeleteRecurring": "Are you sure you want to delete the selected {{count}} recurring item(s)? This action cannot be undone.",
+        "bulkDeleteSuccess": "{{count}} recurring item(s) deleted successfully!",
+        "bulkDeleteError": "Failed to delete selected recurring items."
     },
     "incomeManager": {
         "title": "Manage Income",
@@ -152,7 +167,12 @@
         "addButton": "Add Income",
         "listTitle": "Income History",
         "deleteTitle": "Delete Income Record",
-        "deleteConfirmText": "Are you sure you want to delete the income record from '{{source}}' for ${{amount}}? This action cannot be undone."
+        "deleteConfirmText": "Are you sure you want to delete the income record from '{{source}}' for ${{amount}}? This action cannot be undone.",
+        "deleteSelected": "Delete Selected",
+        "deleteMultipleTitle": "Delete Multiple Income Records",
+        "confirmBulkDeleteIncome": "Are you sure you want to delete the selected {{count}} income record(s)? This action cannot be undone.",
+        "bulkDeleteSuccess": "{{count}} income record(s) deleted successfully!",
+        "bulkDeleteError": "Failed to delete selected income records."
     },
     "accountManager": {
         "title": "Manage Accounts",
@@ -170,7 +190,12 @@
         "addButton": "Add Account",
         "listTitle": "Your Accounts",
         "deleteTitle": "Delete Account",
-        "deleteConfirmText": "Are you sure you want to delete the account '{{name}}'? This action cannot be undone."
+        "deleteConfirmText": "Are you sure you want to delete the account '{{name}}'? This action cannot be undone.",
+        "deleteSelected": "Delete Selected",
+        "deleteMultipleTitle": "Delete Multiple Accounts",
+        "confirmBulkDeleteAccounts": "Are you sure you want to delete the selected {{count}} account(s)? This action cannot be undone and may affect linked transactions if not handled properly.",
+        "bulkDeleteSuccess": "{{count}} account(s) deleted successfully!",
+        "bulkDeleteError": "Failed to delete selected accounts. Ensure they are not linked to transactions."
     },
     "expenseImport": {
         "title": "Import Expenses from CSV",

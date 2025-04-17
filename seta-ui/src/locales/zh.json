@@ -62,7 +62,12 @@
         "addButton": "添加预算",
         "listTitle": "预算规则",
         "deleteTitle": "删除预算规则",
-        "deleteConfirmText": "您确定要删除 '{{name}}' 的预算规则吗？此操作无法撤销。"
+        "deleteConfirmText": "您确定要删除 '{{name}}' 的预算规则吗？此操作无法撤销。",
+        "deleteSelected": "删除选中",
+        "deleteMultipleTitle": "删除多个预算规则",
+        "confirmBulkDeleteBudgets": "您确定要删除选中的 {{count}} 条预算规则吗？此操作无法撤销。",
+        "bulkDeleteSuccess": "成功删除 {{count}} 条预算规则！",
+        "bulkDeleteError": "删除选中的预算规则失败。"
     },
     "goalManager": {
         "fetchError": "加载目标失败。",
@@ -85,7 +90,12 @@
         "addButton": "添加目标",
         "listTitle": "财务目标",
         "deleteTitle": "删除目标",
-        "deleteConfirmText": "您确定要删除目标 '{{name}}' 吗？此操作无法撤销。"
+        "deleteConfirmText": "您确定要删除目标 '{{name}}' 吗？此操作无法撤销。",
+        "deleteSelected": "删除选中",
+        "deleteMultipleTitle": "删除多个目标",
+        "confirmBulkDeleteGoals": "您确定要删除选中的 {{count}} 个目标吗？此操作无法撤销。",
+        "bulkDeleteSuccess": "成功删除 {{count}} 个目标！",
+        "bulkDeleteError": "删除选中的目标失败。"
     },
     "recurringManager": {
         "title": "管理周期性交易",
@@ -113,7 +123,12 @@
         "addButton": "添加周期性项目",
         "listTitle": "周期性项目列表",
         "deleteTitle": "删除周期性项目",
-        "deleteConfirmText": "您确定要删除周期性项目 '{{name}}' 吗？此操作无法撤销。"
+        "deleteConfirmText": "您确定要删除周期性项目 '{{name}}' 吗？此操作无法撤销。",
+        "deleteSelected": "删除选中",
+        "deleteMultipleTitle": "删除多个周期性项目",
+        "confirmBulkDeleteRecurring": "您确定要删除选中的 {{count}} 个周期性项目吗？此操作无法撤销。",
+        "bulkDeleteSuccess": "成功删除 {{count}} 个周期性项目！",
+        "bulkDeleteError": "删除选中的周期性项目失败。"
     },
     "incomeManager": {
         "title": "管理收入",
@@ -134,7 +149,12 @@
         "addButton": "添加收入",
         "listTitle": "收入历史",
         "deleteTitle": "删除收入记录",
-        "deleteConfirmText": "您确定要删除来自 '{{source}}' 金额为 ${{amount}} 的收入记录吗？此操作无法撤销。"
+        "deleteConfirmText": "您确定要删除来自 '{{source}}' 金额为 ${{amount}} 的收入记录吗？此操作无法撤销。",
+        "deleteSelected": "删除选中",
+        "deleteMultipleTitle": "删除多个收入记录",
+        "confirmBulkDeleteIncome": "您确定要删除选中的 {{count}} 条收入记录吗？此操作无法撤销。",
+        "bulkDeleteSuccess": "成功删除 {{count}} 条收入记录！",
+        "bulkDeleteError": "删除选中的收入记录失败。"
     },
     "accountManager": {
         "title": "管理账户",
@@ -152,7 +172,12 @@
         "addButton": "添加账户",
         "listTitle": "您的账户",
         "deleteTitle": "删除账户",
-        "deleteConfirmText": "您确定要删除账户 '{{name}}' 吗？此操作无法撤销。"
+        "deleteConfirmText": "您确定要删除账户 '{{name}}' 吗？此操作无法撤销。",
+        "deleteSelected": "删除选中",
+        "deleteMultipleTitle": "删除多个账户",
+        "confirmBulkDeleteAccounts": "您确定要删除选中的 {{count}} 个账户吗？此操作无法撤销，且可能影响关联的交易（如果未正确处理）。",
+        "bulkDeleteSuccess": "成功删除 {{count}} 个账户！",
+        "bulkDeleteError": "删除选中的账户失败。请确保它们没有关联任何交易。"
     },
     "expenseImport": {
         "title": "从 CSV 导入费用",

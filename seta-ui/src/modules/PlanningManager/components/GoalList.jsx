@@ -1,6 +1,7 @@
+// src/modules/PlanningManager/components/GoalList.jsx
 import React from 'react';
 import {
-    Card, CardHeader, CardContent, Box, Typography, Tooltip, IconButton, LinearProgress
+    Card, CardHeader, CardContent, Box, Typography, Tooltip, IconButton, LinearProgress, Button, CircularProgress
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Delete as DeleteIcon } from '@mui/icons-material';
@@ -8,10 +9,19 @@ import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 
-export default function GoalList({ goals, onDelete, isDeleting }) {
+export default function GoalList({
+    goals,
+    onDelete,
+    isDeleting, // Combined deleting state
+    // Bulk delete props
+    onSelectionChange,
+    handleBulkDelete,
+    selectedGoalIds
+}) {
     const { t } = useTranslation();
 
     const columns: GridColDef[] = [
+        // Keep existing column definitions...
         { field: 'name', headerName: t('goalManager.goalName'), width: 200 },
         {
             field: 'target_amount',
@@ -30,7 +40,7 @@ export default function GoalList({ goals, onDelete, isDeleting }) {
             cellClassName: 'font-tabular-nums', headerAlign: 'left', align: 'left'
         },
          {
-            field: 'progress', // Calculated column
+            field: 'progress',
             headerName: t('goalManager.progress'),
             width: 150,
             sortable: false, filterable: false,
@@ -67,7 +77,13 @@ export default function GoalList({ goals, onDelete, isDeleting }) {
             renderCell: (params) => (
                 <Box>
                     <Tooltip title={t('common.delete')} arrow>
-                        <IconButton size="small" color="error" onClick={() => onDelete(params.row)} disabled={isDeleting}>
+                        {/* Disable individual delete when any delete is happening */}
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(params.row)}
+                            disabled={isDeleting}
+                        >
                             <DeleteIcon fontSize="small"/>
                         </IconButton>
                     </Tooltip>
@@ -78,7 +94,27 @@ export default function GoalList({ goals, onDelete, isDeleting }) {
 
     return (
          <Card elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-            <CardHeader title={<T>goalManager.listTitle</T>} sx={{ backgroundColor: '#f9f9f9', borderBottom: '1px solid #eee', py: 1.5 }} />
+            <CardHeader
+                title={<T>goalManager.listTitle</T>}
+                action={
+                    selectedGoalIds.length > 0 && (
+                        <Button
+                            variant="contained"
+                            color="error"
+                            size="small"
+                            onClick={handleBulkDelete}
+                            // Disable button specifically during bulk delete
+                            disabled={isDeleting}
+                            startIcon={isDeleting && selectedGoalIds.length > 0 ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
+                            sx={{ textTransform: 'none', mr: 1 }}
+                        >
+                            {/* TODO: Add translation */}
+                            <T>goalManager.deleteSelected</T> ({selectedGoalIds.length})
+                        </Button>
+                    )
+                }
+                sx={{ backgroundColor: '#f9f9f9', borderBottom: '1px solid #eee', py: 1.5 }}
+            />
             <CardContent sx={{ p: 0 }}>
                  <DataGrid
                     autoHeight
@@ -86,12 +122,27 @@ export default function GoalList({ goals, onDelete, isDeleting }) {
                     columns={columns}
                     initialState={{
                         pagination: { paginationModel: { pageSize: 10 } },
-                        sorting: { sortModel: [{ field: 'target_date', sort: 'asc' }] }, // Sort by target date
-                         columns: { columnVisibilityModel: { current_amount: false } }, // Hide current amount by default?
+                        sorting: { sortModel: [{ field: 'target_date', sort: 'asc' }] },
+                         columns: { columnVisibilityModel: { current_amount: false } },
                     }}
                     pageSizeOptions={[5, 10, 25]}
+                    // Enable checkbox selection
+                    checkboxSelection
+                    // Pass selection model and handler
+                    onRowSelectionModelChange={onSelectionChange}
+                    rowSelectionModel={selectedGoalIds}
                     disableRowSelectionOnClick
-                    sx={{ border: 'none' }}
+                    // Disable grid interaction during delete
+                    loading={isDeleting}
+                    sx={{
+                        border: 'none',
+                         '& .MuiDataGrid-row.Mui-selected': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                        },
+                        '& .MuiDataGrid-row.Mui-selected:hover': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                        },
+                    }}
                 />
             </CardContent>
         </Card>
