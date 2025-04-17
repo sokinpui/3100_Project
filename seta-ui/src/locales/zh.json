@@ -40,7 +40,26 @@
         "cancel": "取消",
         "logoutButton": "登出",
         "viewProfile": "查看个人资料",
-        "importExpenses": "导入费用"
+        "importExpenses": "导入费用",
+        "accounts": "账户管理"
+    },
+    "accountManager": {
+        "title": "管理账户",
+        "fetchError": "加载账户失败。",
+        "addSuccess": "账户添加成功！",
+        "addError": "添加账户失败。",
+        "deleteSuccess": "账户 '{{name}}' 删除成功！",
+        "deleteError": "删除账户失败。",
+        "fillRequired": "请填写账户名称、类型、初始余额和余额日期。",
+        "addTitle": "添加新账户",
+        "accountName": "账户名称",
+        "accountType": "账户类型",
+        "startingBalance": "初始余额",
+        "balanceDate": "余额截止日期",
+        "addButton": "添加账户",
+        "listTitle": "您的账户",
+        "deleteTitle": "删除账户",
+        "deleteConfirmText": "您确定要删除账户 '{{name}}' 吗？此操作无法撤销。"
     },
     "expenseImport": {
         "title": "从 CSV 导入费用",
@@ -68,7 +87,13 @@
         "cancel": "取消",
         "Income": "收入",
         "Expenses": "支出",
-        "All Time": "所有时间"
+        "All Time": "所有时间",
+        "actions": "操作",
+        "edit": "编辑",
+        "delete": "删除",
+        "cancel": "取消",
+        "confirm": "确认",
+        "createdAt": "创建时间"
     },
     "dynamicDashboard": {
         "title": "动态仪表板",
