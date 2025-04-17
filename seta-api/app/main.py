@@ -201,6 +201,9 @@ class ImportResponse(BaseModel):
     skipped_rows: List[int] = []
     errors: List[str] = []
 
+class AccountCreate(AccountBase):
+    user_id: int
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -713,6 +716,59 @@ async def get_total_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get total expenses for a user."""
     total = db.query(func.sum(models.Expense.amount)).filter(models.Expense.user_id == user_id).scalar() or 0
     return {"total": float(total)}
+
+# --------- New Account Endpoints ---------
+
+@app.get("/accounts/{user_id}", response_model=List[AccountResponse])
+async def get_user_accounts(user_id: int, db: Session = Depends(get_db)):
+    """Get all accounts for a user."""
+    accounts = db.query(models.Account).filter(models.Account.user_id == user_id).all()
+    return accounts
+
+# --- ADD THIS ENDPOINT ---
+@app.post("/accounts", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)
+async def create_account(account_data: AccountCreate, db: Session = Depends(get_db)):
+    """Create a new account for a user."""
+    user = db.query(models.User).filter(models.User.id == account_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not account_data.balance_date:
+         raise HTTPException(status_code=400, detail="Balance date is required")
+
+    # --- FIX IS HERE ---
+    # Create dict excluding user_id for model creation
+    # Use model_dump for Pydantic v2+ (which you likely have based on version 2.10.6)
+    # If you were on Pydantic v1, you would use .dict()
+    try:
+        # Use model_dump for Pydantic v2
+        create_data = account_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        # Fallback for Pydantic v1 if needed, though unlikely based on your requirements
+        create_data = account_data.dict(exclude={'user_id'})
+    # --- END FIX ---
+
+
+    # Now create_data contains all fields from AccountBase but not user_id
+    db_account = models.Account(user_id=account_data.user_id, **create_data)
+    db.add(db_account)
+    db.commit()
+    db.refresh(db_account)
+    return db_account
+
+# --- Add Delete Endpoint (Basic) ---
+@app.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(account_id: int, db: Session = Depends(get_db)):
+    """Delete an account."""
+    account = db.query(models.Account).filter(models.Account.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    # Optional: Add check if user owns this account before deleting
+
+    db.delete(account)
+    db.commit()
+    return None
 
 if __name__ == "__main__":
     import uvicorn

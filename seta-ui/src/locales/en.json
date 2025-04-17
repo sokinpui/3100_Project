@@ -40,14 +40,39 @@
         "cancel": "Cancel",
         "logoutButton": "Logout",
         "viewProfile": "View Profile",
-        "importExpenses": "Import Expenses"
+        "importExpenses": "Import Expenses",
+        "accounts": "Accounts"
     },
     "common": {
         "close": "Close",
         "cancel": "Cancel",
         "Income": "Income",
         "Expenses": "Expenses",
-        "All Time": "All Time"
+        "All Time": "All Time",
+        "actions": "Actions",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "createdAt": "Created At"
+    },
+    "accountManager": {
+        "title": "Manage Accounts",
+        "fetchError": "Failed to load accounts.",
+        "addSuccess": "Account added successfully!",
+        "addError": "Failed to add account.",
+        "deleteSuccess": "Account '{{name}}' deleted successfully!",
+        "deleteError": "Failed to delete account.",
+        "fillRequired": "Please fill in Name, Type, Starting Balance, and Balance Date.",
+        "addTitle": "Add New Account",
+        "accountName": "Account Name",
+        "accountType": "Account Type",
+        "startingBalance": "Starting Balance",
+        "balanceDate": "Balance As Of Date",
+        "addButton": "Add Account",
+        "listTitle": "Your Accounts",
+        "deleteTitle": "Delete Account",
+        "deleteConfirmText": "Are you sure you want to delete the account '{{name}}'? This action cannot be undone."
     },
     "expenseImport": {
         "title": "Import Expenses from CSV",
