@@ -229,6 +229,9 @@ class ImportResponse(BaseModel):
     skipped_rows: List[int] = []
     errors: List[str] = []
 
+class RecurringExpenseCreate(RecurringExpenseBase):
+    user_id: int
+
 class SignupResponse(BaseModel):
     """Response model for signup."""
     message: str
@@ -1028,6 +1031,60 @@ async def delete_income(income_id: int, db: Session = Depends(get_db)):
     # Optional: Add check if user owns this income record before deleting
 
     db.delete(income_record)
+    db.commit()
+    return None
+
+@app.get("/recurring/{user_id}", response_model=List[RecurringExpenseResponse])
+async def get_user_recurring_expenses(user_id: int, db: Session = Depends(get_db)):
+    """Get all recurring expense rules for a user."""
+    recurring = db.query(models.RecurringExpense).filter(
+        models.RecurringExpense.user_id == user_id
+    ).order_by(
+        models.RecurringExpense.start_date.desc() # Sort by start date
+    ).all()
+    return recurring
+
+# --- ADD POST ENDPOINT ---
+@app.post("/recurring", response_model=RecurringExpenseResponse, status_code=status.HTTP_201_CREATED)
+async def create_recurring_expense(rec_data: RecurringExpenseCreate, db: Session = Depends(get_db)):
+    """Create a new recurring expense rule."""
+    user = db.query(models.User).filter(models.User.id == rec_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Optional: Check if account_id exists if provided
+    if rec_data.account_id:
+        account = db.query(models.Account).filter(models.Account.id == rec_data.account_id, models.Account.user_id == rec_data.user_id).first()
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Account with id {rec_data.account_id} not found for this user.")
+
+    # Validate frequency enum
+    if not isinstance(rec_data.frequency, FrequencyEnum):
+         raise HTTPException(status_code=400, detail=f"Invalid frequency value: {rec_data.frequency}")
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = rec_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = rec_data.dict(exclude={'user_id'}) # Fallback
+
+    db_rec = models.RecurringExpense(user_id=rec_data.user_id, **create_data)
+    db.add(db_rec)
+    db.commit()
+    db.refresh(db_rec)
+    return db_rec
+
+# --- ADD DELETE ENDPOINT ---
+@app.delete("/recurring/{recurring_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recurring_expense(recurring_id: int, db: Session = Depends(get_db)):
+    """Delete a recurring expense rule."""
+    rec_expense = db.query(models.RecurringExpense).filter(models.RecurringExpense.id == recurring_id).first()
+    if not rec_expense:
+        raise HTTPException(status_code=404, detail="Recurring expense rule not found")
+
+    # Optional: Add check if user owns this rule
+
+    db.delete(rec_expense)
     db.commit()
     return None
 

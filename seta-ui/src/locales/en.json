@@ -42,7 +42,8 @@
         "viewProfile": "View Profile",
         "importExpenses": "Import Expenses",
         "accounts": "Accounts",
-        "income": "Income"
+        "income": "Income",
+        "recurring": "Recurring Items"
     },
     "common": {
         "close": "Close",
@@ -56,6 +57,34 @@
         "cancel": "Cancel",
         "confirm": "Confirm",
         "createdAt": "Created At"
+    },
+    "recurringManager": {
+        "title": "Manage Recurring Transactions",
+        "fetchError": "Failed to load recurring items.",
+        "addSuccess": "Recurring item added successfully!",
+        "addError": "Failed to add recurring item.",
+        "deleteSuccess": "Recurring item '{{name}}' deleted successfully!",
+        "deleteError": "Failed to delete recurring item.",
+        "fillRequired": "Please fill in Name, Amount, Category, Frequency, and Start Date.",
+        "addTitle": "Add New Recurring Item",
+        "name": "Name (e.g., Rent, Netflix)",
+        "amount": "Amount",
+        "frequency": "Frequency",
+        "frequency_daily": "Daily",
+        "frequency_weekly": "Weekly",
+        "frequency_monthly": "Monthly",
+        "frequency_quarterly": "Quarterly",
+        "frequency_yearly": "Yearly",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "endDateOptional": "End Date (Optional)",
+        "descriptionOptional": "Description (Optional)",
+        "account": "Account",
+        "accountOptional": "Account (Optional)",
+        "addButton": "Add Recurring Item",
+        "listTitle": "Recurring Items List",
+        "deleteTitle": "Delete Recurring Item",
+        "deleteConfirmText": "Are you sure you want to delete the recurring item '{{name}}'? This action cannot be undone."
     },
     "incomeManager": {
         "title": "Manage Income",

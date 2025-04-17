@@ -11,6 +11,7 @@ import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 
 export const appModules = [
   {
@@ -68,6 +69,14 @@ export const appModules = [
     component: React.lazy(() => import('./modules/IncomeManager/IncomeManager')), // New component path
     isProtected: true,
     icon: <AttachMoneyIcon />, // Use an appropriate icon
+  },
+  {
+    id: 'recurring', // New ID
+    name: 'sidebar.recurring', // New translation key
+    path: '/recurring', // New path
+    component: React.lazy(() => import('./modules/RecurringManager/RecurringManager')), // New component path
+    isProtected: true,
+    icon: <EventRepeatIcon />, // Use the icon
   },
   {
     id: 'accounts', // New ID
