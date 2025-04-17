@@ -4,22 +4,32 @@ import {
     Card, CardHeader, CardContent, Box, Typography, Tooltip, IconButton, Button, CircularProgress
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { enUS, zhCN } from '@mui/x-data-grid/locales'; // Import locales
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 import { getCategoryDetails } from '../../../constants';
 
+// Map language codes to MUI locale objects
+const dataGridLocaleTextMap = {
+  english: enUS.components.MuiDataGrid.defaultProps.localeText,
+  zh: zhCN.components.MuiDataGrid.defaultProps.localeText,
+};
+
 export default function BudgetList({
     budgets,
     onDelete,
     isDeleting, // Combined deleting state
-    // Bulk delete props
     onSelectionChange,
     handleBulkDelete,
     selectedBudgetIds
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Get i18n instance
+
+    // Determine current locale for DataGrid
+    const currentLanguage = i18n.language.split('-')[0]; // Get base language ('en', 'zh')
+    const dataGridLocale = dataGridLocaleTextMap[currentLanguage] || dataGridLocaleTextMap['english'];
 
     const getTranslatedCategory = (name) => {
         const details = getCategoryDetails(name);
@@ -28,7 +38,6 @@ export default function BudgetList({
      }
 
     const columns: GridColDef[] = [
-        // Keep existing column definitions...
         {
             field: 'category_name',
             headerName: t('expenseManager.category'),
@@ -76,7 +85,6 @@ export default function BudgetList({
             renderCell: (params) => (
                 <Box>
                     <Tooltip title={t('common.delete')} arrow>
-                        {/* Disable individual delete when any delete is happening */}
                         <IconButton
                             size="small"
                             color="error"
@@ -102,12 +110,10 @@ export default function BudgetList({
                             color="error"
                             size="small"
                             onClick={handleBulkDelete}
-                            // Disable button specifically during bulk delete
                             disabled={isDeleting}
                             startIcon={isDeleting && selectedBudgetIds.length > 0 ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
                             sx={{ textTransform: 'none', mr: 1 }}
                         >
-                            {/* TODO: Add translation */}
                             <T>budgetManager.deleteSelected</T> ({selectedBudgetIds.length})
                         </Button>
                     )
@@ -125,17 +131,15 @@ export default function BudgetList({
                          columns: { columnVisibilityModel: { end_date: false } },
                     }}
                     pageSizeOptions={[5, 10, 25]}
-                    // Enable checkbox selection
                     checkboxSelection
-                    // Pass selection model and handler
                     onRowSelectionModelChange={onSelectionChange}
                     rowSelectionModel={selectedBudgetIds}
                     disableRowSelectionOnClick
-                    // Disable grid interaction during delete
-                    loading={isDeleting}
+                    loading={isDeleting} // Show loading overlay during delete
+                    localeText={dataGridLocale} // <-- Apply localization
                     sx={{
                         border: 'none',
-                        '& .MuiDataGrid-row.Mui-selected': {
+                         '& .MuiDataGrid-row.Mui-selected': {
                             backgroundColor: 'rgba(25, 118, 210, 0.08)',
                         },
                         '& .MuiDataGrid-row.Mui-selected:hover': {

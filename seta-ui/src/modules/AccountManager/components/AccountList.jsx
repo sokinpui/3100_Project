@@ -4,24 +4,33 @@ import {
     Card, CardHeader, CardContent, Box, Typography, Tooltip, IconButton, Button, CircularProgress
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { enUS, zhCN } from '@mui/x-data-grid/locales'; // Import locales
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 
+// Map language codes to MUI locale objects
+const dataGridLocaleTextMap = {
+  english: enUS.components.MuiDataGrid.defaultProps.localeText,
+  zh: zhCN.components.MuiDataGrid.defaultProps.localeText,
+};
+
 export default function AccountList({
     accounts,
     handleOpenDeleteDialog,
     isDeleting, // Combined deleting state
-    // Bulk delete props
     onSelectionChange,
     handleBulkDelete,
     selectedAccountIds
  }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Get i18n instance
+
+    // Determine current locale for DataGrid
+    const currentLanguage = i18n.language.split('-')[0]; // Get base language ('en', 'zh')
+    const dataGridLocale = dataGridLocaleTextMap[currentLanguage] || dataGridLocaleTextMap['english'];
 
     const columns: GridColDef[] = [
-        // Keep existing column definitions...
         { field: 'name', headerName: t('accountManager.accountName'), width: 200 },
         { field: 'account_type', headerName: t('accountManager.accountType'), width: 150 },
         {
@@ -36,7 +45,7 @@ export default function AccountList({
             headerName: t('accountManager.balanceDate'),
             width: 130,
             type: 'date',
-            valueGetter: (value) => value ? parseISO(value) : null, // Convert string to Date object for sorting/filtering
+            valueGetter: (value) => value ? parseISO(value) : null,
             renderCell: (params) => params.value ? format(params.value, 'yyyy-MM-dd') : '',
         },
          {
@@ -50,7 +59,7 @@ export default function AccountList({
         {
             field: 'actions',
             headerName: t('common.actions'),
-            width: 80, // Adjusted width slightly
+            width: 80,
             sortable: false,
             filterable: false,
             align: 'center',
@@ -58,7 +67,6 @@ export default function AccountList({
             renderCell: (params) => (
                 <Box>
                     <Tooltip title={t('common.delete')} arrow>
-                         {/* Disable individual delete when any delete is happening */}
                         <IconButton
                             size="small"
                             color="error"
@@ -84,12 +92,10 @@ export default function AccountList({
                             color="error"
                             size="small"
                             onClick={handleBulkDelete}
-                            // Disable button specifically during bulk delete
                             disabled={isDeleting}
                             startIcon={isDeleting && selectedAccountIds.length > 0 ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
                             sx={{ textTransform: 'none', mr: 1 }}
                         >
-                             {/* TODO: Add translation */}
                             <T>accountManager.deleteSelected</T> ({selectedAccountIds.length})
                         </Button>
                     )
@@ -106,14 +112,12 @@ export default function AccountList({
                         columns: { columnVisibilityModel: { created_at: false } },
                     }}
                     pageSizeOptions={[5, 10, 25]}
-                    // Enable checkbox selection
                     checkboxSelection
-                    // Pass selection model and handler
                     onRowSelectionModelChange={onSelectionChange}
                     rowSelectionModel={selectedAccountIds}
                     disableRowSelectionOnClick
-                    // Disable grid interaction during delete
-                    loading={isDeleting}
+                    loading={isDeleting} // Show loading overlay during delete
+                    localeText={dataGridLocale} // <-- Apply localization
                     sx={{
                         border: 'none',
                         '& .MuiDataGrid-row.Mui-selected': {

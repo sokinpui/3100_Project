@@ -4,11 +4,18 @@ import {
     Card, CardHeader, CardContent, Box, Typography, Tooltip, IconButton, Button, CircularProgress
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Delete as DeleteIcon } from '@mui/icons-material'; // Removed EditIcon
+import { enUS, zhCN } from '@mui/x-data-grid/locales'; // Import locales
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 import { getCategoryDetails } from '../../../constants'; // Import constants
+
+// Map language codes to MUI locale objects
+const dataGridLocaleTextMap = {
+  english: enUS.components.MuiDataGrid.defaultProps.localeText,
+  zh: zhCN.components.MuiDataGrid.defaultProps.localeText,
+};
 
 export default function RecurringList({
     recurringList,
@@ -19,7 +26,11 @@ export default function RecurringList({
     handleBulkDelete,
     selectedRecurringIds
  }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Get i18n instance
+
+    // Determine current locale for DataGrid
+    const currentLanguage = i18n.language.split('-')[0]; // Get base language ('en', 'zh')
+    const dataGridLocale = dataGridLocaleTextMap[currentLanguage] || dataGridLocaleTextMap['english'];
 
     const getAccountName = (accountId) => {
         const account = accounts.find(acc => acc.id === accountId);
@@ -33,7 +44,6 @@ export default function RecurringList({
      }
 
     const columns: GridColDef[] = [
-        // Keep existing column definitions...
         { field: 'name', headerName: t('recurringManager.name'), width: 180 },
         {
             field: 'amount',
@@ -56,7 +66,7 @@ export default function RecurringList({
             headerName: t('recurringManager.frequency'),
             width: 120,
             renderCell: (params) => <T>{`recurringManager.frequency_${params.value}`}</T>,
-            valueGetter: (value) => t(`recurringManager.frequency_${value}`),
+            valueGetter: (value) => t(`recurringManager.frequency_${value.value}`),
         },
         {
             field: 'start_date',
@@ -89,7 +99,6 @@ export default function RecurringList({
             renderCell: (params) => (
                 <Box>
                     <Tooltip title={t('common.delete')} arrow>
-                        {/* Disable individual delete when any delete is happening */}
                         <IconButton
                             size="small"
                             color="error"
@@ -115,12 +124,10 @@ export default function RecurringList({
                             color="error"
                             size="small"
                             onClick={handleBulkDelete}
-                             // Disable button specifically during bulk delete
                             disabled={isDeleting}
                             startIcon={isDeleting && selectedRecurringIds.length > 0 ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
                             sx={{ textTransform: 'none', mr: 1 }}
                         >
-                             {/* TODO: Add translation */}
                             <T>recurringManager.deleteSelected</T> ({selectedRecurringIds.length})
                         </Button>
                     )
@@ -138,17 +145,15 @@ export default function RecurringList({
                         columns: { columnVisibilityModel: { end_date: false, account_id: false } },
                     }}
                     pageSizeOptions={[5, 10, 25]}
-                    // Enable checkbox selection
                     checkboxSelection
-                    // Pass selection model and handler
                     onRowSelectionModelChange={onSelectionChange}
                     rowSelectionModel={selectedRecurringIds}
                     disableRowSelectionOnClick
-                    // Disable grid interaction during bulk delete
-                    loading={isDeleting}
+                    loading={isDeleting} // Show loading overlay during delete
+                    localeText={dataGridLocale} // <-- Apply localization
                     sx={{
                         border: 'none',
-                         '& .MuiDataGrid-row.Mui-selected': {
+                        '& .MuiDataGrid-row.Mui-selected': {
                             backgroundColor: 'rgba(25, 118, 210, 0.08)',
                         },
                         '& .MuiDataGrid-row.Mui-selected:hover': {

@@ -4,17 +4,17 @@ import {
     Card, CardHeader, CardContent, Box, Typography, Tooltip, IconButton, Button, CircularProgress
 } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { enUS, zhCN } from '@mui/x-data-grid/locales'; // Import locales
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
-import { enUS, zhCN } from '@mui/x-data-grid/locales';
 
+// Map language codes to MUI locale objects
 const dataGridLocaleTextMap = {
   english: enUS.components.MuiDataGrid.defaultProps.localeText,
   zh: zhCN.components.MuiDataGrid.defaultProps.localeText,
 };
-
 
 export default function IncomeList({
     incomeList,
@@ -25,7 +25,12 @@ export default function IncomeList({
     handleBulkDelete,
     selectedIncomeIds
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Get i18n instance
+
+    // Determine current locale for DataGrid
+    const currentLanguage = i18n.language.split('-')[0]; // Get base language ('en', 'zh')
+    const dataGridLocale = dataGridLocaleTextMap[currentLanguage] || dataGridLocaleTextMap['english'];
+
 
     // Helper to find account name
     const getAccountName = (accountId) => {
@@ -34,7 +39,6 @@ export default function IncomeList({
     };
 
     const columns: GridColDef[] = [
-        // Keep existing column definitions...
         {
             field: 'date',
             headerName: t('incomeManager.date'),
@@ -81,7 +85,6 @@ export default function IncomeList({
             renderCell: (params) => (
                 <Box>
                     <Tooltip title={t('common.delete')} arrow>
-                        {/* Disable individual delete when any delete is happening */}
                         <IconButton
                             size="small"
                             color="error"
@@ -107,12 +110,10 @@ export default function IncomeList({
                             color="error"
                             size="small"
                             onClick={handleBulkDelete}
-                            // Disable button specifically during bulk delete
                             disabled={isDeleting}
                             startIcon={isDeleting && selectedIncomeIds.length > 0 ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
                             sx={{ textTransform: 'none', mr: 1 }}
                         >
-                            {/* TODO: Add translation */}
                             <T>incomeManager.deleteSelected</T> ({selectedIncomeIds.length})
                         </Button>
                     )
@@ -130,18 +131,16 @@ export default function IncomeList({
                         columns: { columnVisibilityModel: { created_at: false, account_id: false } },
                     }}
                     pageSizeOptions={[5, 10, 25]}
-                    // Enable checkbox selection
                     checkboxSelection
-                    // Pass selection model and handler
                     onRowSelectionModelChange={onSelectionChange}
                     rowSelectionModel={selectedIncomeIds}
                     disableRowSelectionOnClick
-                    // Disable grid interaction during bulk delete
-                    loading={isDeleting}
+                    loading={isDeleting} // Show loading overlay during delete
+                    localeText={dataGridLocale} // <-- Apply localization
                     sx={{
                         border: 'none',
                         '& .MuiDataGrid-row.Mui-selected': {
-                            backgroundColor: 'rgba(25, 118, 210, 0.08)', // Highlight selected rows
+                            backgroundColor: 'rgba(25, 118, 210, 0.08)',
                         },
                         '& .MuiDataGrid-row.Mui-selected:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.12)',
