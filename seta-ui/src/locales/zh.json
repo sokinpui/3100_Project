@@ -41,7 +41,29 @@
         "logoutButton": "登出",
         "viewProfile": "查看个人资料",
         "importExpenses": "导入费用",
-        "accounts": "账户管理"
+        "accounts": "账户管理",
+        "income": "收入管理"
+    },
+    "incomeManager": {
+        "title": "管理收入",
+        "fetchError": "加载收入记录失败。",
+        "addSuccess": "收入记录添加成功！",
+        "addError": "添加收入记录失败。",
+        "deleteSuccess": "来自 '{{source}}' 的收入记录（${{amount}}）删除成功！",
+        "deleteError": "删除收入记录失败。",
+        "fillRequired": "请填写金额、日期和来源。",
+        "addTitle": "添加新收入",
+        "amount": "金额",
+        "date": "日期",
+        "source": "来源",
+        "description": "描述",
+        "descriptionOptional": "描述（可选）",
+        "account": "账户",
+        "accountOptional": "账户（可选）",
+        "addButton": "添加收入",
+        "listTitle": "收入历史",
+        "deleteTitle": "删除收入记录",
+        "deleteConfirmText": "您确定要删除来自 '{{source}}' 金额为 ${{amount}} 的收入记录吗？此操作无法撤销。"
     },
     "accountManager": {
         "title": "管理账户",

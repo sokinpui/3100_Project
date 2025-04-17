@@ -41,7 +41,8 @@
         "logoutButton": "Logout",
         "viewProfile": "View Profile",
         "importExpenses": "Import Expenses",
-        "accounts": "Accounts"
+        "accounts": "Accounts",
+        "income": "Income"
     },
     "common": {
         "close": "Close",
@@ -55,6 +56,27 @@
         "cancel": "Cancel",
         "confirm": "Confirm",
         "createdAt": "Created At"
+    },
+    "incomeManager": {
+        "title": "Manage Income",
+        "fetchError": "Failed to load income records.",
+        "addSuccess": "Income record added successfully!",
+        "addError": "Failed to add income record.",
+        "deleteSuccess": "Income record '{{source}}' (${{amount}}) deleted successfully!",
+        "deleteError": "Failed to delete income record.",
+        "fillRequired": "Please fill in Amount, Date, and Source.",
+        "addTitle": "Add New Income",
+        "amount": "Amount",
+        "date": "Date",
+        "source": "Source",
+        "description": "Description",
+        "descriptionOptional": "Description (Optional)",
+        "account": "Account",
+        "accountOptional": "Account (Optional)",
+        "addButton": "Add Income",
+        "listTitle": "Income History",
+        "deleteTitle": "Delete Income Record",
+        "deleteConfirmText": "Are you sure you want to delete the income record from '{{source}}' for ${{amount}}? This action cannot be undone."
     },
     "accountManager": {
         "title": "Manage Accounts",

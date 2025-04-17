@@ -986,6 +986,51 @@ async def delete_account(account_id: int, db: Session = Depends(get_db)):
     db.commit()
     return None
 
+@app.get("/income/{user_id}", response_model=List[IncomeResponse])
+async def get_user_income(user_id: int, db: Session = Depends(get_db)):
+    """Get all income records for a user."""
+    income_records = db.query(models.Income).filter(models.Income.user_id == user_id).order_by(models.Income.date.desc()).all() # Added sorting
+    return income_records
+
+@app.post("/income", response_model=IncomeResponse, status_code=status.HTTP_201_CREATED)
+async def create_income(income_data: IncomeCreate, db: Session = Depends(get_db)):
+    """Create a new income record."""
+    user = db.query(models.User).filter(models.User.id == income_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Optional: Check if account_id exists if provided
+    if income_data.account_id:
+        account = db.query(models.Account).filter(models.Account.id == income_data.account_id, models.Account.user_id == income_data.user_id).first()
+        if not account:
+            raise HTTPException(status_code=404, detail=f"Account with id {income_data.account_id} not found for this user.")
+
+    # Use model_dump for Pydantic v2+
+    try:
+        create_data = income_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        create_data = income_data.dict(exclude={'user_id'}) # Fallback for Pydantic v1
+
+    db_income = models.Income(user_id=income_data.user_id, **create_data)
+    db.add(db_income)
+    db.commit()
+    db.refresh(db_income)
+    return db_income
+
+# --- ADD THIS DELETE ENDPOINT ---
+@app.delete("/income/{income_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_income(income_id: int, db: Session = Depends(get_db)):
+    """Delete an income record."""
+    income_record = db.query(models.Income).filter(models.Income.id == income_id).first()
+    if not income_record:
+        raise HTTPException(status_code=404, detail="Income record not found")
+
+    # Optional: Add check if user owns this income record before deleting
+
+    db.delete(income_record)
+    db.commit()
+    return None
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
