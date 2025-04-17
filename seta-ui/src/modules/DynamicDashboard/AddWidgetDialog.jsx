@@ -7,7 +7,7 @@ import {
     FormControlLabel, Typography
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-// --- Keep icon imports ---
+// --- Import Existing Icons ---
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import ListAltIcon from '@mui/icons-material/ListAlt';
@@ -19,12 +19,20 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
 import TrackChangesIcon from '@mui/icons-material/TrackChanges';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+// --- Import NEW Icons ---
+import EventNoteIcon from '@mui/icons-material/EventNote'; // For Upcoming Bills
+import DonutSmallIcon from '@mui/icons-material/DonutSmall'; // For Budget Overview
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'; // For Mini Calendar
+import FlagIcon from '@mui/icons-material/Flag'; // For Goal Progress
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows'; // For Net Cash Flow
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'; // For Account Balance
 // --- End Import Icons ---
 import { useTranslation } from 'react-i18next';
 import T from '../../utils/T';
 
-// --- Keep AVAILABLE_WIDGETS ---
+// --- Updated AVAILABLE_WIDGETS ---
 const AVAILABLE_WIDGETS = [
+    // Existing Widgets
     { id: 'overviewSummary', titleKey: 'dynamicDashboard.overviewSummary', icon: <AssessmentIcon /> },
     { id: 'filterWidget', titleKey: 'dynamicDashboard.filterWidgetTitle', icon: <FilterAltIcon /> },
     { id: 'categoryBreakdown', titleKey: 'dynamicDashboard.categoryBreakdown', icon: <PieChartIcon /> },
@@ -36,6 +44,13 @@ const AVAILABLE_WIDGETS = [
     { id: 'averageDailySpend', titleKey: 'dynamicDashboard.averageDailySpend', icon: <CalculateIcon /> },
     { id: 'categorySpendingTimeline', titleKey: 'dynamicDashboard.categorySpendingTimeline', icon: <StackedLineChartIcon /> },
     { id: 'spendingGoalTracker', titleKey: 'dynamicDashboard.spendingGoal', icon: <TrackChangesIcon /> },
+    // --- NEW Widgets ---
+    { id: 'upcomingBills', titleKey: 'dynamicDashboard.upcomingBillsTitle', icon: <EventNoteIcon /> },
+    { id: 'budgetOverview', titleKey: 'dynamicDashboard.budgetOverviewTitle', icon: <DonutSmallIcon /> },
+    { id: 'miniCalendar', titleKey: 'dynamicDashboard.miniCalendarTitle', icon: <CalendarMonthIcon /> },
+    { id: 'goalProgress', titleKey: 'dynamicDashboard.goalProgressTitle', icon: <FlagIcon /> },
+    { id: 'netCashFlow', titleKey: 'dynamicDashboard.netCashFlowTitle', icon: <CompareArrowsIcon /> },
+    { id: 'accountBalance', titleKey: 'dynamicDashboard.accountBalanceTitle', icon: <AccountBalanceWalletIcon /> },
 ];
 // --- End Available Widgets ---
 
@@ -43,23 +58,22 @@ const AVAILABLE_WIDGETS = [
 export default function AddWidgetDialog({
     open,
     onClose,
-    // REMOVE onAddWidget and onRemoveExistingWidget props
-    onApplyChanges, // <-- NEW PROP: Passes back the desired state
+    onApplyChanges,
     existingWidgetTypes = []
 }) {
     const { t } = useTranslation();
     const [checkboxStates, setCheckboxStates] = useState({});
     const [initialCheckboxStates, setInitialCheckboxStates] = useState({});
 
+    // --- useEffect and other logic remains the same ---
     useEffect(() => {
         if (open) {
             const initialStates = {};
             AVAILABLE_WIDGETS.forEach(widget => {
-                // Initialize based on whether the TYPE exists in the dashboard
                 initialStates[widget.id] = existingWidgetTypes.includes(widget.id);
             });
             setCheckboxStates(initialStates);
-            setInitialCheckboxStates(initialStates); // Store the initial state
+            setInitialCheckboxStates(initialStates);
         } else {
              setCheckboxStates({});
              setInitialCheckboxStates({});
@@ -74,7 +88,7 @@ export default function AddWidgetDialog({
     const handleToggleCheckbox = useCallback((widgetId) => {
         setCheckboxStates(prev => ({
             ...prev,
-            [widgetId]: !prev[widgetId] // Toggle the state for this widget type
+            [widgetId]: !prev[widgetId]
         }));
     }, []);
 
@@ -89,19 +103,18 @@ export default function AddWidgetDialog({
         });
     }, [allWidgetIds]);
 
-    // --- Apply Changes: Call the new callback ---
     const handleApplyClick = () => {
         if (onApplyChanges) {
-            onApplyChanges(checkboxStates); // Pass the final desired state (map of type -> boolean)
+            onApplyChanges(checkboxStates);
         }
         onClose();
     };
-    // --- End Apply Changes ---
 
     const hasChanges = useMemo(() => {
-        // Check if the current checkbox states differ from the initial states
         return JSON.stringify(checkboxStates) !== JSON.stringify(initialCheckboxStates);
     }, [checkboxStates, initialCheckboxStates]);
+    // --- End of unchanged logic ---
+
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -125,31 +138,33 @@ export default function AddWidgetDialog({
                         }
                     />
                 </Box>
-                <List dense>
-                    {AVAILABLE_WIDGETS.map((widget) => (
-                        <ListItem
-                            key={widget.id} // Use widget type (id) as key
-                            disablePadding
-                            secondaryAction={
-                                <Checkbox
-                                    edge="end"
-                                    onChange={() => handleToggleCheckbox(widget.id)}
-                                    // Use the state for this widget type
-                                    checked={checkboxStates[widget.id] || false}
-                                    inputProps={{ 'aria-labelledby': `widget-label-${widget.id}` }}
-                                />
-                            }
-                        >
-                            <ListItemButton onClick={() => handleToggleCheckbox(widget.id)}>
-                                <ListItemIcon sx={{ minWidth: 40 }}>
-                                    {widget.icon}
-                                </ListItemIcon>
-                                <ListItemText
-                                    id={`widget-label-${widget.id}`}
-                                    primary={t(widget.titleKey)}
-                                />
-                            </ListItemButton>
-                        </ListItem>
+                <List dense sx={{ maxHeight: '60vh', overflowY: 'auto' }}> {/* Added scroll */}
+                    {/* Sort alphabetically by translated title for better UX */}
+                    {AVAILABLE_WIDGETS
+                        .sort((a, b) => t(a.titleKey).localeCompare(t(b.titleKey)))
+                        .map((widget) => (
+                            <ListItem
+                                key={widget.id}
+                                disablePadding
+                                secondaryAction={
+                                    <Checkbox
+                                        edge="end"
+                                        onChange={() => handleToggleCheckbox(widget.id)}
+                                        checked={checkboxStates[widget.id] || false}
+                                        inputProps={{ 'aria-labelledby': `widget-label-${widget.id}` }}
+                                    />
+                                }
+                            >
+                                <ListItemButton onClick={() => handleToggleCheckbox(widget.id)}>
+                                    <ListItemIcon sx={{ minWidth: 40 }}>
+                                        {widget.icon}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        id={`widget-label-${widget.id}`}
+                                        primary={t(widget.titleKey)}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
                     ))}
                 </List>
             </DialogContent>
@@ -158,9 +173,9 @@ export default function AddWidgetDialog({
                     <T>common.cancel</T>
                 </Button>
                 <Button
-                    onClick={handleApplyClick} // Call the handler that passes state up
+                    onClick={handleApplyClick}
                     variant="contained"
-                    disabled={!hasChanges} // Disable if no changes were made
+                    disabled={!hasChanges}
                 >
                     <T>dynamicDashboard.applyChanges</T>
                 </Button>

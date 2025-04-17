@@ -4,3 +4,4 @@ seta-api/app/test_user_info.json
 seta-api/test_user_info.json
 seta-api/venv/
 .DS_Store
+__pycache__/

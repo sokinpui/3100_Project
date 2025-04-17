@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
 import models
-from models import get_db, User, Expense
 from datetime import date, datetime, timedelta, timezone  # Add timezone here
+# from models import get_db, User, Expense
+from models import get_db, User, Expense, Income, RecurringExpense, Budget, Goal, Account, FrequencyEnum
 from pydantic import BaseModel, EmailStr, ConfigDict, validator, Field
 from typing import List, Optional
 import hashlib
@@ -63,6 +64,81 @@ async def read_root():
     return {"message": "Welcome to SETA API", "version": "1.0"}
 
 # --------- Pydantic Models ---------
+
+class IncomeBase(BaseModel):
+    amount: float
+    date: date
+    source: str
+    description: Optional[str] = None
+    account_id: Optional[int] = None
+
+class IncomeCreate(IncomeBase):
+    user_id: int
+
+class IncomeResponse(IncomeBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class RecurringExpenseBase(BaseModel):
+    name: str
+    amount: float
+    category_name: str
+    frequency: FrequencyEnum
+    start_date: date
+    end_date: Optional[date] = None
+    description: Optional[str] = None
+    account_id: Optional[int] = None
+
+class RecurringExpenseResponse(RecurringExpenseBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class BudgetBase(BaseModel):
+    category_name: str
+    amount_limit: float
+    period: FrequencyEnum
+    start_date: date
+    end_date: Optional[date] = None
+
+class BudgetResponse(BudgetBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class GoalBase(BaseModel):
+    name: str
+    target_amount: float
+    current_amount: float = 0.0
+    target_date: Optional[date] = None
+
+class GoalResponse(GoalBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
+
+class AccountBase(BaseModel):
+    name: str
+    account_type: str
+    starting_balance: float = 0.0
+    balance_date: date
+    currency: str = 'USD'
+
+class AccountResponse(AccountBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    class Config: orm_mode = True
 
 class ExpenseBase(BaseModel):
     """Base expense model with common attributes."""
@@ -178,6 +254,8 @@ class ResetPasswordPayload(BaseModel):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         return v
+class AccountCreate(AccountBase):
+    user_id: int
 
 # --------- Helper Functions ---------
 
@@ -717,6 +795,60 @@ async def generate_expense_report(user_id: int, format: str = "json", db: Sessio
     else:
         raise HTTPException(status_code=400, detail="Unsupported format. Use json, csv, xlsx, or pdf")
 
+# --------- New Income Endpoints ---------
+
+@app.get("/income/{user_id}", response_model=List[IncomeResponse])
+async def get_user_income(user_id: int, db: Session = Depends(get_db)):
+    """Get all income records for a user."""
+    income_records = db.query(models.Income).filter(models.Income.user_id == user_id).all()
+    return income_records
+
+@app.post("/income", response_model=IncomeResponse, status_code=status.HTTP_201_CREATED)
+async def create_income(income_data: IncomeCreate, db: Session = Depends(get_db)):
+    """Create a new income record."""
+    user = db.query(models.User).filter(models.User.id == income_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_income = models.Income(**income_data.dict())
+    db.add(db_income)
+    db.commit()
+    db.refresh(db_income)
+    return db_income
+
+# --------- New Recurring Expense Endpoints ---------
+
+@app.get("/recurring/{user_id}", response_model=List[RecurringExpenseResponse])
+async def get_user_recurring_expenses(user_id: int, db: Session = Depends(get_db)):
+    """Get all recurring expense rules for a user."""
+    # TODO: Add logic to calculate next due dates based on frequency/start_date
+    recurring = db.query(models.RecurringExpense).filter(models.RecurringExpense.user_id == user_id).all()
+    return recurring
+
+# --------- New Budget Endpoints ---------
+
+@app.get("/budgets/{user_id}", response_model=List[BudgetResponse])
+async def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
+    """Get all budget rules for a user."""
+    budgets = db.query(models.Budget).filter(models.Budget.user_id == user_id).all()
+    return budgets
+
+# --------- New Goal Endpoints ---------
+
+@app.get("/goals/{user_id}", response_model=List[GoalResponse])
+async def get_user_goals(user_id: int, db: Session = Depends(get_db)):
+    """Get all financial goals for a user."""
+    goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).all()
+    return goals
+
+# --------- New Account Endpoints ---------
+
+@app.get("/accounts/{user_id}", response_model=List[AccountResponse])
+async def get_user_accounts(user_id: int, db: Session = Depends(get_db)):
+    """Get all accounts for a user."""
+    accounts = db.query(models.Account).filter(models.Account.user_id == user_id).all()
+    return accounts
+
 # --------- User Settings Endpoints ---------
 
 @app.get("/users/{user_id}/settings", response_model=UserSettings)
@@ -800,6 +932,59 @@ async def get_total_expenses(user_id: int, db: Session = Depends(get_db)):
     """Get total expenses for a user."""
     total = db.query(func.sum(models.Expense.amount)).filter(models.Expense.user_id == user_id).scalar() or 0
     return {"total": float(total)}
+
+# --------- New Account Endpoints ---------
+
+@app.get("/accounts/{user_id}", response_model=List[AccountResponse])
+async def get_user_accounts(user_id: int, db: Session = Depends(get_db)):
+    """Get all accounts for a user."""
+    accounts = db.query(models.Account).filter(models.Account.user_id == user_id).all()
+    return accounts
+
+# --- ADD THIS ENDPOINT ---
+@app.post("/accounts", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)
+async def create_account(account_data: AccountCreate, db: Session = Depends(get_db)):
+    """Create a new account for a user."""
+    user = db.query(models.User).filter(models.User.id == account_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not account_data.balance_date:
+         raise HTTPException(status_code=400, detail="Balance date is required")
+
+    # --- FIX IS HERE ---
+    # Create dict excluding user_id for model creation
+    # Use model_dump for Pydantic v2+ (which you likely have based on version 2.10.6)
+    # If you were on Pydantic v1, you would use .dict()
+    try:
+        # Use model_dump for Pydantic v2
+        create_data = account_data.model_dump(exclude={'user_id'})
+    except AttributeError:
+        # Fallback for Pydantic v1 if needed, though unlikely based on your requirements
+        create_data = account_data.dict(exclude={'user_id'})
+    # --- END FIX ---
+
+
+    # Now create_data contains all fields from AccountBase but not user_id
+    db_account = models.Account(user_id=account_data.user_id, **create_data)
+    db.add(db_account)
+    db.commit()
+    db.refresh(db_account)
+    return db_account
+
+# --- Add Delete Endpoint (Basic) ---
+@app.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(account_id: int, db: Session = Depends(get_db)):
+    """Delete an account."""
+    account = db.query(models.Account).filter(models.Account.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    # Optional: Add check if user owns this account before deleting
+
+    db.delete(account)
+    db.commit()
+    return None
 
 if __name__ == "__main__":
     import uvicorn

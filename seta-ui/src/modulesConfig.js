@@ -9,6 +9,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ErrorIcon from '@mui/icons-material/Error';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 export const appModules = [
   {
@@ -58,6 +59,14 @@ export const appModules = [
     component: React.lazy(() => import('./modules/ExpenseReports')),
     isProtected: true,
     icon: <AssessmentIcon />,
+  },
+  {
+    id: 'accounts', // New ID
+    name: 'sidebar.accounts', // New translation key
+    path: '/accounts', // New path
+    component: React.lazy(() => import('./modules/AccountManager/AccountManager')), // New component path
+    isProtected: true,
+    icon: <AccountBalanceWalletIcon />, // Use the icon
   },
   {
     id: 'settings',
