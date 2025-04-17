@@ -20,7 +20,10 @@ from reportlab.lib.pagesizes import letter
 from fastapi.responses import FileResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 import os  # Ideally use environment variables
+from dotenv import load_dotenv
 import logging
+
+load_dotenv()
 
 # Configure basic logging (optional but good practice)
 logging.basicConfig(level=logging.INFO)
@@ -29,23 +32,22 @@ logger = logging.getLogger(__name__)
 # --- Email Configuration ---
 # WARNING: Hardcoding credentials is insecure. Use environment variables in production.
 conf = ConnectionConfig(
-    MAIL_USERNAME="csci3100setaproject@gmail.com",  # os.getenv("MAIL_USERNAME")
-    MAIL_PASSWORD="xltj rskt qgxb idsx ",  # os.getenv("MAIL_PASSWORD") # NOTE: Added '.' as per user prompt
-    MAIL_FROM="csci3100setaproject@gmail.com",  # os.getenv("MAIL_FROM") # Just use the string directly
-    MAIL_PORT=587,
-    MAIL_SERVER="smtp.gmail.com",
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
+    MAIL_USERNAME=os.getenv("MAIL_USERNAME", "your_default_dev_email@example.com"),
+    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "your_default_dev_password"), # Strongly advise against default password
+    MAIL_FROM=os.getenv("MAIL_FROM", "noreply@example.com"), # Use a default sender
+    MAIL_PORT=int(os.getenv("MAIL_PORT", 587)), # Read as string, convert to int
+    MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.example.com"),
+    MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true", # Read as string, convert to bool
+    MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true",
+    USE_CREDENTIALS=os.getenv("USE_CREDENTIALS", "True").lower() == "true",
+    VALIDATE_CERTS=os.getenv("VALIDATE_CERTS", "True").lower() == "true"
 )
 
 fm = FastMail(conf)
 
 # --- Base URLs ---
-API_BASE_URL = "http://localhost:8000"  # Backend URL (used in emails if needed)
-# !!! IMPORTANT: Set this to your React app's URL !!!
-FRONTEND_BASE_URL = "http://localhost:3000"  # Or your frontend's actual URL
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:3000")
 
 # Create a FastAPI application instance
 app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
