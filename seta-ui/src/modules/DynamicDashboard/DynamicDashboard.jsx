@@ -20,7 +20,6 @@ import TopSpendingCategoriesWidget from './widgets/TopSpendingCategoriesWidget';
 import LargestExpensesWidget from './widgets/LargestExpensesWidget';
 import AverageDailySpendWidget from './widgets/AverageDailySpendWidget';
 import CategorySpendingTimelineWidget from './widgets/CategorySpendingTimelineWidget';
-import SpendingGoalTrackerWidget from './widgets/SpendingGoalTrackerWidget';
 import FilterWidget from './widgets/FilterWidget';
 import UpcomingBillsWidget from './widgets/UpcomingBillsWidget';
 import BudgetOverviewWidget from './widgets/BudgetOverviewWidget';
@@ -92,11 +91,6 @@ const WIDGET_COMPONENTS = {
     component: CategorySpendingTimelineWidget,
     titleKey: 'dynamicDashboard.categorySpendingTimeline',
     defaultLayout: { w: 8, h: 7, minW: 4, minH: 4 }
-  },
-  spendingGoalTracker: {
-    component: SpendingGoalTrackerWidget,
-    titleKey: 'dynamicDashboard.spendingGoal',
-    defaultLayout: { w: 4, h: 5, minW: 2, minH: 3 }
   },
   upcomingBills: {
     component: UpcomingBillsWidget,
