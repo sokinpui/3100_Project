@@ -34,9 +34,11 @@ import AverageDailyIncomeWidget from './widgets/AverageDailyIncomeWidget';
 import IncomeComparisonWidget from './widgets/IncomeComparisonWidget';
 import IncomeTrendWidget from './widgets/IncomeTrendWidget';
 import NetFlowTrendWidget from './widgets/NetFlowTrendWidget';
-
 import AverageDailyNetFlowWidget from './widgets/AverageDailyNetFlowWidget';
 import NetFlowComparisonWidget from './widgets/NetFlowComparisonWidget';
+import SavingsRateWidget from './widgets/SavingsRateWidget'; // NEW
+import QuickAddWidget from './widgets/QuickAddWidget'; // NEW
+import ExpenseNotifications from '../ExpenseManager/components/ExpenseNotifications'; // NEW for notifications
 
 import AddWidgetDialog from './AddWidgetDialog';
 import T from '../../utils/T';
@@ -132,7 +134,6 @@ const WIDGET_COMPONENTS = {
     titleKey: 'dynamicDashboard.accountBalanceTitle',
     defaultLayout: { w: 5, h: 5, minW: 3, minH: 3 }
   },
-  // --- NEW Income Widgets ---
   topIncomeSources: {
     component: TopIncomeSourcesWidget,
     titleKey: 'dynamicDashboard.topIncomeSources',
@@ -149,34 +150,45 @@ const WIDGET_COMPONENTS = {
     defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
   },
   averageDailyIncome: {
-      component: AverageDailyIncomeWidget,
-      titleKey: 'dynamicDashboard.averageDailyIncome', // Add translation key
-      defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } // Same as expense average
+    component: AverageDailyIncomeWidget,
+    titleKey: 'dynamicDashboard.averageDailyIncome',
+    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
   },
   incomeComparison: {
-      component: IncomeComparisonWidget,
-      titleKey: 'dynamicDashboard.incomeComparison', // Add translation key
-      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Same as expense comparison
+    component: IncomeComparisonWidget,
+    titleKey: 'dynamicDashboard.incomeComparison',
+    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
   },
   incomeTrend: {
-      component: IncomeTrendWidget,
-      titleKey: 'dynamicDashboard.incomeTrend', // Add translation key
-      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Same as expense trend
+    component: IncomeTrendWidget,
+    titleKey: 'dynamicDashboard.incomeTrend',
+    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
   },
   netFlowTrend: {
-      component: NetFlowTrendWidget,
-      titleKey: 'dynamicDashboard.netFlowTrend', // Add translation key
-      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Similar size to other trends
+    component: NetFlowTrendWidget,
+    titleKey: 'dynamicDashboard.netFlowTrend',
+    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
   },
   averageDailyNetFlow: {
-      component: AverageDailyNetFlowWidget,
-      titleKey: 'dynamicDashboard.averageDailyNetFlow', // Add translation key
-      defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } // Same as other averages
+    component: AverageDailyNetFlowWidget,
+    titleKey: 'dynamicDashboard.averageDailyNetFlow',
+    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
   },
   netFlowComparison: {
-      component: NetFlowComparisonWidget,
-      titleKey: 'dynamicDashboard.netFlowComparison', // Add translation key
-      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Same as other comparisons
+    component: NetFlowComparisonWidget,
+    titleKey: 'dynamicDashboard.netFlowComparison',
+    defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
+  },
+  // --- NEW Widgets ---
+  savingsRate: {
+    component: SavingsRateWidget,
+    titleKey: 'dynamicDashboard.savingsRate',
+    defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 }
+  },
+  quickAdd: {
+    component: QuickAddWidget,
+    titleKey: 'dynamicDashboard.quickAdd',
+    defaultLayout: { w: 4, h: 8, minW: 3, minH: 7 }
   },
 };
 
@@ -193,6 +205,7 @@ export default function DynamicDashboard() {
   const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' }); // NEW: Notification state
 
   // Initialize activeFilters from localStorage if available
   const [activeFilters, setActiveFilters] = useState(() => {
@@ -212,6 +225,18 @@ export default function DynamicDashboard() {
     }
     return DEFAULT_FILTERS;
   });
+
+  // --- Notification Handlers ---
+  const showNotification = useCallback((message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  }, []);
+
+  const handleCloseNotification = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setNotification(prev => ({ ...prev, open: false }));
+  };
 
   // --- Load Layout ---
   useEffect(() => {
@@ -284,30 +309,34 @@ export default function DynamicDashboard() {
   }, [activeFilters, isMounted]);
 
   // --- Fetch ALL Expenses and Income ---
+  const fetchDashboardData = useCallback(async () => {
+    if (!userId) {
+      setIsLoadingData(false);
+      setAllExpenses([]);
+      setAllIncome([]);
+      return;
+    }
+    setIsLoadingData(true);
+    try {
+      const [expenseResponse, incomeResponse] = await Promise.all([
+        axios.get(`${API_URL}/expenses/${userId}`),
+        axios.get(`${API_URL}/income/${userId}`),
+      ]);
+      setAllExpenses(expenseResponse.data || []);
+      setAllIncome(incomeResponse.data || []);
+    } catch (error) {
+      console.error("Failed to load dashboard data", error);
+      setAllExpenses([]);
+      setAllIncome([]);
+      showNotification(t('dynamicDashboard.fetchError'), 'error');
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [userId, showNotification, t]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!userId) {
-        setIsLoadingData(false);
-        return;
-      }
-      setIsLoadingData(true);
-      try {
-        const [expenseResponse, incomeResponse] = await Promise.all([
-          axios.get(`${API_URL}/expenses/${userId}`),
-          axios.get(`${API_URL}/income/${userId}`),
-        ]);
-        setAllExpenses(expenseResponse.data || []);
-        setAllIncome(incomeResponse.data || []);
-      } catch (error) {
-        console.error("Failed to load dashboard data", error);
-        setAllExpenses([]);
-        setAllIncome([]);
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-    fetchData();
-  }, [userId]);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // --- Calculate Time-Period Filtered Expenses ---
   const timePeriodFilteredExpenses = useMemo(() => {
@@ -514,15 +543,21 @@ export default function DynamicDashboard() {
         activeFilters: activeFilters,
       };
 
-      const extraProps = widget.type === 'filterWidget'
-        ? {
-            onFilterChange: handleFilterChange,
-            currentFilters: activeFilters,
-            availableCategories: allCategoriesAndSources,
-            maxAmount: maxTransactionAmount,
-            isLoadingData: isLoadingData,
-          }
-        : {};
+      let extraProps = {};
+      if (widget.type === 'filterWidget') {
+        extraProps = {
+          onFilterChange: handleFilterChange,
+          currentFilters: activeFilters,
+          availableCategories: allCategoriesAndSources,
+          maxAmount: maxTransactionAmount,
+          isLoadingData: isLoadingData,
+        };
+      } else if (widget.type === 'quickAdd') {
+        extraProps = {
+          showNotification: showNotification,
+          onDataAdded: fetchDashboardData,
+        };
+      }
 
       const handleRemoveThisWidget = () => removeSingleWidget(widget.id);
 
@@ -551,6 +586,10 @@ export default function DynamicDashboard() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
+      <ExpenseNotifications
+        notification={notification}
+        handleCloseNotification={handleCloseNotification}
+      />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5" component="h1"> <T>dynamicDashboard.title</T> </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setIsAddWidgetDialogOpen(true)}>

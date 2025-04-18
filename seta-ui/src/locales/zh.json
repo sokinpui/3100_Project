@@ -234,7 +234,10 @@
         "delete": "删除",
         "cancel": "取消",
         "confirm": "确认",
-        "createdAt": "创建时间"
+        "createdAt": "创建时间",
+        "Amount": "金额",
+        "Date": "日期",
+        "Description": "描述"
     },
     "dynamicDashboard": {
         "title": "动态仪表板",
@@ -327,7 +330,22 @@
         "netFlowComparison": "月度净流量比较",
         "notEnoughDataForNetFlowAverage": "数据不足，无法计算平均净流量。",
         "basedOnNetFlowDays": "基于交易天数:",
-        "noMonthlyNetFlowData": "无月度净流量数据可用。"
+        "noMonthlyNetFlowData": "无月度净流量数据可用。",
+        "miniCalendarPlaceholder": "净流量日历热图将在此处显示。",
+        "noDataForMonth": "本月无收入或支出数据。",
+        "netFlow": "净流量",
+        "savingsRate": "储蓄率",
+        "quickAdd": "快速添加交易"
+    },
+    "quickAdd": {
+        "addExpense": "添加支出",
+        "addIncome": "添加收入",
+        "fillRequired": "请填写金额和类别/来源。",
+        "amountPositive": "金额必须大于零。",
+        "expenseAdded": "支出添加成功！",
+        "incomeAdded": "收入添加成功！",
+        "expenseError": "添加支出失败。",
+        "incomeError": "添加收入失败。"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

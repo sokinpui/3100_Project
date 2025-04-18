@@ -59,7 +59,10 @@
         "delete": "Delete",
         "cancel": "Cancel",
         "confirm": "Confirm",
-        "createdAt": "Created At"
+        "createdAt": "Created At",
+        "Amount": "Amount",
+        "Date": "Date",
+        "Description": "Description"
     },
     "planningManager": {
         "title": "Financial Planning",
@@ -332,7 +335,22 @@
         "netFlowComparison": "Monthly Net Flow Comparison",
         "notEnoughDataForNetFlowAverage": "Not enough data for average net flow calculation.",
         "basedOnNetFlowDays": "based on transaction days:",
-        "noMonthlyNetFlowData": "No monthly net flow data available."
+        "noMonthlyNetFlowData": "No monthly net flow data available.",
+        "miniCalendarPlaceholder": "Net flow calendar heatmap will be shown here.",
+        "noDataForMonth": "No income or expense data for this month.",
+        "netFlow": "Net Flow",
+        "savingsRate": "Savings Rate",
+        "quickAdd": "Quick Add Transaction"
+    },
+    "quickAdd": {
+        "addExpense": "Add Expense",
+        "addIncome": "Add Income",
+        "fillRequired": "Please fill Amount and Category/Source.",
+        "amountPositive": "Amount must be greater than zero.",
+        "expenseAdded": "Expense added successfully!",
+        "incomeAdded": "Income added successfully!",
+        "expenseError": "Failed to add expense.",
+        "incomeError": "Failed to add income."
     },
     "timePeriods": {
         "last7days": "Last 7 Days",
