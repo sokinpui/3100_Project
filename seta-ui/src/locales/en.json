@@ -309,7 +309,9 @@
         "totalIncome": "Total Income",
         "netFlow": "Net Flow",
         "incomeEntries": "Income Entries",
-        "Entries": "Entries"
+        "Entries": "Entries",
+        "filterByCategory": "Filter by Category",
+        "filterByCategorySource": "Filter by Category / Source"
     },
     "timePeriods": {
         "last7days": "Last 7 Days",

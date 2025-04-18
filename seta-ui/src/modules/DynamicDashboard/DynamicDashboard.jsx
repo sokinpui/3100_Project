@@ -1,3 +1,4 @@
+// src/modules/DynamicDashboard/DynamicDashboard.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { Box, Button, Container, CircularProgress, Typography } from '@mui/material';
@@ -35,6 +36,7 @@ import T from '../../utils/T';
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const API_URL = 'http://localhost:8000';
 const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v2';
+const FILTER_STORAGE_KEY = 'dynamicDashboardFilters_v2'; // New key for filters
 const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
 const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
 const DEFAULT_MAX_AMOUNT = 1000;
@@ -141,7 +143,25 @@ export default function DynamicDashboard() {
   const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
-  const [activeFilters, setActiveFilters] = useState(DEFAULT_FILTERS);
+
+  // Initialize activeFilters from localStorage if available
+  const [activeFilters, setActiveFilters] = useState(() => {
+    const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (savedFilters) {
+      try {
+        const parsedFilters = JSON.parse(savedFilters);
+        return {
+          categories: Array.isArray(parsedFilters.categories) ? parsedFilters.categories : [],
+          amountRange: Array.isArray(parsedFilters.amountRange) && parsedFilters.amountRange.length === 2
+            ? [Math.max(0, parsedFilters.amountRange[0]), Math.max(0, parsedFilters.amountRange[1])]
+            : [0, DEFAULT_MAX_AMOUNT]
+        };
+      } catch (e) {
+        console.error("Failed to parse saved filters", e);
+      }
+    }
+    return DEFAULT_FILTERS;
+  });
 
   // --- Load Layout ---
   useEffect(() => {
@@ -201,6 +221,17 @@ export default function DynamicDashboard() {
       localStorage.removeItem(LAYOUT_STORAGE_KEY);
     }
   }, [layouts, widgets, isMounted]);
+
+  // --- Save Filters ---
+  useEffect(() => {
+    if (isMounted) {
+      try {
+        localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(activeFilters));
+      } catch (e) {
+        console.error("Failed to save filters", e);
+      }
+    }
+  }, [activeFilters, isMounted]);
 
   // --- Fetch ALL Expenses and Income ---
   useEffect(() => {
@@ -270,19 +301,43 @@ export default function DynamicDashboard() {
     return incomeToFilter;
   }, [allIncome, timePeriod]);
 
-  // --- Calculate Max Amount ---
-  const maxExpenseAmount = useMemo(() => {
-    if (!timePeriodFilteredExpenses || timePeriodFilteredExpenses.length === 0) {
-      return DEFAULT_MAX_AMOUNT;
-    }
-    const max = timePeriodFilteredExpenses.reduce((maxVal, expense) => {
-      const amount = parseFloat(expense.amount) || 0;
-      return Math.max(maxVal, amount);
-    }, 0);
-    return Math.max(max, DEFAULT_MAX_AMOUNT);
-  }, [timePeriodFilteredExpenses]);
+  // --- Calculate Combined Categories/Sources ---
+  const allCategoriesAndSources = useMemo(() => {
+    const expenseCats = new Set(allExpenses.map(e => e.category_name).filter(Boolean));
+    const incomeSources = new Set(allIncome.map(i => i.source).filter(Boolean));
+    return Array.from(new Set([...expenseCats, ...incomeSources])).sort();
+  }, [allExpenses, allIncome]);
 
-  // --- Apply Active Filters ---
+  // --- Calculate Max Transaction Amount ---
+  const maxTransactionAmount = useMemo(() => {
+    if (isLoadingData) return Math.max(activeFilters.amountRange[1], DEFAULT_MAX_AMOUNT);
+
+    const expensesToConsider = timePeriodFilteredExpenses || [];
+    const incomeToConsider = timePeriodFilteredIncome || [];
+
+    const maxExpense = expensesToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
+    const maxIncome = incomeToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
+
+    const overallMax = Math.max(maxExpense, maxIncome);
+    return Math.max(overallMax, DEFAULT_MAX_AMOUNT);
+  }, [timePeriodFilteredExpenses, timePeriodFilteredIncome, isLoadingData, activeFilters.amountRange]);
+
+  // --- Adjust amount range filter if maxTransactionAmount decreases ---
+  useEffect(() => {
+    if (!isLoadingData) {
+      const [currentMin, currentMax] = activeFilters.amountRange;
+      let newMax = Math.min(currentMax, maxTransactionAmount);
+      let newMin = Math.min(currentMin, newMax);
+      if (newMin !== currentMin || newMax !== currentMax) {
+        setActiveFilters(prev => ({
+          ...prev,
+          amountRange: [newMin, newMax]
+        }));
+      }
+    }
+  }, [maxTransactionAmount, isLoadingData]);
+
+  // --- Apply Active Filters to Expenses ---
   const filteredExpenses = useMemo(() => {
     let expensesToFilter = timePeriodFilteredExpenses;
     if (activeFilters.categories && activeFilters.categories.length > 0) {
@@ -299,6 +354,24 @@ export default function DynamicDashboard() {
     }
     return expensesToFilter;
   }, [timePeriodFilteredExpenses, activeFilters]);
+
+  // --- Apply Active Filters to Income ---
+  const filteredIncome = useMemo(() => {
+    let incomeToFilter = timePeriodFilteredIncome;
+    if (activeFilters.categories && activeFilters.categories.length > 0) {
+      incomeToFilter = incomeToFilter.filter(income =>
+        activeFilters.categories.includes(income.source)
+      );
+    }
+    if (activeFilters.amountRange) {
+      const [minAmount, maxAmount] = activeFilters.amountRange;
+      incomeToFilter = incomeToFilter.filter(income => {
+        const amount = parseFloat(income.amount) || 0;
+        return amount >= minAmount && amount <= maxAmount;
+      });
+    }
+    return incomeToFilter;
+  }, [timePeriodFilteredIncome, activeFilters]);
 
   // --- Layout Change Handler ---
   const handleLayoutChange = useCallback((layout, allLayouts) => {
@@ -329,7 +402,12 @@ export default function DynamicDashboard() {
   }, []);
 
   const removeSingleWidget = useCallback((widgetInstanceId) => {
-    setWidgets(prev => prev.filter(widget => widget.id !== widgetInstanceId));
+    setWidgets(prev => prev.filter(widget => {
+      if (widget.id === widgetInstanceId && widget.type === 'filterWidget') {
+        setActiveFilters({ categories: [], amountRange: [0, maxTransactionAmount] });
+      }
+      return widget.id !== widgetInstanceId;
+    }));
     setLayouts(prevLayouts => {
       const newLayouts = {};
       Object.keys(prevLayouts).forEach(breakpoint => {
@@ -337,7 +415,7 @@ export default function DynamicDashboard() {
       });
       return newLayouts;
     });
-  }, []);
+  }, [maxTransactionAmount]);
 
   // --- Handler for Dialog Apply Changes ---
   const handleApplyWidgetChanges = useCallback((desiredStates) => {
@@ -350,29 +428,22 @@ export default function DynamicDashboard() {
         const instanceIdToRemove = currentWidgetsMap.get(widgetType);
         if (instanceIdToRemove) {
           removeSingleWidget(instanceIdToRemove);
-          if (widgetType === 'filterWidget') {
-            setActiveFilters({
-              categories: [],
-              amountRange: [0, maxExpenseAmount]
-            });
-          }
         }
       }
     });
     setIsAddWidgetDialogOpen(false);
-  }, [widgets, addSingleWidget, removeSingleWidget, maxExpenseAmount]);
+  }, [widgets, addSingleWidget, removeSingleWidget]);
 
   // --- Callback for Filter Widget ---
   const handleFilterChange = useCallback((newFilters) => {
     const adjustedRange = [...newFilters.amountRange];
-    if (adjustedRange[1] > maxExpenseAmount) adjustedRange[1] = maxExpenseAmount;
+    if (adjustedRange[1] > maxTransactionAmount) adjustedRange[1] = maxTransactionAmount;
     if (adjustedRange[0] > adjustedRange[1]) adjustedRange[0] = adjustedRange[1];
-    setActiveFilters(prev => ({
-      ...prev,
+    setActiveFilters({
       categories: newFilters.categories,
       amountRange: adjustedRange
-    }));
-  }, [maxExpenseAmount]);
+    });
+  }, [maxTransactionAmount]);
 
   // --- Render Widgets ---
   const renderWidgets = () => {
@@ -386,7 +457,7 @@ export default function DynamicDashboard() {
 
       const commonWidgetProps = {
         expenses: filteredExpenses,
-        income: timePeriodFilteredIncome,
+        income: filteredIncome,
         isLoading: isLoadingData,
         userId: userId,
         timePeriod: timePeriod,
@@ -396,8 +467,10 @@ export default function DynamicDashboard() {
       const extraProps = widget.type === 'filterWidget'
         ? {
             onFilterChange: handleFilterChange,
-            initialFilters: activeFilters,
-            maxAmount: maxExpenseAmount
+            currentFilters: activeFilters,
+            availableCategories: allCategoriesAndSources,
+            maxAmount: maxTransactionAmount,
+            isLoadingData: isLoadingData,
           }
         : {};
 
@@ -410,10 +483,16 @@ export default function DynamicDashboard() {
             widgetId={widget.id}
             onRemoveWidget={handleRemoveThisWidget}
           >
-            <WidgetComponent
-              {...commonWidgetProps}
-              {...extraProps}
-            />
+            {widget.type === 'filterWidget' && isLoadingData ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : (
+              <WidgetComponent
+                {...commonWidgetProps}
+                {...extraProps}
+              />
+            )}
           </WidgetWrapper>
         </div>
       );
