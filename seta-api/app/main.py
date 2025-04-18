@@ -6,7 +6,7 @@ import models
 from datetime import date, datetime, timedelta, timezone  # Add timezone here
 # from models import get_db, User, Expense
 from models import get_db, User, Expense, Income, RecurringExpense, Budget, Goal, Account, FrequencyEnum
-from pydantic import BaseModel, EmailStr, ConfigDict, validator, Field
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, Field
 from typing import List, Optional
 import hashlib
 import secrets
@@ -28,6 +28,8 @@ load_dotenv()
 # Configure basic logging (optional but good practice)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
 
 # --- Email Configuration ---
 # WARNING: Hardcoding credentials is insecure. Use environment variables in production.
@@ -252,13 +254,13 @@ class ResetPasswordPayload(BaseModel):
     new_password: str
     confirm_password: str
 
-    @validator('confirm_password')
+    @field_validator('confirm_password')
     def passwords_match(cls, v, values, **kwargs):
         if 'new_password' in values and v != values['new_password']:
             raise ValueError('Passwords do not match')
         return v
 
-    @validator('new_password')
+    @field_validator('new_password')
     def password_strength(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
@@ -1462,4 +1464,4 @@ async def get_all_user_data_for_report(user_id: int, db: Session = Depends(get_d
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)

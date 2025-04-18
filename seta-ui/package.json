@@ -1,64 +1,114 @@
 {
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@fontsource/roboto": "^5.1.1",
-    "@mui/icons-material": "^6.4.7",
-    "@mui/material": "^6.4.7",
-    "@mui/x-data-grid": "^7.27.2",
-    "@mui/x-date-pickers": "^7.27.3",
-    "axios": "^1.8.2",
-    "bcryptjs": "^2.4.3",
-    "date-fns": "^3.6.0",
-    "dayjs": "^1.11.13",
-    "i18next": "^22.5.1",
-    "i18next-browser-languagedetector": "^7.1.0",
-    "jspdf": "^3.0.0",
-    "jspdf-autotable": "^5.0.2",
-    "react": "^18.2.0",
-    "react-csv": "^2.2.2",
-    "react-dom": "^18.2.0",
-    "react-grid-layout": "^1.5.1",
-    "react-i18next": "^12.3.0",
-    "react-router-dom": "^6.29.0",
-    "react-scripts": "^5.0.1",
-    "recharts": "^2.15.2",
-    "styled-components": "^6.1.15",
-    "vite": "^6.2.1",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "@storybook/react": "^8.5.3",
-    "@testing-library/react": "^16.2.0",
-    "css-loader": "^7.1.2",
-    "style-loader": "^4.0.0"
-  },
-  "name": "seta-ui",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "seta-desktop",
+    "version": "0.1.0",
+    "private": true,
+    "description": "SETA Personal Finance Desktop App",
+    "main": "public/electron.js",
+    "homepage": "./",
+    "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.0",
+        "@fontsource/roboto": "^5.1.1",
+        "@mui/icons-material": "^6.4.7",
+        "@mui/material": "^6.4.7",
+        "@mui/x-data-grid": "^7.27.2",
+        "@mui/x-date-pickers": "^7.27.3",
+        "axios": "^1.8.2",
+        "bcryptjs": "^2.4.3",
+        "date-fns": "^3.6.0",
+        "dayjs": "^1.11.13",
+        "i18next": "^22.5.1",
+        "i18next-browser-languagedetector": "^7.1.0",
+        "jspdf": "^3.0.0",
+        "jspdf-autotable": "^5.0.2",
+        "react": "^18.2.0",
+        "react-csv": "^2.2.2",
+        "react-dom": "^18.2.0",
+        "react-grid-layout": "^1.5.1",
+        "react-i18next": "^12.3.0",
+        "react-router-dom": "^6.29.0",
+        "react-scripts": "^5.0.1",
+        "recharts": "^2.15.2",
+        "styled-components": "^6.1.15",
+        "vite": "^6.2.1",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "@storybook/react": "^8.5.3",
+        "@testing-library/jest-dom": "^5.16.5",
+        "@testing-library/react": "^16.2.0",
+        "concurrently": "^9.1.2",
+        "cross-env": "^7.0.3",
+        "css-loader": "^7.1.2",
+        "electron": "^35.1.5",
+        "electron-builder": "^26.0.12",
+        "style-loader": "^4.0.0",
+        "wait-on": "^7.2.0"
+    },
+    "scripts": {
+        "dev": "vite",
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject",
+        "electron:dev": "concurrently -k \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
+        "electron:build": "npm run build && electron-builder"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "build": {
+        "appId": "com.yourcompany.setadesktop",
+        "productName": "SETA",
+        "files": [
+            "build/**/*",
+            "node_modules/**/*",
+            "public/electron.js",
+            "public/preload.js"
+        ],
+        "directories": {
+            "buildResources": "assets",
+            "output": "release"
+        },
+        "extraResources": [
+            {
+                "from": "../seta-api/dist/seta_api_server/",
+                "to": "app/backend",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "mac": {
+            "target": "dmg",
+            "icon": "assets/icon.icns"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "assets/icon.ico"
+        },
+        "linux": {
+            "target": "AppImage",
+            "icon": "assets/icon.png"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true
+        }
+    }
 }
