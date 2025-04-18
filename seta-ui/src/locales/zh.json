@@ -306,7 +306,14 @@
         "incomeEntries": "收入条目",
         "Entries": "条目",
         "filterByCategory": "按类别筛选",
-        "filterByCategorySource": "按类别/来源筛选"
+        "filterByCategorySource": "按类别/来源筛选",
+        "topIncomeSources": "主要收入来源",
+        "incomeBreakdown": "收入分类明细",
+        "largestIncomes": "最大单笔收入",
+        "noIncomeData": "此期间无可用收入数据。",
+        "noLargestIncomes": "无可用单笔收入数据。",
+        "unknownSource": "未知来源",
+        "source": "来源"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

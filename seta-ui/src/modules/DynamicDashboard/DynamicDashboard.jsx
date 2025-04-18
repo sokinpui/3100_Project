@@ -27,6 +27,9 @@ import MiniCalendarWidget from './widgets/MiniCalendarWidget';
 import GoalProgressWidget from './widgets/GoalProgressWidget';
 import NetCashFlowWidget from './widgets/NetCashFlowWidget';
 import AccountBalanceWidget from './widgets/AccountBalanceWidget';
+import TopIncomeSourcesWidget from './widgets/TopIncomeSourcesWidget';
+import IncomeBreakdownWidget from './widgets/IncomeBreakdownWidget';
+import LargestIncomeWidget from './widgets/LargestIncomeWidget';
 
 import AddWidgetDialog from './AddWidgetDialog';
 import T from '../../utils/T';
@@ -35,7 +38,7 @@ import T from '../../utils/T';
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const API_URL = 'http://localhost:8000';
 const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v2';
-const FILTER_STORAGE_KEY = 'dynamicDashboardFilters_v2'; // New key for filters
+const FILTER_STORAGE_KEY = 'dynamicDashboardFilters_v2';
 const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
 const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
 const DEFAULT_MAX_AMOUNT = 1000;
@@ -45,7 +48,7 @@ const WIDGET_COMPONENTS = {
   overviewSummary: {
     component: OverviewSummaryWidget,
     titleKey: 'dynamicDashboard.overviewSummary',
-    defaultLayout: { w: 4, h: 6, minW: 2, minH: 2 }
+    defaultLayout: { w: 4, h: 4, minW: 3, minH: 3 }
   },
   filterWidget: {
     component: FilterWidget,
@@ -60,7 +63,7 @@ const WIDGET_COMPONENTS = {
   recentTransactions: {
     component: RecentTransactionsWidget,
     titleKey: 'dynamicDashboard.recentTransactions',
-    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+    defaultLayout: { w: 4, h: 7, minW: 3, minH: 5 }
   },
   expenseTrend: {
     component: ExpenseTrendWidget,
@@ -121,6 +124,22 @@ const WIDGET_COMPONENTS = {
     component: AccountBalanceWidget,
     titleKey: 'dynamicDashboard.accountBalanceTitle',
     defaultLayout: { w: 5, h: 5, minW: 3, minH: 3 }
+  },
+  // --- NEW Income Widgets ---
+  topIncomeSources: {
+    component: TopIncomeSourcesWidget,
+    titleKey: 'dynamicDashboard.topIncomeSources',
+    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+  },
+  incomeBreakdown: {
+    component: IncomeBreakdownWidget,
+    titleKey: 'dynamicDashboard.incomeBreakdown',
+    defaultLayout: { w: 4, h: 6, minW: 3, minH: 4 }
+  },
+  largestIncomes: {
+    component: LargestIncomeWidget,
+    titleKey: 'dynamicDashboard.largestIncomes',
+    defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
   },
 };
 

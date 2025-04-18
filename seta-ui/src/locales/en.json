@@ -311,7 +311,14 @@
         "incomeEntries": "Income Entries",
         "Entries": "Entries",
         "filterByCategory": "Filter by Category",
-        "filterByCategorySource": "Filter by Category / Source"
+        "filterByCategorySource": "Filter by Category / Source",
+        "topIncomeSources": "Top Income Sources",
+        "incomeBreakdown": "Income Breakdown",
+        "largestIncomes": "Largest Incomes",
+        "noIncomeData": "No income data available for this period.",
+        "noLargestIncomes": "No individual income data available.",
+        "unknownSource": "Unknown Source",
+        "source": "Source"
     },
     "timePeriods": {
         "last7days": "Last 7 Days",

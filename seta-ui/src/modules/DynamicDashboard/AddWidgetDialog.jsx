@@ -19,13 +19,17 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
 import TrackChangesIcon from '@mui/icons-material/TrackChanges';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-// --- Import NEW Icons ---
+// --- Import Existing and NEW Icons ---
 import EventNoteIcon from '@mui/icons-material/EventNote'; // For Upcoming Bills
 import DonutSmallIcon from '@mui/icons-material/DonutSmall'; // For Budget Overview
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'; // For Mini Calendar
 import FlagIcon from '@mui/icons-material/Flag'; // For Goal Progress
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows'; // For Net Cash Flow
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'; // For Account Balance
+// --- Icons for New Income Widgets ---
+import LeaderboardIcon from '@mui/icons-material/Leaderboard'; // For Top Income Sources
+import DonutLargeIcon from '@mui/icons-material/DonutLarge'; // For Income Breakdown
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'; // For Largest Incomes
 // --- End Import Icons ---
 import { useTranslation } from 'react-i18next';
 import T from '../../utils/T';
@@ -43,14 +47,16 @@ const AVAILABLE_WIDGETS = [
     { id: 'largestExpenses', titleKey: 'dynamicDashboard.largestExpenses', icon: <TrendingUpIcon /> },
     { id: 'averageDailySpend', titleKey: 'dynamicDashboard.averageDailySpend', icon: <CalculateIcon /> },
     { id: 'categorySpendingTimeline', titleKey: 'dynamicDashboard.categorySpendingTimeline', icon: <StackedLineChartIcon /> },
-    { id: 'spendingGoalTracker', titleKey: 'dynamicDashboard.spendingGoal', icon: <TrackChangesIcon /> },
-    // --- NEW Widgets ---
     { id: 'upcomingBills', titleKey: 'dynamicDashboard.upcomingBillsTitle', icon: <EventNoteIcon /> },
     { id: 'budgetOverview', titleKey: 'dynamicDashboard.budgetOverviewTitle', icon: <DonutSmallIcon /> },
     { id: 'miniCalendar', titleKey: 'dynamicDashboard.miniCalendarTitle', icon: <CalendarMonthIcon /> },
     { id: 'goalProgress', titleKey: 'dynamicDashboard.goalProgressTitle', icon: <FlagIcon /> },
     { id: 'netCashFlow', titleKey: 'dynamicDashboard.netCashFlowTitle', icon: <CompareArrowsIcon /> },
     { id: 'accountBalance', titleKey: 'dynamicDashboard.accountBalanceTitle', icon: <AccountBalanceWalletIcon /> },
+    // --- NEW Income Widgets ---
+    { id: 'topIncomeSources', titleKey: 'dynamicDashboard.topIncomeSources', icon: <LeaderboardIcon /> },
+    { id: 'incomeBreakdown', titleKey: 'dynamicDashboard.incomeBreakdown', icon: <DonutLargeIcon /> },
+    { id: 'largestIncomes', titleKey: 'dynamicDashboard.largestIncomes', icon: <MonetizationOnIcon /> },
 ];
 // --- End Available Widgets ---
 
@@ -115,7 +121,6 @@ export default function AddWidgetDialog({
     }, [checkboxStates, initialCheckboxStates]);
     // --- End of unchanged logic ---
 
-
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
             <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -138,8 +143,7 @@ export default function AddWidgetDialog({
                         }
                     />
                 </Box>
-                <List dense sx={{ maxHeight: '60vh', overflowY: 'auto' }}> {/* Added scroll */}
-                    {/* Sort alphabetically by translated title for better UX */}
+                <List dense sx={{ maxHeight: '60vh', overflowY: 'auto' }}>
                     {AVAILABLE_WIDGETS
                         .sort((a, b) => t(a.titleKey).localeCompare(t(b.titleKey)))
                         .map((widget) => (
