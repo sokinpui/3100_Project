@@ -28,8 +28,12 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import DonutLargeIcon from '@mui/icons-material/DonutLarge';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import SavingsIcon from '@mui/icons-material/Savings'; // NEW
-import AddBoxIcon from '@mui/icons-material/AddBox'; // NEW
+import SavingsIcon from '@mui/icons-material/Savings';
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import CompareIcon from '@mui/icons-material/Compare';
 
 import { useTranslation } from 'react-i18next';
 import T from '../../utils/T';
@@ -48,6 +52,7 @@ const AVAILABLE_WIDGETS = [
   { id: 'categorySpendingTimeline', titleKey: 'dynamicDashboard.categorySpendingTimeline', icon: <StackedLineChartIcon /> },
   { id: 'upcomingBills', titleKey: 'dynamicDashboard.upcomingBillsTitle', icon: <EventNoteIcon /> },
   { id: 'budgetOverview', titleKey: 'dynamicDashboard.budgetOverviewTitle', icon: <DonutSmallIcon /> },
+  { id: 'budgetComparison', titleKey: 'dynamicDashboard.budgetComparison', icon: <CompareIcon /> },
   { id: 'miniCalendar', titleKey: 'dynamicDashboard.miniCalendarTitle', icon: <CalendarMonthIcon /> },
   { id: 'goalProgress', titleKey: 'dynamicDashboard.goalProgressTitle', icon: <FlagIcon /> },
   { id: 'netCashFlow', titleKey: 'dynamicDashboard.netCashFlowTitle', icon: <CompareArrowsIcon /> },
@@ -61,9 +66,11 @@ const AVAILABLE_WIDGETS = [
   { id: 'netFlowTrend', titleKey: 'dynamicDashboard.netFlowTrend', icon: <CompareArrowsIcon /> },
   { id: 'averageDailyNetFlow', titleKey: 'dynamicDashboard.averageDailyNetFlow', icon: <CompareArrowsIcon /> },
   { id: 'netFlowComparison', titleKey: 'dynamicDashboard.netFlowComparison', icon: <BarChartIcon /> },
-  // --- NEW Widgets ---
   { id: 'savingsRate', titleKey: 'dynamicDashboard.savingsRate', icon: <SavingsIcon /> },
   { id: 'quickAdd', titleKey: 'dynamicDashboard.quickAdd', icon: <AddBoxIcon /> },
+  { id: 'topUnbudgetedCategory', titleKey: 'dynamicDashboard.topUnbudgetedCategory', icon: <WarningAmberIcon /> },
+  { id: 'goalTargetDateEstimate', titleKey: 'dynamicDashboard.goalTargetDateEstimate', icon: <QueryStatsIcon /> },
+  { id: 'accountDetail', titleKey: 'dynamicDashboard.accountDetail', icon: <AccountBoxIcon /> },
 ];
 // --- End Available Widgets ---
 

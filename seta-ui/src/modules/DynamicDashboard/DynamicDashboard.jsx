@@ -36,12 +36,17 @@ import IncomeTrendWidget from './widgets/IncomeTrendWidget';
 import NetFlowTrendWidget from './widgets/NetFlowTrendWidget';
 import AverageDailyNetFlowWidget from './widgets/AverageDailyNetFlowWidget';
 import NetFlowComparisonWidget from './widgets/NetFlowComparisonWidget';
-import SavingsRateWidget from './widgets/SavingsRateWidget'; // NEW
-import QuickAddWidget from './widgets/QuickAddWidget'; // NEW
-import ExpenseNotifications from '../ExpenseManager/components/ExpenseNotifications'; // NEW for notifications
+import SavingsRateWidget from './widgets/SavingsRateWidget';
+import QuickAddWidget from './widgets/QuickAddWidget';
+import TopUnbudgetedCategoryWidget from './widgets/TopUnbudgetedCategoryWidget';
+import GoalTargetDateEstimateWidget from './widgets/GoalTargetDateEstimateWidget';
+import AccountDetailWidget from './widgets/AccountDetailWidget';
+import ExpenseNotifications from '../ExpenseManager/components/ExpenseNotifications';
+import BudgetComparisonWidget from './widgets/BudgetComparisonWidget';
 
 import AddWidgetDialog from './AddWidgetDialog';
-import T from '../../utils/T';
+
+import T from "../../utils/T";
 
 // --- Constants ---
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -179,7 +184,6 @@ const WIDGET_COMPONENTS = {
     titleKey: 'dynamicDashboard.netFlowComparison',
     defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 }
   },
-  // --- NEW Widgets ---
   savingsRate: {
     component: SavingsRateWidget,
     titleKey: 'dynamicDashboard.savingsRate',
@@ -189,6 +193,26 @@ const WIDGET_COMPONENTS = {
     component: QuickAddWidget,
     titleKey: 'dynamicDashboard.quickAdd',
     defaultLayout: { w: 4, h: 8, minW: 3, minH: 7 }
+  },
+  topUnbudgetedCategory: {
+    component: TopUnbudgetedCategoryWidget,
+    titleKey: 'dynamicDashboard.topUnbudgetedCategory',
+    defaultLayout: { w: 4, h: 4, minW: 3, minH: 3 }
+  },
+  goalTargetDateEstimate: {
+    component: GoalTargetDateEstimateWidget,
+    titleKey: 'dynamicDashboard.goalTargetDateEstimate',
+    defaultLayout: { w: 4, h: 5, minW: 3, minH: 4 }
+  },
+  accountDetail: {
+    component: AccountDetailWidget,
+    titleKey: 'dynamicDashboard.accountDetail',
+    defaultLayout: { w: 4, h: 6, minW: 3, minH: 5 }
+  },
+  budgetComparison: {
+    component: BudgetComparisonWidget,
+    titleKey: 'dynamicDashboard.budgetComparison',
+    defaultLayout: { w: 6, h: 7, minW: 4, minH: 5 }
   },
 };
 
@@ -201,11 +225,14 @@ export default function DynamicDashboard() {
   const [widgets, setWidgets] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
   const [allIncome, setAllIncome] = useState([]);
+  const [allBudgets, setAllBudgets] = useState([]);
+  const [allGoals, setAllGoals] = useState([]);
+  const [allAccounts, setAllAccounts] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' }); // NEW: Notification state
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // Initialize activeFilters from localStorage if available
   const [activeFilters, setActiveFilters] = useState(() => {
@@ -308,26 +335,38 @@ export default function DynamicDashboard() {
     }
   }, [activeFilters, isMounted]);
 
-  // --- Fetch ALL Expenses and Income ---
+  // --- Fetch ALL Expenses, Income, Budgets, Goals, and Accounts ---
   const fetchDashboardData = useCallback(async () => {
     if (!userId) {
       setIsLoadingData(false);
       setAllExpenses([]);
       setAllIncome([]);
+      setAllBudgets([]);
+      setAllGoals([]);
+      setAllAccounts([]);
       return;
     }
     setIsLoadingData(true);
     try {
-      const [expenseResponse, incomeResponse] = await Promise.all([
+      const [expenseResponse, incomeResponse, budgetResponse, goalResponse, accountResponse] = await Promise.all([
         axios.get(`${API_URL}/expenses/${userId}`),
         axios.get(`${API_URL}/income/${userId}`),
+        axios.get(`${API_URL}/budgets/${userId}`),
+        axios.get(`${API_URL}/goals/${userId}`),
+        axios.get(`${API_URL}/accounts/${userId}`),
       ]);
       setAllExpenses(expenseResponse.data || []);
       setAllIncome(incomeResponse.data || []);
+      setAllBudgets(budgetResponse.data || []);
+      setAllGoals(goalResponse.data || []);
+      setAllAccounts(accountResponse.data || []);
     } catch (error) {
       console.error("Failed to load dashboard data", error);
       setAllExpenses([]);
       setAllIncome([]);
+      setAllBudgets([]);
+      setAllGoals([]);
+      setAllAccounts([]);
       showNotification(t('dynamicDashboard.fetchError'), 'error');
     } finally {
       setIsLoadingData(false);
@@ -537,6 +576,9 @@ export default function DynamicDashboard() {
       const commonWidgetProps = {
         expenses: filteredExpenses,
         income: filteredIncome,
+        budgets: allBudgets,
+        goals: allGoals,
+        accounts: allAccounts,
         isLoading: isLoadingData,
         userId: userId,
         timePeriod: timePeriod,
