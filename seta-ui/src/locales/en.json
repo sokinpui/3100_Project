@@ -318,7 +318,16 @@
         "noIncomeData": "No income data available for this period.",
         "noLargestIncomes": "No individual income data available.",
         "unknownSource": "Unknown Source",
-        "source": "Source"
+        "source": "Source",
+        "averageDailyIncome": "Average Daily Income",
+        "incomeComparison": "Monthly Income Comparison",
+        "incomeTrend": "Income Trend",
+        "netFlowTrend": "Net Flow Trend",
+        "notEnoughDataForIncomeAverage": "Not enough data for average income calculation.",
+        "basedOnIncomeDays": "based on income days:",
+        "noMonthlyIncomeData": "No monthly income data available.",
+        "notEnoughDataForIncomeTrend": "Not enough data for income trend analysis.",
+        "notEnoughDataForNetFlowTrend": "Not enough data for net flow trend analysis."
     },
     "timePeriods": {
         "last7days": "Last 7 Days",

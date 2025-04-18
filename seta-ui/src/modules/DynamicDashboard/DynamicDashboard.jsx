@@ -30,6 +30,15 @@ import AccountBalanceWidget from './widgets/AccountBalanceWidget';
 import TopIncomeSourcesWidget from './widgets/TopIncomeSourcesWidget';
 import IncomeBreakdownWidget from './widgets/IncomeBreakdownWidget';
 import LargestIncomeWidget from './widgets/LargestIncomeWidget';
+import AverageDailyIncomeWidget from './widgets/AverageDailyIncomeWidget';
+import IncomeComparisonWidget from './widgets/IncomeComparisonWidget';
+import IncomeTrendWidget from './widgets/IncomeTrendWidget';
+import NetFlowTrendWidget from './widgets/NetFlowTrendWidget';
+
+import CalculateIcon from '@mui/icons-material/Calculate'; // Reusing for Average Income
+import BarChartIcon from '@mui/icons-material/BarChart'; // Reusing for Income Comparison
+import ShowChartIcon from '@mui/icons-material/ShowChart'; // Reusing for Income Trend
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows'; // Reusing for Net Flow Trend
 
 import AddWidgetDialog from './AddWidgetDialog';
 import T from '../../utils/T';
@@ -140,6 +149,26 @@ const WIDGET_COMPONENTS = {
     component: LargestIncomeWidget,
     titleKey: 'dynamicDashboard.largestIncomes',
     defaultLayout: { w: 4, h: 6, minW: 2, minH: 3 }
+  },
+  averageDailyIncome: {
+      component: AverageDailyIncomeWidget,
+      titleKey: 'dynamicDashboard.averageDailyIncome', // Add translation key
+      defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } // Same as expense average
+  },
+  incomeComparison: {
+      component: IncomeComparisonWidget,
+      titleKey: 'dynamicDashboard.incomeComparison', // Add translation key
+      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Same as expense comparison
+  },
+  incomeTrend: {
+      component: IncomeTrendWidget,
+      titleKey: 'dynamicDashboard.incomeTrend', // Add translation key
+      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Same as expense trend
+  },
+  netFlowTrend: {
+      component: NetFlowTrendWidget,
+      titleKey: 'dynamicDashboard.netFlowTrend', // Add translation key
+      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Similar size to other trends
   },
 };
 

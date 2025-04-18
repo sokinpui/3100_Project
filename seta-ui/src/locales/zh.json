@@ -313,7 +313,16 @@
         "noIncomeData": "此期间无可用收入数据。",
         "noLargestIncomes": "无可用单笔收入数据。",
         "unknownSource": "未知来源",
-        "source": "来源"
+        "source": "来源",
+        "averageDailyIncome": "日均收入",
+        "incomeComparison": "月度收入比较",
+        "incomeTrend": "收入趋势",
+        "netFlowTrend": "净流量趋势",
+        "notEnoughDataForIncomeAverage": "数据不足，无法计算平均收入。",
+        "basedOnIncomeDays": "基于收入天数:",
+        "noMonthlyIncomeData": "无月度收入数据可用。",
+        "notEnoughDataForIncomeTrend": "数据不足，无法进行收入趋势分析。",
+        "notEnoughDataForNetFlowTrend": "数据不足，无法进行净流量趋势分析。"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

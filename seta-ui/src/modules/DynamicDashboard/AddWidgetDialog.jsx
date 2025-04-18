@@ -30,6 +30,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard'; // For Top Income Sources
 import DonutLargeIcon from '@mui/icons-material/DonutLarge'; // For Income Breakdown
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'; // For Largest Incomes
+
 // --- End Import Icons ---
 import { useTranslation } from 'react-i18next';
 import T from '../../utils/T';
@@ -57,6 +58,12 @@ const AVAILABLE_WIDGETS = [
     { id: 'topIncomeSources', titleKey: 'dynamicDashboard.topIncomeSources', icon: <LeaderboardIcon /> },
     { id: 'incomeBreakdown', titleKey: 'dynamicDashboard.incomeBreakdown', icon: <DonutLargeIcon /> },
     { id: 'largestIncomes', titleKey: 'dynamicDashboard.largestIncomes', icon: <MonetizationOnIcon /> },
+    { id: 'averageDailyIncome', titleKey: 'dynamicDashboard.averageDailyIncome', icon: <CalculateIcon /> },
+    { id: 'incomeComparison', titleKey: 'dynamicDashboard.incomeComparison', icon: <BarChartIcon /> },
+    { id: 'incomeTrend', titleKey: 'dynamicDashboard.incomeTrend', icon: <ShowChartIcon /> },
+
+    // --- new Net Flow Widgets ---
+    { id: 'netFlowTrend', titleKey: 'dynamicDashboard.netFlowTrend', icon: <CompareArrowsIcon /> },
 ];
 // --- End Available Widgets ---
 
