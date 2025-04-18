@@ -17,3 +17,8 @@ venv/
 *.log
 
 test_user_data_summary.json
+
+node_modules/
+build/
+dist/
+release/
