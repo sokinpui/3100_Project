@@ -322,7 +322,12 @@
         "basedOnIncomeDays": "基于收入天数:",
         "noMonthlyIncomeData": "无月度收入数据可用。",
         "notEnoughDataForIncomeTrend": "数据不足，无法进行收入趋势分析。",
-        "notEnoughDataForNetFlowTrend": "数据不足，无法进行净流量趋势分析。"
+        "notEnoughDataForNetFlowTrend": "数据不足，无法进行净流量趋势分析。",
+        "averageDailyNetFlow": "日均净流量",
+        "netFlowComparison": "月度净流量比较",
+        "notEnoughDataForNetFlowAverage": "数据不足，无法计算平均净流量。",
+        "basedOnNetFlowDays": "基于交易天数:",
+        "noMonthlyNetFlowData": "无月度净流量数据可用。"
     },
     "timePeriods": {
         "last7days": "最近 7 天",

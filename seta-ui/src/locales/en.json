@@ -327,7 +327,12 @@
         "basedOnIncomeDays": "based on income days:",
         "noMonthlyIncomeData": "No monthly income data available.",
         "notEnoughDataForIncomeTrend": "Not enough data for income trend analysis.",
-        "notEnoughDataForNetFlowTrend": "Not enough data for net flow trend analysis."
+        "notEnoughDataForNetFlowTrend": "Not enough data for net flow trend analysis.",
+        "averageDailyNetFlow": "Average Daily Net Flow",
+        "netFlowComparison": "Monthly Net Flow Comparison",
+        "notEnoughDataForNetFlowAverage": "Not enough data for average net flow calculation.",
+        "basedOnNetFlowDays": "based on transaction days:",
+        "noMonthlyNetFlowData": "No monthly net flow data available."
     },
     "timePeriods": {
         "last7days": "Last 7 Days",

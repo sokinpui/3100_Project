@@ -64,6 +64,8 @@ const AVAILABLE_WIDGETS = [
 
     // --- new Net Flow Widgets ---
     { id: 'netFlowTrend', titleKey: 'dynamicDashboard.netFlowTrend', icon: <CompareArrowsIcon /> },
+    { id: 'averageDailyNetFlow', titleKey: 'dynamicDashboard.averageDailyNetFlow', icon: <CompareArrowsIcon /> },
+    { id: 'netFlowComparison', titleKey: 'dynamicDashboard.netFlowComparison', icon: <BarChartIcon /> },
 ];
 // --- End Available Widgets ---
 

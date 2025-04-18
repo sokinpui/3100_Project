@@ -35,10 +35,8 @@ import IncomeComparisonWidget from './widgets/IncomeComparisonWidget';
 import IncomeTrendWidget from './widgets/IncomeTrendWidget';
 import NetFlowTrendWidget from './widgets/NetFlowTrendWidget';
 
-import CalculateIcon from '@mui/icons-material/Calculate'; // Reusing for Average Income
-import BarChartIcon from '@mui/icons-material/BarChart'; // Reusing for Income Comparison
-import ShowChartIcon from '@mui/icons-material/ShowChart'; // Reusing for Income Trend
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows'; // Reusing for Net Flow Trend
+import AverageDailyNetFlowWidget from './widgets/AverageDailyNetFlowWidget';
+import NetFlowComparisonWidget from './widgets/NetFlowComparisonWidget';
 
 import AddWidgetDialog from './AddWidgetDialog';
 import T from '../../utils/T';
@@ -169,6 +167,16 @@ const WIDGET_COMPONENTS = {
       component: NetFlowTrendWidget,
       titleKey: 'dynamicDashboard.netFlowTrend', // Add translation key
       defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Similar size to other trends
+  },
+  averageDailyNetFlow: {
+      component: AverageDailyNetFlowWidget,
+      titleKey: 'dynamicDashboard.averageDailyNetFlow', // Add translation key
+      defaultLayout: { w: 4, h: 3, minW: 2, minH: 2 } // Same as other averages
+  },
+  netFlowComparison: {
+      component: NetFlowComparisonWidget,
+      titleKey: 'dynamicDashboard.netFlowComparison', // Add translation key
+      defaultLayout: { w: 6, h: 6, minW: 3, minH: 3 } // Same as other comparisons
   },
 };
 
