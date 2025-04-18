@@ -5,7 +5,7 @@ import CalculateIcon from '@mui/icons-material/Calculate'; // Or ShowChartIcon
 import { differenceInDays, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 
-export default function AverageDailySpendWidget({ expenses, isLoading }) {
+export function AverageDailySpendWidget({ expenses, isLoading }) {
 
   const averageSpend = useMemo(() => {
     if (!expenses || expenses.length === 0) return { avg: 0, days: 0 };
@@ -64,3 +64,5 @@ export default function AverageDailySpendWidget({ expenses, isLoading }) {
     </Box>
   );
 }
+
+export default React.memo(AverageDailySpendWidget);

@@ -6,7 +6,7 @@ import { differenceInDays, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
-export default function AverageDailyIncomeWidget({ income = [], isLoading }) {
+export function AverageDailyIncomeWidget({ income = [], isLoading }) {
   const { t } = useTranslation(); // Get translation function
 
   const averageIncome = useMemo(() => {
@@ -66,3 +66,5 @@ export default function AverageDailyIncomeWidget({ income = [], isLoading }) {
     </Box>
   );
 }
+
+export default React.memo(AverageDailyIncomeWidget);

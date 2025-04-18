@@ -5,7 +5,7 @@ import SavingsIcon from '@mui/icons-material/Savings'; // Or TrendingUp/Down bas
 import T from '../../../utils/T';
 import { useTheme } from '@mui/material/styles';
 
-export default function SavingsRateWidget({ expenses = [], income = [], isLoading }) {
+export function SavingsRateWidget({ expenses = [], income = [], isLoading }) {
     const theme = useTheme();
 
     const { totalIncome, totalExpenses, netFlow, savingsRate, rateLabel } = React.useMemo(() => {
@@ -68,3 +68,5 @@ export default function SavingsRateWidget({ expenses = [], income = [], isLoadin
         </Tooltip>
     );
 }
+
+export default React.memo(SavingsRateWidget);

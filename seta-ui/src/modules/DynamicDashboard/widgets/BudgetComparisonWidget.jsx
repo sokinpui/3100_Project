@@ -62,7 +62,7 @@ const CustomTooltip = ({ active, payload, label, budgetAmount, currency = '$' })
     return null;
 };
 
-export default function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading }) {
+export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading }) {
     const { t } = useTranslation();
     const theme = useTheme();
     const [selectedBudgetId, setSelectedBudgetId] = useState('');
@@ -209,3 +209,5 @@ export default function BudgetComparisonWidget({ budgets = [], expenses = [], is
         </Box>
     );
 }
+
+export default React.memo(BudgetComparisonWidget);

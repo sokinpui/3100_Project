@@ -15,7 +15,7 @@ function formatCurrency(value) {
     return isNaN(num) ? '-' : `$${num.toFixed(2)}`;
 }
 
-export default function AccountDetailWidget({ accounts = [], income = [], expenses = [], isLoading }) {
+export function AccountDetailWidget({ accounts = [], income = [], expenses = [], isLoading }) {
     const { t } = useTranslation();
     const [selectedAccountId, setSelectedAccountId] = useState('');
 
@@ -151,3 +151,5 @@ export default function AccountDetailWidget({ accounts = [], income = [], expens
         </Box>
     );
 }
+
+export default React.memo(AccountDetailWidget);

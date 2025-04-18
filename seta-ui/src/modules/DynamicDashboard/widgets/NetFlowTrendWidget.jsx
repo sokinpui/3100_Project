@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
+export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
   const { t } = useTranslation(); // Get t function
 
   const dailyNetFlowData = useMemo(() => {
@@ -115,3 +115,5 @@ export default function NetFlowTrendWidget({ expenses = [], income = [], isLoadi
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(NetFlowTrendWidget);

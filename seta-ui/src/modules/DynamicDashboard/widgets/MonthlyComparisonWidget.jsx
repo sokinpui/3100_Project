@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 
-export default function MonthlyComparisonWidget({ expenses, isLoading }) {
+export function MonthlyComparisonWidget({ expenses, isLoading }) {
 
     // Re-use the same data aggregation logic as ExpenseTrendWidget
     const monthlyData = useMemo(() => {
@@ -61,3 +61,5 @@ export default function MonthlyComparisonWidget({ expenses, isLoading }) {
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(MonthlyComparisonWidget);

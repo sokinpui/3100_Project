@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 const API_URL = 'http://localhost:8000';
 
-export default function GoalProgressWidget({ userId }) {
+export function GoalProgressWidget({ userId }) {
     const { t } = useTranslation();
     const [goals, setGoals] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -85,3 +85,5 @@ export default function GoalProgressWidget({ userId }) {
         </Box>
     );
 }
+
+export default React.memo(GoalProgressWidget);

@@ -7,7 +7,7 @@ import T from '../../../utils/T';
 
 const MAX_CATEGORIES = 5; // Max categories to show
 
-export default function TopSpendingCategoriesWidget({ expenses, isLoading }) {
+export function TopSpendingCategoriesWidget({ expenses, isLoading }) {
   const { t } = useTranslation();
 
   const topCategories = useMemo(() => {
@@ -62,3 +62,5 @@ export default function TopSpendingCategoriesWidget({ expenses, isLoading }) {
     </TableContainer>
   );
 }
+
+export default React.memo(TopSpendingCategoriesWidget);

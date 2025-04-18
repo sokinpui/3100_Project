@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 
-export default function NetFlowComparisonWidget({ expenses = [], income = [], isLoading }) {
+export function NetFlowComparisonWidget({ expenses = [], income = [], isLoading }) {
     const { t } = useTranslation();
     const theme = useTheme(); // For colors
 
@@ -101,3 +101,5 @@ export default function NetFlowComparisonWidget({ expenses = [], income = [], is
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(NetFlowComparisonWidget);

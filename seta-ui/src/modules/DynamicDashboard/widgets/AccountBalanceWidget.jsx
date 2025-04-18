@@ -9,7 +9,7 @@ import { format, parseISO, isValid } from 'date-fns';
 
 const API_URL = 'http://localhost:8000';
 
-export default function AccountBalanceWidget({ userId, expenses, timePeriod }) { // Pass expenses and timePeriod
+export function AccountBalanceWidget({ userId, expenses, timePeriod }) { // Pass expenses and timePeriod
     const { t } = useTranslation();
     const [accounts, setAccounts] = useState([]);
     const [income, setIncome] = useState([]); // Need income too
@@ -116,3 +116,5 @@ export default function AccountBalanceWidget({ userId, expenses, timePeriod }) {
         </List>
     );
 }
+
+export default React.memo(AccountBalanceWidget);

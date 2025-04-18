@@ -45,7 +45,7 @@ const estimateNextDueDate = (recExp) => {
 };
 
 
-export default function UpcomingBillsWidget({ userId }) {
+export function UpcomingBillsWidget({ userId }) {
     const { t } = useTranslation();
     const [upcomingBills, setUpcomingBills] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -122,3 +122,5 @@ export default function UpcomingBillsWidget({ userId }) {
         </List>
     );
 }
+
+export default React.memo(UpcomingBillsWidget);

@@ -8,7 +8,7 @@ import T from '../../../utils/T';
 const cancelButtonClass = 'widget-remove-button';
 const dragHandleClass = 'widget-drag-handle'; // Define class for the handle
 
-export default function WidgetWrapper({ titleKey, children, widgetId, onRemoveWidget }) {
+export function WidgetWrapper({ titleKey, children, widgetId, onRemoveWidget }) {
   const { t } = useTranslation();
 
   const handleRemoveClick = (event) => {
@@ -53,3 +53,5 @@ export default function WidgetWrapper({ titleKey, children, widgetId, onRemoveWi
     </Card>
   );
 }
+
+export default React.memo(WidgetWrapper);

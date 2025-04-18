@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function CategoryBreakdownWidget({ expenses, isLoading }) {
+export function CategoryBreakdownWidget({ expenses, isLoading }) {
   const { t } = useTranslation();
 
   const categoryData = useMemo(() => {
@@ -77,3 +77,5 @@ export default function CategoryBreakdownWidget({ expenses, isLoading }) {
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(CategoryBreakdownWidget);

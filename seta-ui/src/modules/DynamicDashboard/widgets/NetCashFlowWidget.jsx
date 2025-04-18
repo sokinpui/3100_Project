@@ -9,7 +9,7 @@ import { isWithinInterval, parseISO, isValid } from 'date-fns'; // Import date f
 
 const API_URL = 'http://localhost:8000';
 
-export default function NetCashFlowWidget({ userId, expenses, timePeriod }) {
+export function NetCashFlowWidget({ userId, expenses, timePeriod }) {
     const { t } = useTranslation();
     const [income, setIncome] = useState([]);
     const [isLoadingIncome, setIsLoadingIncome] = useState(false);
@@ -89,3 +89,5 @@ export default function NetCashFlowWidget({ userId, expenses, timePeriod }) {
         </Box>
     );
 }
+
+export default React.memo(NetCashFlowWidget);

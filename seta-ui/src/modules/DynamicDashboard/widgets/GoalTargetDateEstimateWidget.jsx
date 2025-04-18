@@ -15,7 +15,7 @@ function formatCurrency(value) {
     return isNaN(num) ? '-' : `$${num.toFixed(2)}`;
 }
 
-export default function GoalTargetDateEstimateWidget({ goals = [], income = [], expenses = [], isLoading, timePeriod }) {
+export function GoalTargetDateEstimateWidget({ goals = [], income = [], expenses = [], isLoading, timePeriod }) {
     const { t } = useTranslation();
     const [selectedGoalId, setSelectedGoalId] = useState('');
 
@@ -159,3 +159,5 @@ export default function GoalTargetDateEstimateWidget({ goals = [], income = [], 
         </Box>
     );
 }
+
+export default React.memo(GoalTargetDateEstimateWidget);

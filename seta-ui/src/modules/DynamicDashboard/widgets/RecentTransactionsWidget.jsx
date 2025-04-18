@@ -11,7 +11,7 @@ import { useTheme } from '@mui/material/styles'; // To use theme colors
 
 const MAX_ITEMS = 7; // Increase slightly to show more mixed items
 
-export default function RecentTransactionsWidget({ expenses = [], income = [], isLoading }) {
+export function RecentTransactionsWidget({ expenses = [], income = [], isLoading }) {
     const { t } = useTranslation();
     const theme = useTheme();
 
@@ -111,3 +111,5 @@ export default function RecentTransactionsWidget({ expenses = [], income = [], i
         </List>
     );
 }
+
+export default React.memo(RecentTransactionsWidget);

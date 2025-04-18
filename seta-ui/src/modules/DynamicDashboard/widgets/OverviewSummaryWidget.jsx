@@ -8,7 +8,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'; // For Entries (c
 import T from '../../../utils/T';
 import { useTheme } from '@mui/material/styles'; // To get theme for colors
 
-export default function OverviewSummaryWidget({ expenses = [], income = [], isLoading }) {
+export function OverviewSummaryWidget({ expenses = [], income = [], isLoading }) {
   const theme = useTheme(); // Get theme object
 
   // Calculate Totals
@@ -101,3 +101,5 @@ export default function OverviewSummaryWidget({ expenses = [], income = [], isLo
     </Grid>
   );
 }
+
+export default React.memo(OverviewSummaryWidget);

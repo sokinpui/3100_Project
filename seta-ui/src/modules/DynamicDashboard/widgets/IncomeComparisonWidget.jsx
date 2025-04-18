@@ -20,7 +20,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 
-export default function IncomeComparisonWidget({ income = [], isLoading }) {
+export function IncomeComparisonWidget({ income = [], isLoading }) {
     const { t } = useTranslation(); // Get t function
 
     const monthlyData = useMemo(() => {
@@ -69,3 +69,5 @@ export default function IncomeComparisonWidget({ income = [], isLoading }) {
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(IncomeComparisonWidget);

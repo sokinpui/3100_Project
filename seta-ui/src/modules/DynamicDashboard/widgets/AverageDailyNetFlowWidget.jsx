@@ -7,7 +7,7 @@ import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
 
-export default function AverageDailyNetFlowWidget({ expenses = [], income = [], isLoading }) {
+export function AverageDailyNetFlowWidget({ expenses = [], income = [], isLoading }) {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -96,3 +96,5 @@ export default function AverageDailyNetFlowWidget({ expenses = [], income = [], 
     </Box>
   );
 }
+
+export default React.memo(AverageDailyNetFlowWidget);

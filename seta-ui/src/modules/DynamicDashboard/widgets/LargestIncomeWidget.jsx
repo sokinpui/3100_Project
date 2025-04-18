@@ -8,7 +8,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp'; // Icon for income 
 
 const MAX_ITEMS = 5; // Max items to show
 
-export default function LargestIncomeWidget({ income = [], isLoading }) {
+export function LargestIncomeWidget({ income = [], isLoading }) {
   const { t } = useTranslation();
 
   const largestIncomes = useMemo(() => {
@@ -69,3 +69,5 @@ export default function LargestIncomeWidget({ income = [], isLoading }) {
     </List>
   );
 }
+
+export default React.memo(LargestIncomeWidget);

@@ -3,7 +3,7 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import AssessmentIcon from '@mui/icons-material/Assessment'; // Or another relevant icon
 import T from '../../../utils/T'; // Your translation component
 
-export default function TotalExpensesWidget({ expenses, isLoading }) {
+export function TotalExpensesWidget({ expenses, isLoading }) {
   const total = expenses
     .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0)
     .toFixed(2);
@@ -26,3 +26,5 @@ export default function TotalExpensesWidget({ expenses, isLoading }) {
     </Box>
   );
 }
+
+export default React.memo(TotalExpensesWidget);

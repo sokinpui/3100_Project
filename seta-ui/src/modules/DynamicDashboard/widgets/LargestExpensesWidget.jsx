@@ -8,7 +8,7 @@ import T from '../../../utils/T';
 
 const MAX_ITEMS = 5; // Max items to show
 
-export default function LargestExpensesWidget({ expenses, isLoading }) {
+export function LargestExpensesWidget({ expenses, isLoading }) {
   const { t } = useTranslation();
 
   const largestExpenses = useMemo(() => {
@@ -68,3 +68,5 @@ export default function LargestExpensesWidget({ expenses, isLoading }) {
     </List>
   );
 }
+
+export default React.memo(LargestExpensesWidget);

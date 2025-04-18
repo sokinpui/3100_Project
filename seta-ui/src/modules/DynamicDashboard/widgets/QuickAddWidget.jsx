@@ -21,7 +21,7 @@ const API_URL = 'http://localhost:8000';
 // Define some common income sources for quick add
 const commonIncomeSources = ["Salary", "Freelance", "Bonus", "Gift", "Other"];
 
-export default function QuickAddWidget({ userId, showNotification, onDataAdded }) {
+export function QuickAddWidget({ userId, showNotification, onDataAdded }) {
     const { t } = useTranslation();
     const [tabValue, setTabValue] = useState(0); // 0 for Expense, 1 for Income
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -190,3 +190,5 @@ export default function QuickAddWidget({ userId, showNotification, onDataAdded }
         </Box>
     );
 }
+
+export default React.memo(QuickAddWidget);

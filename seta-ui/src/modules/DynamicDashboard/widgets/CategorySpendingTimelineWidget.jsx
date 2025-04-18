@@ -26,7 +26,7 @@ const CustomTooltip = ({ active, payload, label, categoryNames }) => {
   return null;
 };
 
-export default function CategorySpendingTimelineWidget({ expenses, isLoading }) {
+export function CategorySpendingTimelineWidget({ expenses, isLoading }) {
   const { t } = useTranslation();
 
   const { timelineData, categoryNames } = useMemo(() => {
@@ -109,3 +109,5 @@ export default function CategorySpendingTimelineWidget({ expenses, isLoading }) 
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(CategorySpendingTimelineWidget);

@@ -40,7 +40,7 @@ const getNetFlowHeatmapColor = (netFlow, maxAbsNetFlow, theme) => {
 };
 
 
-export default function MiniCalendarWidget({ expenses = [], income = [], timePeriod }) {
+export function MiniCalendarWidget({ expenses = [], income = [], timePeriod }) {
     const theme = useTheme();
     const { t } = useTranslation();
 
@@ -218,3 +218,5 @@ function formatCurrency(value) {
     const num = parseFloat(value);
     return isNaN(num) ? '-' : `$${num.toFixed(2)}`;
 }
+
+export default React.memo(MiniCalendarWidget);

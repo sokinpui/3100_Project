@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Added timePeriod prop if needed for axis formatting later
+export function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Added timePeriod prop if needed for axis formatting later
   const { t } = useTranslation(); // Get translation function
 
   // --- Aggregate data daily ---
@@ -111,3 +111,5 @@ export default function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) 
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(ExpenseTrendWidget);

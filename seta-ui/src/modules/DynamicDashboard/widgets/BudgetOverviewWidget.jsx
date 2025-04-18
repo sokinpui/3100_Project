@@ -10,7 +10,7 @@ import { getCategoryDetails } from '../../../constants'; // Assuming you have th
 
 const API_URL = 'http://localhost:8000';
 
-export default function BudgetOverviewWidget({ userId, expenses, timePeriod }) {
+export function BudgetOverviewWidget({ userId, expenses, timePeriod }) {
     const { t } = useTranslation();
     const [budgets, setBudgets] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -135,3 +135,5 @@ export default function BudgetOverviewWidget({ userId, expenses, timePeriod }) {
         </Box>
     );
 }
+
+export default React.memo(BudgetOverviewWidget);

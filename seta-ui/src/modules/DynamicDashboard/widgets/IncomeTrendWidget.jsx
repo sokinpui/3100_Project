@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function IncomeTrendWidget({ income = [], isLoading }) {
+export function IncomeTrendWidget({ income = [], isLoading }) {
   const { t } = useTranslation(); // Get t function
 
   const dailyData = useMemo(() => {
@@ -92,3 +92,5 @@ export default function IncomeTrendWidget({ income = [], isLoading }) {
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(IncomeTrendWidget);

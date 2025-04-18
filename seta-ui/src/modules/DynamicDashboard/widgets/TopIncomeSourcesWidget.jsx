@@ -9,7 +9,7 @@ import T from '../../../utils/T';
 
 const MAX_SOURCES = 5; // Max items to show
 
-export default function TopIncomeSourcesWidget({ income = [], isLoading }) {
+export function TopIncomeSourcesWidget({ income = [], isLoading }) {
   const { t } = useTranslation();
 
   const topSources = useMemo(() => {
@@ -62,3 +62,5 @@ export default function TopIncomeSourcesWidget({ income = [], isLoading }) {
     </TableContainer>
   );
 }
+
+export default React.memo(TopIncomeSourcesWidget);

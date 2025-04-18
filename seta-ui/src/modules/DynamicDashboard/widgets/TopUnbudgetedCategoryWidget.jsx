@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { getCategoryDetails } from '../../../constants';
 import { useNavigate } from 'react-router-dom'; // To navigate to planning
 
-export default function TopUnbudgetedCategoryWidget({ expenses = [], budgets = [], isLoading }) {
+export function TopUnbudgetedCategoryWidget({ expenses = [], budgets = [], isLoading }) {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -95,3 +95,5 @@ export default function TopUnbudgetedCategoryWidget({ expenses = [], budgets = [
         </Box>
     );
 }
+
+export default React.memo(TopUnbudgetedCategoryWidget);

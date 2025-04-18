@@ -59,7 +59,7 @@ const getDatesForPreset = (presetKey) => {
 // --- End Helper ---
 
 // --- Component ---
-export default function TimePeriodSelectorWidget({ onPeriodChange }) { // Removed initialPeriod prop
+export function TimePeriodSelectorWidget({ onPeriodChange }) { // Removed initialPeriod prop
     const { t } = useTranslation();
 
     // --- State Initialization from localStorage ---
@@ -219,3 +219,5 @@ export default function TimePeriodSelectorWidget({ onPeriodChange }) { // Remove
         </Box>
     );
 }
+
+export default React.memo(TimePeriodSelectorWidget);

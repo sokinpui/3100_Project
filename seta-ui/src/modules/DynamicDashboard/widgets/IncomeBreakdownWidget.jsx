@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function IncomeBreakdownWidget({ income = [], isLoading }) {
+export function IncomeBreakdownWidget({ income = [], isLoading }) {
   const { t } = useTranslation();
 
   const incomeData = useMemo(() => {
@@ -73,3 +73,5 @@ export default function IncomeBreakdownWidget({ income = [], isLoading }) {
     </ResponsiveContainer>
   );
 }
+
+export default React.memo(IncomeBreakdownWidget);
