@@ -2,8 +2,8 @@
 
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-// const isDev = require('electron-is-dev');
 const { spawn } = require('child_process');
+const fs = require('fs');
 
 let backendProcess = null;
 let mainWindow;
@@ -22,8 +22,7 @@ function getBackendPath() {
     return null;
   }
 
-  // --- Use app.isPackaged ---
-  if (!app.isPackaged) { // <--- CHANGE HERE (Checks if NOT packaged == development)
+  if (!app.isPackaged) {
     // DEVELOPMENT PATH
     const devPath = path.join(__dirname, '..', '..', 'seta-api', 'dist', 'seta_api_server', executableName);
     console.log(`[Dev Mode (!app.isPackaged)] Calculated backend path: ${devPath}`);
@@ -34,21 +33,19 @@ function getBackendPath() {
     console.log(`[Prod Mode (app.isPackaged)] Calculated backend path: ${prodPath}`);
     return prodPath;
   }
-  // --- End Change ---
 }
 
-// --- Function to Start Python Backend (keep the rest of the function as is) ---
+// --- Function to Start Python Backend ---
 function startBackend() {
   return new Promise((resolve, reject) => {
     const backendPath = getBackendPath();
     if (!backendPath) {
-        return reject(new Error('Backend executable path could not be determined for this platform/mode.'));
+      return reject(new Error('Backend executable path could not be determined for this platform/mode.'));
     }
 
-    const fs = require('fs');
     if (!fs.existsSync(backendPath)) {
-        console.error(`Backend executable not found at expected path: ${backendPath}`);
-        return reject(new Error(`Backend executable not found at: ${backendPath}`));
+      console.error(`Backend executable not found at expected path: ${backendPath}`);
+      return reject(new Error(`Backend executable not found at: ${backendPath}`));
     }
 
     console.log(`Attempting to start backend executable: ${backendPath}`);
@@ -56,76 +53,71 @@ function startBackend() {
     try {
       backendProcess = spawn(backendPath, [], { stdio: 'pipe' });
 
-      let outputBuffer = ''; // Buffer for potential timeout error message
+      let outputBuffer = '';
       const startupTimeout = setTimeout(() => {
         console.error('Backend startup timed out.');
         if (backendProcess) backendProcess.kill();
         reject(new Error('Backend startup timeout. Output:\n' + outputBuffer));
-      }, 30000); // Keep 30-second timeout for now
+      }, 30000);
 
-      // --- Handle STDOUT (just log it) ---
       backendProcess.stdout.on('data', (data) => {
         const stdoutOutput = data.toString();
-        outputBuffer += stdoutOutput; // Add to buffer
+        outputBuffer += stdoutOutput;
         console.log(`Backend STDOUT: ${stdoutOutput.trim()}`);
-        // NO check for success here anymore
       });
 
-      // --- Handle STDERR (log it AND check for success message) ---
       backendProcess.stderr.on('data', (data) => {
         const stderrOutput = data.toString();
-        outputBuffer += stderrOutput; // Add to buffer
-        console.error(`Backend STDERR: ${stderrOutput.trim()}`); // Log as error (as it's stderr stream)
+        outputBuffer += stderrOutput;
+        console.error(`Backend STDERR: ${stderrOutput.trim()}`);
 
-        // <<< --- MOVE THE SUCCESS CHECK HERE --- >>>
         if (stderrOutput.includes('Application startup complete')) {
           console.log('Backend started successfully (detected via stderr).');
-          clearTimeout(startupTimeout); // Clear timeout on success
-          resolve(); // Resolve the promise
+          clearTimeout(startupTimeout);
+          resolve();
         }
-        // <<< --- END OF MOVED CHECK --- >>>
       });
 
       backendProcess.on('close', (code) => {
         console.log(`Backend process exited with code ${code}`);
         backendProcess = null;
         if (!app.isQuitting) {
-            console.error('Backend process closed unexpectedly.');
-            // If the promise hasn't resolved/rejected yet, reject it here
-            // reject(new Error(`Backend process exited unexpectedly with code ${code}`));
+          console.error('Backend process closed unexpectedly.');
         }
       });
 
       backendProcess.on('error', (err) => {
         console.error('Failed to start backend process:', err);
-        clearTimeout(startupTimeout); // Clear timeout on error
+        clearTimeout(startupTimeout);
         reject(err);
       });
 
     } catch (error) {
-        console.error('Error spawning backend process:', error);
-        reject(error);
+      console.error('Error spawning backend process:', error);
+      reject(error);
     }
   });
 }
 
-// --- Function to Create the Electron Window (keep as is) ---
+// --- Function to Create the Electron Window ---
 function createWindow() {
-  // ... (window creation logic remains the same) ...
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: false,
+      webSecurity: false,
+      allowRunningInsecureContent: false,
       // preload: path.join(__dirname, 'preload.js')
     },
     show: false
   });
 
-  const startUrl = !app.isPackaged // <--- CHANGE HERE
-      ? 'http://localhost:3000' // Dev URL
-      : `file://${path.join(__dirname, '../build/index.html')}`;
+  const startUrl = !app.isPackaged
+    ? 'http://localhost:3000'
+    : `file://${path.join(__dirname, 'index.html')}`;
 
   console.log(`Loading URL: ${startUrl}`);
   mainWindow.loadURL(startUrl);
@@ -142,9 +134,10 @@ function createWindow() {
   });
 }
 
-// --- Electron App Lifecycle (keep as is) ---
+// --- Electron App Lifecycle ---
 app.on('ready', async () => {
   console.log('Electron app ready.');
+
   try {
     await startBackend();
     console.log('Backend start confirmed, creating window...');
@@ -162,21 +155,20 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-        if (backendProcess) {
-            createWindow();
-        } else {
-            console.warn("Cannot reactivate: Backend process not running. Attempting restart...");
-            startBackend()
-                .then(createWindow)
-                .catch(error => {
-                    console.error("FATAL: Failed to restart backend on activate.", error);
-                    app.quit();
-                });
-        }
+  if (BrowserWindow.getAllWindows().length === 0) {
+    if (backendProcess) {
+      createWindow();
+    } else {
+      console.warn("Cannot reactivate: Backend process not running. Attempting restart...");
+      startBackend()
+        .then(createWindow)
+        .catch(error => {
+          console.error("FATAL: Failed to restart backend on activate.", error);
+          app.quit();
+        });
     }
+  }
 });
-
 
 app.on('will-quit', () => {
   app.isQuitting = true;
