@@ -36,12 +36,26 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Database Setup (Modified) ---
-DATABASE_URL = get_database_url() # Get URL based on config file
+DATABASE_URL = os.getenv("DATABASE_URL") # Check environment first
+
+if not DATABASE_URL:
+    logger.warning("DATABASE_URL environment variable not set. Falling back to config file.")
+    DATABASE_URL = get_database_url() # Fallback to reading from db_config.json
+
+if not DATABASE_URL:
+    logger.error("FATAL: Database URL is not configured via environment variable or config file.")
+    # Exit or raise a more critical error if DB is essential for startup
+    raise RuntimeError("Database URL configuration is missing.")
+else:
+    logger.info(f"Connecting to database: {'SQLite local file' if DATABASE_URL.startswith('sqlite') else 'Configured Database'}")
+
 
 engine = create_engine(
     DATABASE_URL,
     # Add connect_args for SQLite: crucial for FastAPI/Uvicorn compatibility
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+    # Consider adding pool_recycle for production databases like MySQL/PostgreSQL
+    # pool_recycle=3600 # Example: recycle connections every hour
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -55,78 +69,86 @@ def get_db():
 
 # --- Schema Creation for Local DB (Run on Startup if needed) ---
 def initialize_local_database():
-    if is_local_db_configured():
-        local_db_file = get_local_db_path()
-        if not local_db_file.exists():
-            logger.info(f"Local database file not found at {local_db_file}. Creating schema...")
+    # Only attempt creation if the *effective* DATABASE_URL is SQLite
+    if DATABASE_URL.startswith("sqlite"):
+        local_db_file_path = DATABASE_URL.split("///")[-1] # Basic way to get path
+        local_db_file = get_local_db_path() # Use config manager's path logic if preferred
+
+        # Ensure the directory exists
+        db_dir = os.path.dirname(local_db_file_path)
+        if db_dir: # Check if there's a directory part
+             os.makedirs(db_dir, exist_ok=True)
+
+        if not os.path.exists(local_db_file_path):
+            logger.info(f"Local database file not found at {local_db_file_path}. Creating schema...")
             try:
                 # Create all tables defined in models.py using the Base metadata
                 Base.metadata.create_all(bind=engine) # Use Base from models
                 logger.info("Database schema created successfully.")
             except Exception as e:
                 logger.error(f"Failed to create local database schema: {e}", exc_info=True)
-                # Depending on severity, you might want to raise an exception or exit
         else:
-             logger.info(f"Local database file found at {local_db_file}.")
+             logger.info(f"Local database file found at {local_db_file_path}.")
     else:
-        logger.info("Using configured cloud/custom database, skipping local schema creation check.")
+        logger.info("Using configured non-SQLite database, skipping local schema creation check.")
 
 # Call initialization right after engine setup
-initialize_local_database()
+try:
+    initialize_local_database()
+except Exception as e:
+    logger.critical(f"Failed during database initialization: {e}. Exiting.", exc_info=True)
+    exit(1) # Exit if DB init fails critically
 # --- End Schema Creation ---
 
-app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
 
-# --- Email Configuration ---
-# WARNING: Hardcoding credentials is insecure. Use environment variables in production.
-# conf = ConnectionConfig(
-#     MAIL_USERNAME=os.getenv("MAIL_USERNAME", "your_default_dev_email@example.com"),
-#     MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "your_default_dev_password"), # Strongly advise against default password
-#     MAIL_FROM=os.getenv("MAIL_FROM", "noreply@example.com"), # Use a default sender
-#     MAIL_PORT=int(os.getenv("MAIL_PORT", 587)), # Read as string, convert to int
-#     MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.example.com"),
-#     MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true", # Read as string, convert to bool
-#     MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true",
-#     USE_CREDENTIALS=os.getenv("USE_CREDENTIALS", "True").lower() == "true",
-#     VALIDATE_CERTS=os.getenv("VALIDATE_CERTS", "True").lower() == "true"
-# )
+# --- Email Configuration (Using Environment Variables) ---
+# Provide defaults only for non-sensitive items or items unlikely to change drastically
+try:
+    conf = ConnectionConfig(
+        MAIL_USERNAME=os.getenv("MAIL_USERNAME"), # No default for username
+        MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"), # No default for password
+        MAIL_FROM=os.getenv("MAIL_FROM", os.getenv("MAIL_USERNAME")), # Default FROM to USERNAME if not set
+        MAIL_PORT=int(os.getenv("MAIL_PORT", 587)), # Default port
+        MAIL_SERVER=os.getenv("MAIL_SERVER"), # No default for server
+        MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true", # Default True
+        MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true", # Default False
+        USE_CREDENTIALS=os.getenv("USE_CREDENTIALS", "True").lower() == "true", # Default True
+        VALIDATE_CERTS=os.getenv("VALIDATE_CERTS", "True").lower() == "true" # Default True
+    )
+    # Validate essential email config
+    if not conf.MAIL_USERNAME or not conf.MAIL_PASSWORD or not conf.MAIL_SERVER:
+        logger.warning("Email credentials (MAIL_USERNAME, MAIL_PASSWORD, MAIL_SERVER) are not fully configured in environment variables. Email sending will likely fail.")
+        # Set fm to None or a dummy object if email is optional
+        fm = None # Or raise an error if email is mandatory
+    else:
+        fm = FastMail(conf)
 
-MAIL_USERNAME = "csci3100setaproject@gmail.com"
-MAIL_NAME = "xltj rskt qgxb idsx"
-MAIL_FROM = "csci3100setaproject@gmail.com"
-MAIL_PORT = 587
-MAIL_SERVER = "smtp.gmail.com"
-MAIL_STARTTLS = True
-MAIL_SSL_TLS = False
-USE_CREDENTIALS = True
-VALIDATE_CERTS = True
-
-conf = ConnectionConfig(
-    MAIL_USERNAME=MAIL_USERNAME,
-    MAIL_PASSWORD=MAIL_NAME,
-    MAIL_FROM=MAIL_FROM,
-    MAIL_PORT=MAIL_PORT,
-    MAIL_SERVER=MAIL_SERVER,
-    MAIL_STARTTLS=MAIL_STARTTLS,
-    MAIL_SSL_TLS=MAIL_SSL_TLS,
-    USE_CREDENTIALS=USE_CREDENTIALS,
-    VALIDATE_CERTS=VALIDATE_CERTS
-)
-
-
-fm = FastMail(conf)
+except ValueError as e:
+     logger.error(f"Invalid email configuration value in environment variables: {e}. Email sending disabled.", exc_info=True)
+     fm = None # Disable email sending on config error
+except Exception as e:
+    logger.error(f"Failed to initialize email configuration: {e}. Email sending disabled.", exc_info=True)
+    fm = None
 
 # --- Base URLs ---
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:3000")
 
 # Create a FastAPI application instance
-app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
+app = FastAPI(
+    title="SETA API",
+    description="Backend API for Smart Expense Tracker Application",
+    version="1.1" # Example version
+)
 
-# Configure CORS to allow requests from your React frontend
+# Configure CORS
+# For production, be more specific than "*" if possible
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",") # Read from env, default to "*"
+logger.info(f"Allowing CORS origins: {ALLOWED_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # React dev server
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -622,22 +644,24 @@ async def import_all_user_data(
 @app.put("/settings/database", status_code=status.HTTP_200_OK)
 async def set_database_config(payload: DatabaseConfigPayload):
     """
-    Updates the database configuration (local, cloud, custom).
-    Requires application restart for changes to take effect.
+    Updates the database configuration file (db_config.json).
+    NOTE: This change only takes effect if the DATABASE_URL environment
+    variable is NOT set and the application is restarted.
+    Environment variables always take precedence.
+    Consider securing this endpoint.
     """
     try:
         updated_config = update_database_config(payload.db_type, payload.db_url)
-        # NOTE: The change only takes effect after restarting the FastAPI server!
-        # The engine and SessionLocal are created on startup.
         return {
-            "message": "Database configuration updated successfully. Please restart the application for the changes to take effect.",
-            "new_config": updated_config
+            "message": "Database configuration file updated. Restart the application WITHOUT the DATABASE_URL environment variable set for these changes to potentially take effect. Environment variables override this setting.",
+            "new_config_file_content": updated_config
             }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Failed to save database config: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to save database configuration.")
+        logger.error(f"Failed to save database config file: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to save database configuration file.")
+
 
 # --------- User Authentication Endpoints ---------
 
@@ -1735,6 +1759,15 @@ async def get_all_user_data_for_report(user_id: int, db: Session = Depends(get_d
         generated_at=datetime.now(timezone.utc) # Use timezone aware datetime
     )
 
+# --- Remove or keep the uvicorn runner for local dev ---
+# This block is NOT used when running with Gunicorn via systemd
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    # Use environment variables for host/port here too for consistency
+    run_host = os.getenv("UVICORN_HOST", "127.0.0.1")
+    run_port = int(os.getenv("UVICORN_PORT", 8000))
+    run_reload = os.getenv("UVICORN_RELOAD", "False").lower() == "true"
+
+    logger.info(f"Starting Uvicorn locally on {run_host}:{run_port} (Reload: {run_reload})")
+    uvicorn.run("main:app", host=run_host, port=run_port, reload=run_reload)
+
