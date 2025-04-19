@@ -6,15 +6,9 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 
 const { autoUpdater } = require('electron-updater'); // <-- Import autoUpdater
-const log = require('electron-log'); // <-- Optional: Highly recommended for logging
 
 let backendProcess = null;
 let mainWindow;
-
-// --- Configure Logging (Optional but helpful) ---
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
-log.info('App starting...');
 
 // --- Function to get the path to the backend executable ---
 function getBackendPath() {
@@ -143,7 +137,6 @@ function createWindow() {
 }
 
 function checkForUpdates() {
-    log.info('Checking for updates...');
     // You can listen to events for more control, or just use this simple check:
     autoUpdater.checkForUpdatesAndNotify();
 }
@@ -151,7 +144,6 @@ function checkForUpdates() {
 // --- Electron App Lifecycle ---
 app.on('ready', async () => {
     console.log('Electron app ready.');
-    log.info('Electron app ready.');
 
     try {
         await startBackend();
@@ -163,7 +155,6 @@ app.on('ready', async () => {
         mainWindow.webContents.once('did-finish-load', () => {
             // Don't check for updates in development mode
             if (!app.isPackaged) {
-                log.info('Skipping update check in development mode.');
                 return;
             }
             // Check after a short delay
@@ -172,7 +163,6 @@ app.on('ready', async () => {
 
     } catch (error) {
         console.error("FATAL: Failed to start backend. Application cannot continue.", error);
-        log.error("FATAL: Failed to start backend. Application cannot continue.", error); // Optional log
         app.quit();
     }
 });
