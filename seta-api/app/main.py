@@ -36,17 +36,40 @@ app = FastAPI(title="SETA API", description="Backend API for Smart Expense Track
 
 # --- Email Configuration ---
 # WARNING: Hardcoding credentials is insecure. Use environment variables in production.
+# conf = ConnectionConfig(
+#     MAIL_USERNAME=os.getenv("MAIL_USERNAME", "your_default_dev_email@example.com"),
+#     MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "your_default_dev_password"), # Strongly advise against default password
+#     MAIL_FROM=os.getenv("MAIL_FROM", "noreply@example.com"), # Use a default sender
+#     MAIL_PORT=int(os.getenv("MAIL_PORT", 587)), # Read as string, convert to int
+#     MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.example.com"),
+#     MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true", # Read as string, convert to bool
+#     MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true",
+#     USE_CREDENTIALS=os.getenv("USE_CREDENTIALS", "True").lower() == "true",
+#     VALIDATE_CERTS=os.getenv("VALIDATE_CERTS", "True").lower() == "true"
+# )
+
+MAIL_USERNAME = "csci3100setaproject@gmail.com"
+MAIL_NAME = "xltj rskt qgxb idsx"
+MAIL_FROM = "csci3100setaproject@gmail.com"
+MAIL_PORT = 587
+MAIL_SERVER = "smtp.gmail.com"
+MAIL_STARTTLS = True
+MAIL_SSL_TLS = False
+USE_CREDENTIALS = True
+VALIDATE_CERTS = True
+
 conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME", "your_default_dev_email@example.com"),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "your_default_dev_password"), # Strongly advise against default password
-    MAIL_FROM=os.getenv("MAIL_FROM", "noreply@example.com"), # Use a default sender
-    MAIL_PORT=int(os.getenv("MAIL_PORT", 587)), # Read as string, convert to int
-    MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.example.com"),
-    MAIL_STARTTLS=os.getenv("MAIL_STARTTLS", "True").lower() == "true", # Read as string, convert to bool
-    MAIL_SSL_TLS=os.getenv("MAIL_SSL_TLS", "False").lower() == "true",
-    USE_CREDENTIALS=os.getenv("USE_CREDENTIALS", "True").lower() == "true",
-    VALIDATE_CERTS=os.getenv("VALIDATE_CERTS", "True").lower() == "true"
+    MAIL_USERNAME=MAIL_USERNAME,
+    MAIL_PASSWORD=MAIL_NAME,
+    MAIL_FROM=MAIL_FROM,
+    MAIL_PORT=MAIL_PORT,
+    MAIL_SERVER=MAIL_SERVER,
+    MAIL_STARTTLS=MAIL_STARTTLS,
+    MAIL_SSL_TLS=MAIL_SSL_TLS,
+    USE_CREDENTIALS=USE_CREDENTIALS,
+    VALIDATE_CERTS=VALIDATE_CERTS
 )
+
 
 fm = FastMail(conf)
 

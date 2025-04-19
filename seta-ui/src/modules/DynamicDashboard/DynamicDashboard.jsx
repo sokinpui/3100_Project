@@ -55,8 +55,7 @@ const LAYOUT_STORAGE_KEY = 'dynamicDashboardLayout_v2';
 const FILTER_STORAGE_KEY = 'dynamicDashboardFilters_v2';
 const WIDGET_REMOVE_SELECTOR = '.widget-remove-button';
 const WIDGET_DRAG_HANDLE_SELECTOR = '.widget-drag-handle';
-const DEFAULT_MAX_AMOUNT = 1000;
-const DEFAULT_FILTERS = { categories: [], amountRange: [0, DEFAULT_MAX_AMOUNT] };
+const DEFAULT_FILTERS = { categories: [], amountRange: [0, 0] };
 
 const WIDGET_COMPONENTS = {
   overviewSummary: {
@@ -235,23 +234,25 @@ export default function DynamicDashboard() {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // Initialize activeFilters from localStorage if available
-  const [activeFilters, setActiveFilters] = useState(() => {
-    const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
-    if (savedFilters) {
-      try {
-        const parsedFilters = JSON.parse(savedFilters);
-        return {
-          categories: Array.isArray(parsedFilters.categories) ? parsedFilters.categories : [],
-          amountRange: Array.isArray(parsedFilters.amountRange) && parsedFilters.amountRange.length === 2
-            ? [Math.max(0, parsedFilters.amountRange[0]), Math.max(0, parsedFilters.amountRange[1])]
-            : [0, DEFAULT_MAX_AMOUNT]
-        };
-      } catch (e) {
-        console.error("Failed to parse saved filters", e);
-      }
-    }
-    return DEFAULT_FILTERS;
-  });
+    const [activeFilters, setActiveFilters] = useState(() => {
+        const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+        if (savedFilters) {
+            try {
+                const parsedFilters = JSON.parse(savedFilters);
+                // Validate saved filters, especially the range
+                const validRange = Array.isArray(parsedFilters.amountRange) && parsedFilters.amountRange.length === 2
+                    ? [Math.max(0, parsedFilters.amountRange[0]), Math.max(0, parsedFilters.amountRange[1])]
+                    : DEFAULT_FILTERS.amountRange; // Fallback to placeholder if invalid
+                const validCategories = Array.isArray(parsedFilters.categories) ? parsedFilters.categories : [];
+                return { categories: validCategories, amountRange: validRange };
+            } catch (e) {
+                console.error("Failed to parse saved filters", e);
+                return { ...DEFAULT_FILTERS }; // Use a copy of the placeholder on error
+            }
+        }
+        return { ...DEFAULT_FILTERS }; // Use a copy of the placeholder if nothing saved
+    });
+    const [initialMaxAmountSet, setInitialMaxAmountSet] = useState(false); // Flag
 
   // --- Notification Handlers ---
   const showNotification = useCallback((message, severity = 'success') => {
@@ -427,33 +428,58 @@ export default function DynamicDashboard() {
   }, [allExpenses, allIncome]);
 
   // --- Calculate Max Transaction Amount ---
-  const maxTransactionAmount = useMemo(() => {
-    if (isLoadingData) return Math.max(activeFilters.amountRange[1], DEFAULT_MAX_AMOUNT);
+    const maxTransactionAmount = useMemo(() => {
+        // Calculate based on time-period filtered data
+        const expensesToConsider = timePeriodFilteredExpenses || [];
+        const incomeToConsider = timePeriodFilteredIncome || [];
 
-    const expensesToConsider = timePeriodFilteredExpenses || [];
-    const incomeToConsider = timePeriodFilteredIncome || [];
+        const maxExpense = expensesToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
+        const maxIncome = incomeToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
 
-    const maxExpense = expensesToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
-    const maxIncome = incomeToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
-
-    const overallMax = Math.max(maxExpense, maxIncome);
-    return Math.max(overallMax, DEFAULT_MAX_AMOUNT);
-  }, [timePeriodFilteredExpenses, timePeriodFilteredIncome, isLoadingData, activeFilters.amountRange]);
+        const overallMax = Math.max(maxExpense, maxIncome);
+        // Ensure a minimum range for the slider if max is very low or zero, e.g., 100
+        return Math.max(overallMax, 100);
+    }, [timePeriodFilteredExpenses, timePeriodFilteredIncome]);
 
   // --- Adjust amount range filter if maxTransactionAmount decreases ---
-  useEffect(() => {
-    if (!isLoadingData) {
-      const [currentMin, currentMax] = activeFilters.amountRange;
-      let newMax = Math.min(currentMax, maxTransactionAmount);
-      let newMin = Math.min(currentMin, newMax);
-      if (newMin !== currentMin || newMax !== currentMax) {
-        setActiveFilters(prev => ({
-          ...prev,
-          amountRange: [newMin, newMax]
-        }));
-      }
-    }
-  }, [maxTransactionAmount, isLoadingData]);
+    useEffect(() => {
+        // Only run if data is loaded, max amount is calculated, and we haven't set the initial filter yet
+        if (!isLoadingData && maxTransactionAmount > 0 && !initialMaxAmountSet) {
+            const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+            if (!savedFilters) {
+                // No saved filters, set initial range to [0, max]
+                console.log(`Setting initial filter range to [0, ${maxTransactionAmount}]`);
+                setActiveFilters(prev => ({
+                    ...prev,
+                    amountRange: [0, maxTransactionAmount]
+                }));
+            }
+            // Mark that we've considered the initial max amount setting, regardless of whether we changed it
+            setInitialMaxAmountSet(true);
+        }
+    }, [isLoadingData, maxTransactionAmount, initialMaxAmountSet]); // Add flag to dependencies
+
+    useEffect(() => {
+        // Only run after initial setting check is done and data is not loading
+        if (!isLoadingData && initialMaxAmountSet) {
+            const [currentMin, currentMax] = activeFilters.amountRange;
+            // Adjust only if currentMax EXCEEDS the new possible max
+            if (currentMax > maxTransactionAmount) {
+                console.log(`Adjusting filter max from ${currentMax} down to ${maxTransactionAmount}`);
+                const newMax = maxTransactionAmount;
+                // Ensure min isn't greater than the new max
+                const newMin = Math.min(currentMin, newMax);
+                setActiveFilters(prev => ({
+                    ...prev,
+                    amountRange: [newMin, newMax]
+                }));
+            }
+        }
+        // Depend on maxTransactionAmount to react to its changes (e.g., time period change)
+        // Also depend on isLoadingData and the flag to ensure it runs at the right time
+        // Depend on activeFilters.amountRange to get the current values for comparison
+    }, [maxTransactionAmount, isLoadingData, initialMaxAmountSet, activeFilters.amountRange]);
+
 
   // --- Apply Active Filters to Expenses ---
   const filteredExpenses = useMemo(() => {
@@ -676,3 +702,4 @@ export default function DynamicDashboard() {
     </Container>
   );
 }
+

@@ -21,7 +21,7 @@ const debounce = (func, delay) => {
 
 const SLIDER_STEP = 50;
 
-export function FilterWidget({
+export default function FilterWidget({
   onFilterChange,
   currentFilters,
   availableCategories = [],
@@ -164,4 +164,5 @@ export function FilterWidget({
   );
 }
 
-export default React.memo(FilterWidget);
+// export default React.memo(FilterWidget);
+
