@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
@@ -22,6 +24,7 @@ from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 import os  # Ideally use environment variables
 from dotenv import load_dotenv
 import logging
+import json
 
 load_dotenv()
 
@@ -365,6 +368,185 @@ async def send_password_reset_email(email_to: str, username: str, token: str):
     except Exception as e:
         logger.error(f"Error sending password reset email to {email_to}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to send password reset email.")
+
+# --- NEW EXPORT ENDPOINT ---
+@app.get("/export/all/{user_id}", response_class=JSONResponse)
+@app.get("/export/all/{user_id}", response_class=JSONResponse)
+async def export_all_user_data(user_id: int, db: Session = Depends(get_db)):
+    """Exports all data for a given user as a JSON file."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    try:
+        # Fetch data (ensure this function returns Pydantic models or ORM objects)
+        all_data_report = await get_all_user_data_for_report(user_id=user_id, db=db)
+
+        # Prepare the data structure for export
+        # Using model_dump() for Pydantic v2+
+        export_data_raw = {
+            "expenses": [exp.model_dump(mode='json') for exp in all_data_report.expenses],
+            "income": [inc.model_dump(mode='json') for inc in all_data_report.income],
+            "recurring_expenses": [rec.model_dump(mode='json') for rec in all_data_report.recurring_expenses],
+            "budgets": [bud.model_dump(mode='json') for bud in all_data_report.budgets],
+            "goals": [goal.model_dump(mode='json') for goal in all_data_report.goals],
+            "accounts": [acc.model_dump(mode='json') for acc in all_data_report.accounts],
+            "export_metadata": {
+                "version": "1.0",
+                "exported_at": datetime.now(timezone.utc).isoformat(), # datetime is fine
+                "user_id": user_id
+            }
+        }
+        # *** APPLY jsonable_encoder HERE ***
+        # This will convert date objects to strings automatically
+        export_content = jsonable_encoder(export_data_raw)
+
+    except Exception as e:
+        logger.error(f"Error fetching or preparing data for export (user {user_id}): {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve or prepare data for export.")
+
+    filename = f"seta_backup_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+    # Return the JSON response with the JSON-serializable content
+    return JSONResponse(
+        content=export_content, # Use the processed content
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+# --- NEW IMPORT ENDPOINT ---
+@app.post("/import/all/{user_id}", response_model=ImportResponse) # Reuse ImportResponse for feedback
+async def import_all_user_data(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Imports all data for a user from a JSON file, replacing existing data."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if not file.filename.endswith('.json'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a .json file.")
+
+    try:
+        contents = await file.read()
+        imported_data = json.loads(contents.decode('utf-8'))
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON file.")
+    except Exception as e:
+        logger.error(f"Error reading import file for user {user_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=f"Error reading file: {e}")
+    finally:
+        await file.close()
+
+    # --- Data Validation (Basic) ---
+    required_keys = {"expenses", "income", "recurring_expenses", "budgets", "goals", "accounts"}
+    if not required_keys.issubset(imported_data.keys()):
+        missing = required_keys - set(imported_data.keys())
+        raise HTTPException(status_code=400, detail=f"Missing required data sections in JSON: {', '.join(missing)}")
+
+    # --- Transaction: Delete existing data and insert new data ---
+    imported_counts = {key: 0 for key in required_keys}
+    errors = []
+    skipped = {key: 0 for key in required_keys}
+
+    try:
+        # 1. Delete existing data (Order matters due to foreign keys, delete dependents first)
+        logger.info(f"Starting data deletion for user {user_id}")
+        db.query(models.Expense).filter(models.Expense.user_id == user_id).delete(synchronize_session=False)
+        db.query(models.Income).filter(models.Income.user_id == user_id).delete(synchronize_session=False)
+        db.query(models.RecurringExpense).filter(models.RecurringExpense.user_id == user_id).delete(synchronize_session=False)
+        db.query(models.Budget).filter(models.Budget.user_id == user_id).delete(synchronize_session=False)
+        db.query(models.Goal).filter(models.Goal.user_id == user_id).delete(synchronize_session=False)
+        # Accounts might have dependencies, delete them last OR handle FKs with cascade (already set)
+        db.query(models.Account).filter(models.Account.user_id == user_id).delete(synchronize_session=False)
+        logger.info(f"Data deletion complete for user {user_id}")
+
+        # 2. Import Accounts (need these first for FKs in other tables)
+        accounts_to_add = []
+        for i, acc_data in enumerate(imported_data.get("accounts", [])):
+            try:
+                # Ensure user_id is correct, remove potential id from import
+                acc_data.pop('id', None)
+                acc_data.pop('created_at', None)
+                acc_data.pop('updated_at', None)
+                acc_data['user_id'] = user_id
+                # Use Pydantic model for validation
+                validated_acc = AccountCreate(**acc_data)
+                accounts_to_add.append(models.Account(**validated_acc.model_dump()))
+            except Exception as e:
+                errors.append(f"Account item {i+1}: Validation error - {e}")
+                skipped["accounts"] += 1
+        if accounts_to_add:
+            db.add_all(accounts_to_add)
+            db.flush() # Flush to get potential new account IDs if needed below
+            imported_counts["accounts"] = len(accounts_to_add)
+            logger.info(f"Added {len(accounts_to_add)} accounts for user {user_id}")
+
+        # 3. Import Expenses, Income, Recurring (link to new account IDs if possible)
+        #    (Simplified: assumes account_id from import might be invalid/different after restore)
+        #    A more robust import would map old IDs to new IDs, but that's complex.
+        #    For simplicity, we'll import them without linking or try linking based on name (even more complex).
+        #    EASIEST: Import without account_id for now. User can re-link manually if needed.
+        data_map = {
+            "expenses": (models.Expense, CreateExpense),
+            "income": (models.Income, IncomeCreate),
+            "recurring_expenses": (models.RecurringExpense, RecurringExpenseCreate),
+            "budgets": (models.Budget, BudgetCreate),
+            "goals": (models.Goal, GoalCreate),
+        }
+
+        for key, (ModelClass, PydanticCreate) in data_map.items():
+            items_to_add = []
+            for i, item_data in enumerate(imported_data.get(key, [])):
+                try:
+                    item_data.pop('id', None)
+                    item_data.pop('created_at', None)
+                    item_data.pop('updated_at', None)
+                    item_data.pop('account_id', None) # Remove potentially invalid account_id
+                    item_data['user_id'] = user_id
+                    validated_item = PydanticCreate(**item_data)
+                    items_to_add.append(ModelClass(**validated_item.model_dump()))
+                except Exception as e:
+                    errors.append(f"{key.capitalize()} item {i+1}: Validation error - {e}")
+                    skipped[key] += 1
+            if items_to_add:
+                db.add_all(items_to_add)
+                imported_counts[key] = len(items_to_add)
+                logger.info(f"Added {len(items_to_add)} {key} for user {user_id}")
+
+        # Commit the transaction
+        db.commit()
+        logger.info(f"Import transaction committed for user {user_id}")
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error during import process for user {user_id}: {e}", exc_info=True)
+        errors.append(f"Database transaction failed: {e}")
+        # Reset counts if rollback occurred
+        imported_counts = {key: 0 for key in required_keys}
+        # Re-raise or return specific error response
+        raise HTTPException(status_code=500, detail=f"Import failed during database operation: {e}")
+
+    total_imported = sum(imported_counts.values())
+    total_skipped = sum(skipped.values())
+
+    status_message = "Import completed."
+    if errors:
+        status_message = "Import completed with errors."
+    if total_imported == 0 and errors:
+        status_message = "Import failed. See errors."
+
+    # Construct detailed message for frontend
+    details = [f"{key.replace('_', ' ').capitalize()}: {count} imported, {skipped[key]} skipped" for key, count in imported_counts.items()]
+    final_message = f"{status_message} Details: {'; '.join(details)}."
+
+    return ImportResponse(
+        message=final_message,
+        imported_count=total_imported, # Maybe return dict of counts?
+        skipped_rows=[], # Field not directly applicable, use errors instead
+        errors=errors
+    )
 
 # --------- User Authentication Endpoints ---------
 
