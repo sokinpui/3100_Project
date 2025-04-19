@@ -1,24 +1,67 @@
-seta-ui/node_modules/
-seta-api/app/__pycache__/
-seta-api/app/test_user_info.json
-seta-api/test_user_info.json
-seta-api/venv/
+# --- General ---
 .DS_Store
+*.log
+*.swo \
+*.swp \
 
+# --- IDE / Editor Settings ---
+.idea/
+.vscode/  \
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# --- OS Specific ---
+Thumbs.db
+ehthumbs.db
+
+# --- Python (seta-api) ---
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.py[cod]
+$py.class
+
+# Virtual Environments
 env/
 venv/
+/seta-api/venv/
+.Python
+
+# Distribution / Packaging
+/seta-api/dist/
+/seta-api/build/
+*.egg-info/
+.eggs/
+*.egg
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.cover
+nosetests.xml
+coverage.xml
+
+# Environment variables
 *.env
 .env.*
-*.log
 
-test_user_data_summary.json
+# Specific generated files (if they are truly generated/temporary)
+/seta-api/app/test_user_info.json
+/seta-api/test_user_info.json
+/script/test_user_data_summary.json
 
-node_modules/
-build/
-dist/
-release/
+# --- Node.js / React / Electron (seta-ui) ---
+/seta-ui/node_modules/
+/seta-ui/build/
+/seta-ui/dist/
+/seta-ui/release/
+/seta-ui/.pnp.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Other ---
+# Add any other generated files or directories specific to your tools/workflow
