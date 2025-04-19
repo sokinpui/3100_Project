@@ -5,6 +5,10 @@
     "description": "SETA Personal Finance Desktop App",
     "main": "public/electron.js",
     "homepage": "./",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sokinpui/3100_project.git"
+    },
     "dependencies": {
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.0",
@@ -42,6 +46,7 @@
         "css-loader": "^7.1.2",
         "electron": "^35.1.5",
         "electron-builder": "^26.0.12",
+        "electron-updater": "^6.6.2",
         "style-loader": "^4.0.0",
         "wait-on": "^7.2.0"
     },
@@ -109,6 +114,12 @@
         "nsis": {
             "oneClick": false,
             "allowToChangeInstallationDirectory": true
+        },
+        "publish": {
+            "provider": "github",
+            "owner": "sokinpui",
+            "repo": "3100_project",
+            "releaseType": "release"
         }
     }
 }
