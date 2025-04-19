@@ -7,7 +7,7 @@ from sqlalchemy import func, asc, desc
 import models
 from datetime import date, datetime, timedelta, timezone  # Add timezone here
 # from models import get_db, User, Expense
-from models import get_db, User, Expense, Income, RecurringExpense, Budget, Goal, Account, FrequencyEnum
+from models import User, Expense, Income, RecurringExpense, Budget, Goal, Account, FrequencyEnum, Base
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, Field
 from typing import List, Optional
 import hashlib
@@ -26,11 +26,54 @@ from dotenv import load_dotenv
 import logging
 import json
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from config_manager import get_database_url, is_local_db_configured, get_local_db_path, update_database_config
+
 load_dotenv()
 
-# Configure basic logging (optional but good practice)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# --- Database Setup (Modified) ---
+DATABASE_URL = get_database_url() # Get URL based on config file
+
+engine = create_engine(
+    DATABASE_URL,
+    # Add connect_args for SQLite: crucial for FastAPI/Uvicorn compatibility
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Dependency function (no change needed here)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# --- Schema Creation for Local DB (Run on Startup if needed) ---
+def initialize_local_database():
+    if is_local_db_configured():
+        local_db_file = get_local_db_path()
+        if not local_db_file.exists():
+            logger.info(f"Local database file not found at {local_db_file}. Creating schema...")
+            try:
+                # Create all tables defined in models.py using the Base metadata
+                Base.metadata.create_all(bind=engine) # Use Base from models
+                logger.info("Database schema created successfully.")
+            except Exception as e:
+                logger.error(f"Failed to create local database schema: {e}", exc_info=True)
+                # Depending on severity, you might want to raise an exception or exit
+        else:
+             logger.info(f"Local database file found at {local_db_file}.")
+    else:
+        logger.info("Using configured cloud/custom database, skipping local schema creation check.")
+
+# Call initialization right after engine setup
+initialize_local_database()
+# --- End Schema Creation ---
 
 app = FastAPI(title="SETA API", description="Backend API for Smart Expense Tracker Application")
 
@@ -325,6 +368,10 @@ class AllDataReportResponse(BaseModel):
     accounts: List[AccountResponse]
     generated_at: datetime
 
+class DatabaseConfigPayload(BaseModel):
+    db_type: str = Field(..., pattern="^(local|cloud|custom)$") # Validate type
+    db_url: Optional[str] = None # Required only if db_type is 'custom'
+
 # --------- Helper Functions ---------
 
 def hash_password(password: str) -> str:
@@ -570,6 +617,27 @@ async def import_all_user_data(
         skipped_rows=[], # Field not directly applicable, use errors instead
         errors=errors
     )
+
+# --- NEW Settings Endpoint ---
+@app.put("/settings/database", status_code=status.HTTP_200_OK)
+async def set_database_config(payload: DatabaseConfigPayload):
+    """
+    Updates the database configuration (local, cloud, custom).
+    Requires application restart for changes to take effect.
+    """
+    try:
+        updated_config = update_database_config(payload.db_type, payload.db_url)
+        # NOTE: The change only takes effect after restarting the FastAPI server!
+        # The engine and SessionLocal are created on startup.
+        return {
+            "message": "Database configuration updated successfully. Please restart the application for the changes to take effect.",
+            "new_config": updated_config
+            }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to save database config: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to save database configuration.")
 
 # --------- User Authentication Endpoints ---------
 
@@ -1669,4 +1737,4 @@ async def get_all_user_data_for_report(user_id: int, db: Session = Depends(get_d
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
