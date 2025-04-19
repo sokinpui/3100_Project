@@ -1,12 +1,12 @@
 # --- General ---
 .DS_Store
 *.log
-*.swo \
-*.swp \
+*.swo
+*.swp
 
 # --- IDE / Editor Settings ---
 .idea/
-.vscode/  \
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
