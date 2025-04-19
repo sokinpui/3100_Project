@@ -63,5 +63,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# --- Other ---
-# Add any other generated files or directories specific to your tools/workflow
+# SETA Specific Config/Data
+/seta_config.json
+/seta_user_data/
+/seta-api/app/seta_config.json
+/seta-api/app/seta_local.db
+/seta_local.db

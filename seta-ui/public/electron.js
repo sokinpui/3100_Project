@@ -1,11 +1,11 @@
-// Inside seta-ui/public/electron.js
+// seta-ui/public/electron.js
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-const { autoUpdater } = require('electron-updater'); // <-- Import autoUpdater
+const { autoUpdater } = require('electron-updater');
 
 let backendProcess = null;
 let mainWindow;
@@ -50,10 +50,25 @@ function startBackend() {
             return reject(new Error(`Backend executable not found at: ${backendPath}`));
         }
 
+        // --- Get user data path ---
+        const userDataPath = app.getPath('userData');
+        console.log(`User Data Path: ${userDataPath}`);
+        // Ensure the directory exists
+        if (!fs.existsSync(userDataPath)) {
+            fs.mkdirSync(userDataPath, { recursive: true });
+        }
+        // ---
+
         console.log(`Attempting to start backend executable: ${backendPath}`);
 
         try {
-            backendProcess = spawn(backendPath, [], { stdio: 'pipe' });
+            // --- Pass user data path as environment variable ---
+            const env = {
+                ...process.env,
+                SETA_USER_DATA_PATH: userDataPath
+            };
+            backendProcess = spawn(backendPath, [], { stdio: 'pipe', env: env });
+            // ---
 
             let outputBuffer = '';
             const startupTimeout = setTimeout(() => {
@@ -137,7 +152,6 @@ function createWindow() {
 }
 
 function checkForUpdates() {
-    // You can listen to events for more control, or just use this simple check:
     autoUpdater.checkForUpdatesAndNotify();
 }
 
@@ -151,14 +165,11 @@ app.on('ready', async () => {
         createWindow();
 
         // --- Check for Updates After Window is Ready ---
-        // Wait a bit for the window to potentially show before checking
         mainWindow.webContents.once('did-finish-load', () => {
-            // Don't check for updates in development mode
             if (!app.isPackaged) {
                 return;
             }
-            // Check after a short delay
-            setTimeout(checkForUpdates, 5000); // Check after 5 seconds
+            setTimeout(checkForUpdates, 5000);
         });
 
     } catch (error) {
@@ -197,5 +208,3 @@ app.on('will-quit', () => {
         backendProcess = null;
     }
 });
-
-

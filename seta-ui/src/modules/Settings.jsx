@@ -1,3 +1,4 @@
+// seta-ui/src/modules/Settings.jsx
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
@@ -20,6 +21,11 @@ import {
   Divider,
   CircularProgress,
   LinearProgress,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  AlertTitle,
+  Collapse
 } from "@mui/material";
 
 import PersonIcon from "@mui/icons-material/Person";
@@ -28,6 +34,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import BackupIcon from '@mui/icons-material/Backup';
 import DangerousIcon from '@mui/icons-material/Dangerous';
+import StorageIcon from '@mui/icons-material/Storage';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -59,6 +67,14 @@ export default function Settings() {
   const [importResult, setImportResult] = useState(null);
   const [confirmImportDialogOpen, setConfirmImportDialogOpen] = useState(false);
 
+  // --- New State for Database Settings ---
+  const [dbType, setDbType] = useState('local');
+  const [customDbUrl, setCustomDbUrl] = useState('');
+  const [dbSettingsLoading, setDbSettingsLoading] = useState(false);
+  const [dbConfigError, setDbConfigError] = useState('');
+  const [restartRequired, setRestartRequired] = useState(false);
+  // ---
+
   const userId = localStorage.getItem("userId") || 1;
 
   const loadUserProfile = async (userId) => {
@@ -89,10 +105,10 @@ export default function Settings() {
 
   useEffect(() => {
     if (userId) {
-        loadUserProfile(userId);
+      loadUserProfile(userId);
     } else {
-        setError("User ID not found. Please log in again.");
-        setIsLoading(false);
+      setError("User ID not found. Please log in again.");
+      setIsLoading(false);
     }
   }, [userId]);
 
@@ -200,39 +216,39 @@ export default function Settings() {
     setSnackbarOpen(true);
 
     try {
-        const response = await axios.get(`${API_URL}/export/all/${userId}`, {
-            responseType: 'blob',
-        });
+      const response = await axios.get(`${API_URL}/export/all/${userId}`, {
+        responseType: 'blob',
+      });
 
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
 
-        const contentDisposition = response.headers['content-disposition'];
-        let filename = `seta_backup_${userId}.json`;
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-            if (filenameMatch && filenameMatch.length > 1) {
-                filename = filenameMatch[1];
-            }
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `seta_backup_${userId}.json`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch && filenameMatch.length > 1) {
+          filename = filenameMatch[1];
         }
+      }
 
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
 
-        link.parentNode.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-        setSnackbarMessage(t('settings.exportSuccess'));
-        setSnackbarSeverity('success');
+      setSnackbarMessage(t('settings.exportSuccess'));
+      setSnackbarSeverity('success');
     } catch (error) {
-        console.error("Export error:", error);
-        setSnackbarMessage(t('settings.exportFailed'));
-        setSnackbarSeverity('error');
+      console.error("Export error:", error);
+      setSnackbarMessage(t('settings.exportFailed'));
+      setSnackbarSeverity('error');
     } finally {
-        setIsExporting(false);
-        setSnackbarOpen(true);
+      setIsExporting(false);
+      setSnackbarOpen(true);
     }
   };
 
@@ -299,8 +315,70 @@ export default function Settings() {
     }
   };
 
+  // --- Database Settings Handlers ---
+  const handleDbSettingChange = (event) => {
+    setDbType(event.target.value);
+    setRestartRequired(false);
+    setDbConfigError('');
+    if (event.target.value !== 'custom') {
+      setCustomDbUrl('');
+    }
+  };
+
+  const handleCustomUrlChange = (event) => {
+    setCustomDbUrl(event.target.value);
+    setRestartRequired(false);
+    setDbConfigError('');
+  };
+
+  const saveDatabaseSettings = async () => {
+    setDbSettingsLoading(true);
+    setDbConfigError('');
+    setRestartRequired(false);
+
+    if (dbType === 'custom' && !customDbUrl.trim()) {
+      setDbConfigError("Custom Database URL cannot be empty when 'Custom' is selected.");
+      setDbSettingsLoading(false);
+      return;
+    }
+
+    if (dbType === 'custom') {
+      try {
+        new URL(customDbUrl);
+      } catch (_) {
+        setDbConfigError("Invalid Custom Database URL format.");
+        setDbSettingsLoading(false);
+        return;
+      }
+    }
+
+    try {
+      const payload = {
+        db_type: dbType,
+        db_url: dbType === 'custom' ? customDbUrl.trim() : null,
+      };
+      const response = await axios.put(`${API_URL}/settings/database`, payload);
+
+      setSnackbarMessage(response.data.message || "Database settings saved. Restart required.");
+      setSnackbarSeverity("info");
+      setSnackbarOpen(true);
+      setRestartRequired(true);
+    } catch (error) {
+      console.error("Error saving database settings:", error);
+      const message = error.response?.data?.detail || "Failed to save database settings.";
+      setSnackbarMessage(message);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      setDbConfigError(message);
+    } finally {
+      setDbSettingsLoading(false);
+    }
+  };
+  // ---
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Profile Card */}
       <Card elevation={3} sx={{ mb: 4, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
         <CardHeader
           title={
@@ -344,6 +422,76 @@ export default function Settings() {
         </CardContent>
       </Card>
 
+      {/* Database Settings Card */}
+      <Card elevation={3} sx={{ mb: 4, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+        <CardHeader
+          title={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <StorageIcon sx={{ mr: 1 }} />
+              Database Configuration
+            </Box>
+          }
+          sx={{ backgroundColor: "grey.200", py: 1.5 }}
+          titleTypographyProps={{ fontWeight: 500 }}
+        />
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Select the database connection to use. Changes require an application restart.
+          </Typography>
+
+          <Collapse in={restartRequired}>
+            <Alert severity="warning" icon={<RestartAltIcon />} sx={{ mb: 2 }}>
+              <AlertTitle>Restart Required</AlertTitle>
+              Database settings have been changed. Please close and reopen the application for the changes to take effect.
+            </Alert>
+          </Collapse>
+
+          <RadioGroup
+            aria-label="database-type"
+            name="database-type-radio-group"
+            value={dbType}
+            onChange={handleDbSettingChange}
+            row
+            sx={{ mb: 1 }}
+          >
+            <FormControlLabel value="local" control={<Radio />} label="Local Database (Default)" disabled={dbSettingsLoading} />
+            <FormControlLabel value="cloud" control={<Radio />} label="Cloud Database (Online)" disabled={dbSettingsLoading} />
+            <FormControlLabel value="custom" control={<Radio />} label="Custom URL" disabled={dbSettingsLoading}/>
+          </RadioGroup>
+
+          {dbType === 'custom' && (
+            <TextField
+              fullWidth
+              label="Custom Database URL"
+              placeholder="e.g., postgresql://user:pass@host:port/dbname"
+              value={customDbUrl}
+              onChange={handleCustomUrlChange}
+              disabled={dbSettingsLoading}
+              sx={{ mt: 1, mb: 2 }}
+              helperText="Enter the full SQLAlchemy connection string."
+            />
+          )}
+
+          {dbConfigError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{dbConfigError}</Alert>
+          )}
+
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={saveDatabaseSettings}
+            disabled={dbSettingsLoading}
+            startIcon={dbSettingsLoading ? <CircularProgress size={20} color="inherit"/> : <SaveIcon />}
+          >
+            Save Database Setting
+          </Button>
+          <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+            (Requires Application Restart)
+          </Typography>
+        </CardContent>
+      </Card>
+
+      {/* Data Management Card */}
       <Card elevation={3} sx={{ mb: 4, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
         <CardHeader
           title={
@@ -441,7 +589,7 @@ export default function Settings() {
           size="large"
           startIcon={<SaveIcon />}
           onClick={saveSettings}
-          disabled={isLoading}
+          disabled={isLoading || dbSettingsLoading}
           sx={{
             py: 1.5,
             px: 4,
