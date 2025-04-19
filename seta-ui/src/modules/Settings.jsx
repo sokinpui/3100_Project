@@ -111,7 +111,7 @@ export default function Settings() {
 
   const validateProfileForm = () => {
     const errors = {};
-    if (/[`~!@#$%^&*()_.|+\-=?;:'",<>\{\}\[\]\\\/]/g.test(settings.profile.username)) errors.username = "Username should not contain special characters";
+    if (/[`~!@#$%^&*()_.|+\-=?;:'",<>{}[]\\\/]/g.test(settings.profile.username)) errors.username = "Username should not contain special characters";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(settings.profile.email)) errors.email = "Please enter a valid email address";
     if (settings.profile.contactNumber && settings.profile.contactNumber.search(/^[0-9]{8}$/) === -1) errors.contactNumber = "Contact number must be 8 digits";
