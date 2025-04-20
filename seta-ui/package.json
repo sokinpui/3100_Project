@@ -106,7 +106,7 @@
         "mac": {
             "target": "dmg",
             "icon": "assets/icon.icns",
-            "identity": null,
+            "identity": "SETASelfSignedCert",
             "arch": [
                 "x64",
                 "arm64"
