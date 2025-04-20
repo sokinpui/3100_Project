@@ -106,7 +106,9 @@
         "mac": {
             "target": "dmg",
             "icon": "assets/icon.icns",
-            "identity": null
+            "identity": null,
+            "gatekeeperAssess": false,
+            "category": "public.app-category.utilities"
         },
         "win": {
             "target": "nsis",
