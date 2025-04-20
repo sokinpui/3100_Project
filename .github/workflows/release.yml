@@ -14,10 +14,10 @@ env:
   PYTHON_VERSION: '3.13' # Or your preferred version (>= 3.9)
   # --- !! IMPORTANT !! Code Signing Variables (Set as GitHub Secrets) ---
   # For macOS:
-  # CSC_LINK: ${{ secrets.CSC_LINK }} # Base64 encoded .p12 file
-  # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }} # Password for .p12
-  # APPLE_ID: ${{ secrets.APPLE_ID }} # Your Apple developer email
-  # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} # App-specific password for notarization
+  CSC_LINK: ${{ secrets.CSC_LINK }} # Base64 encoded .p12 file
+  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }} # Password for .p12
+  APPLE_ID: ${{ secrets.APPLE_ID }} # Your Apple developer email
+  APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} # App-specific password for notarization
   # TEAM_ID: ${{ secrets.TEAM_ID }} # Your Apple Developer Team ID
   # For Windows:
   # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }} # Base64 encoded .pfx file or cert path

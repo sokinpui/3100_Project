@@ -83,6 +83,9 @@
     },
     "build": {
         "appId": "com.yourcompany.setadesktop",
+        "mac": {
+            "identity": "SETASelfSignedCert"
+        },
         "productName": "SETA",
         "files": [
             "build/**/*",
