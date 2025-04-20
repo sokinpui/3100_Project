@@ -1,0 +1,181 @@
+name: Build and Release SETA
+
+# Trigger the workflow on pushes to tags matching v*.*.* (e.g., v1.0.0, v0.2.1)
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Environment variables accessible to all jobs
+env:
+  # Set the Node.js version to use
+  NODE_VERSION: '18.x' # Or your preferred LTS version
+  # Set the Python version to use
+  PYTHON_VERSION: '3.10' # Or your preferred version (>= 3.9)
+  # --- !! IMPORTANT !! Code Signing Variables (Set as GitHub Secrets) ---
+  # For macOS:
+  # CSC_LINK: ${{ secrets.CSC_LINK }} # Base64 encoded .p12 file
+  # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }} # Password for .p12
+  # APPLE_ID: ${{ secrets.APPLE_ID }} # Your Apple developer email
+  # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} # App-specific password for notarization
+  # TEAM_ID: ${{ secrets.TEAM_ID }} # Your Apple Developer Team ID
+  # For Windows:
+  # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }} # Base64 encoded .pfx file or cert path
+  # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }} # Password for .pfx
+
+jobs:
+  # --- Build Job Template (Using matrix for less repetition) ---
+  build:
+    name: Build on ${{ matrix.os }}
+    # Run on specified OS runners
+    runs-on: ${{ matrix.os }}
+    # Define the build matrix for different OS
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        # Add more configurations if needed, like different architectures
+        include:
+          # Specific settings per OS
+          - os: macos-latest
+            os_name: mac # Used for electron-builder flag and artifact naming
+            electron_build_flag: '--mac'
+            artifact_glob: '*.dmg' # Or '*.pkg', etc. depending on electron-builder config
+          - os: windows-latest
+            os_name: win
+            electron_build_flag: '--win'
+            artifact_glob: '*.exe' # Or '*.msi', etc.
+          - os: ubuntu-latest
+            os_name: linux
+            electron_build_flag: '--linux'
+            artifact_glob: '*.AppImage' # Or '*.deb', '*.rpm', etc.
+
+    steps:
+      # 1. Checkout Code at the specific tag ref
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js environment
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          # Cache npm dependencies based on package-lock.json
+          cache: 'npm'
+          cache-dependency-path: seta-ui/package-lock.json
+
+      # 3. Set up Python environment
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          # Cache pip dependencies based on requirements.txt
+          cache: 'pip'
+          cache-dependency-path: seta-api/requirements.txt
+
+      # --- Backend Build (seta-api) ---
+      - name: Install Backend Dependencies
+        working-directory: ./seta-api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller # Ensure PyInstaller is installed
+
+      # (Optional) Install Linux system dependencies if needed for backend
+      # E.g., for psycopg2 or other C extensions
+      - name: Install Linux System Dependencies (if needed)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          # Add packages needed by your requirements.txt here
+          # sudo apt-get install -y build-essential python3-dev libpq-dev etc...
+          echo "Skipping Linux system dependency installation for now."
+
+      - name: Build Backend with PyInstaller (${{ matrix.os_name }})
+        working-directory: ./seta-api
+        run: |
+          pyinstaller --name seta_api_server \
+                      --onedir \
+                      --noconsole \
+                      --noconfirm \
+                      --add-data "app:app" \
+                      --add-data "alembic:alembic" \
+                      --add-data "alembic.ini:." \
+                      app/main.py
+          # PyInstaller output is in seta-api/dist/seta_api_server/
+
+      # --- Frontend Build (seta-ui) ---
+      - name: Install Frontend Dependencies
+        working-directory: ./seta-ui
+        # Use npm ci for cleaner installs in CI
+        run: npm ci
+
+      - name: Build and Package Electron App (${{ matrix.os_name }})
+        working-directory: ./seta-ui
+        # Pass the OS-specific flag to the build script
+        # The electron-builder config in package.json should point to ../seta-api/dist/ for the backend
+        # The -- means pass the flag to the underlying electron-builder command
+        run: npm run electron:build -- ${{ matrix.electron_build_flag }}
+
+      # 4. Prepare Artifacts for Upload
+      - name: List release files # Helpful for debugging
+        working-directory: ./seta-ui/release
+        run: ls -R
+
+      - name: Stage Artifacts (${{ matrix.os_name }})
+        # Copy the necessary files (app package, yml) to a staging dir
+        working-directory: ./seta-ui/release
+        run: |
+          mkdir staging
+          cp ${{ matrix.artifact_glob }} staging/
+          # Also copy the update yaml file, essential for auto-updates
+          cp *.yml staging/ || echo "No YML file found, continuing..."
+          # Add other files if needed (e.g., .blockmap)
+          cp *.blockmap staging/ || echo "No blockmap file found, continuing..."
+
+      # 5. Upload Artifacts for the Release job
+      - name: Upload ${{ matrix.os_name }} Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seta-${{ matrix.os_name }}-artifact # Unique name per OS
+          path: ./seta-ui/release/staging/ # Upload the contents of the staging dir
+
+  # --- Create Release Job (Runs after all builds succeed) ---
+  create-release:
+    name: Create GitHub Release
+    # This job depends on the successful completion of all matrix builds
+    needs: [build]
+    # Run on Ubuntu (lightweight, OS doesn't matter much here)
+    runs-on: ubuntu-latest
+    # Permissions needed to create releases and upload assets
+    permissions:
+      contents: write
+
+    steps:
+      # 1. Download all artifacts from the build jobs
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # No specific name provided, downloads all artifacts
+          # Artifacts will be placed in directories named after the artifact name (e.g., seta-mac-artifact/)
+          path: artifacts/ # Download into an 'artifacts' directory
+
+      - name: List downloaded artifacts # Helpful for debugging
+        run: ls -R artifacts
+
+      # 2. Create Release and Upload Assets
+      - name: Create Release and Upload Assets
+        uses: ncipollo/release-action@v1
+        with:
+          # Specify all files from the downloaded artifact directories
+          # Adjust glob pattern if directory structure differs
+          artifacts: "artifacts/*/*"
+          # Get the tag name that triggered the workflow
+          tag: ${{ github.ref_name }}
+          # Use the tag name as the release name
+          name: Release ${{ github.ref_name }}
+          # Automatically generate release notes from commits since last release
+          generateReleaseNotes: true
+          # Allow updating the release if the tag already exists (e.g., rerun workflow)
+          allowUpdates: true
+          # Use the default GITHUB_TOKEN for authentication
+          token: ${{ secrets.GITHUB_TOKEN }}
