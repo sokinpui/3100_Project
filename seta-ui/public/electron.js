@@ -5,8 +5,6 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-const { autoUpdater } = require('electron-updater');
-
 let backendProcess = null;
 let mainWindow;
 
@@ -151,10 +149,6 @@ function createWindow() {
     });
 }
 
-function checkForUpdates() {
-    autoUpdater.checkForUpdatesAndNotify();
-}
-
 // --- Electron App Lifecycle ---
 app.on('ready', async () => {
     console.log('Electron app ready.');
@@ -169,7 +163,6 @@ app.on('ready', async () => {
             if (!app.isPackaged) {
                 return;
             }
-            setTimeout(checkForUpdates, 5000);
         });
 
     } catch (error) {

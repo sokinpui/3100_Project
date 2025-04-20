@@ -8,11 +8,11 @@
   },
   "generation_summary": {
     "accounts_generated": 4,
-    "income_records_generated": 150,
-    "random_expenses_generated": 300,
-    "recurring_rules_generated": 5,
-    "budgets_generated": 4,
+    "income_records_generated": 15,
+    "random_expenses_generated": 24,
+    "recurring_rules_generated": 3,
+    "budgets_generated": 3,
     "goals_generated": 3,
-    "timestamp": "2025-04-17T23:08:43.499090"
+    "timestamp": "2025-04-20T09:09:57.806886"
   }
 }
