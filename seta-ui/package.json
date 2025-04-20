@@ -106,8 +106,6 @@
         "mac": {
             "target": "dmg",
             "icon": "assets/icon.icns",
-            "identity": "SETASelfSignedCert",
-            "gatekeeperAssess": false
         },
         "win": {
             "target": "nsis",
