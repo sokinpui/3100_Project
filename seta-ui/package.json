@@ -107,11 +107,7 @@
             "target": "dmg",
             "icon": "assets/icon.icns",
             "identity": "SETASelfSignedCert",
-            "gatekeeperAssess": false,
-            "hardenedRuntime": true,
-            "entitlements": "./entitlements.mac.plist",
-            "entitlementsInherit": "./entitlements.mac.plist",
-            "afterSign": "electron-builder-notarize"
+            "gatekeeperAssess": false
         },
         "win": {
             "target": "nsis",
