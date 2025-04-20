@@ -69,3 +69,6 @@ yarn-error.log*
 /seta-api/app/seta_config.json
 /seta-api/app/seta_local.db
 /seta_local.db
+
+/certificate.txt
+/*.p12
