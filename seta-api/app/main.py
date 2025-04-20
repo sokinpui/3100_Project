@@ -7,7 +7,7 @@ from sqlalchemy import func, asc, desc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import models
-from app.config_manager import get_database_url, is_local_db_configured, get_local_db_path, update_database_config
+from config_manager import get_database_url, is_local_db_configured, get_local_db_path, update_database_config
 from datetime import date, datetime, timedelta, timezone  # Add timezone here
 # from models import get_db, User, Expense
 from models import get_db, User, Expense, Income, RecurringExpense, Budget, Goal, Account, FrequencyEnum
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 # --- Database Setup (Modified) ---
 DATABASE_URL = get_database_url() # Get URL based on config file
+# print(f"Database URL: {DATABASE_URL}")  # Debugging line to check the URL
 
 engine = create_engine(
     DATABASE_URL,
