@@ -114,7 +114,7 @@ jobs:
         # Pass the OS-specific flag to the build script
         # The electron-builder config in package.json should point to ../seta-api/dist/ for the backend
         # The -- means pass the flag to the underlying electron-builder command
-        run: npm run electron:build -- ${{ matrix.electron_build_flag }}
+        run: npm run electron:build -- ${{ matrix.electron_build_flag }} --publish never
 
       # 4. Prepare Artifacts for Upload
       - name: List release files # Helpful for debugging
