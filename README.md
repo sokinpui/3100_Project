@@ -9,4 +9,4 @@
 3. If you see "[SETA] is damaged and can’t be opened":
    - Open Terminal and run:
      ```bash
-     xattr -d com.apple.quarantine /Applications/SETA.app
+     xattr -cr /Applications/SETA.app
