@@ -112,7 +112,7 @@
             "icon": "assets/icon.ico"
         },
         "linux": {
-            "target": "deb",
+            "target": "AppImage",
             "icon": "assets/icon.png"
         },
         "nsis": {
