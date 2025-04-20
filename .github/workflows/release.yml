@@ -11,7 +11,7 @@ env:
   # Set the Node.js version to use
   NODE_VERSION: '20.x' # Or your preferred LTS version
   # Set the Python version to use
-  PYTHON_VERSION: '3.10' # Or your preferred version (>= 3.9)
+  PYTHON_VERSION: '3.13' # Or your preferred version (>= 3.9)
   # --- !! IMPORTANT !! Code Signing Variables (Set as GitHub Secrets) ---
   # For macOS:
   # CSC_LINK: ${{ secrets.CSC_LINK }} # Base64 encoded .p12 file
