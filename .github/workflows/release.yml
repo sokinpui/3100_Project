@@ -9,7 +9,7 @@ on:
 # Environment variables accessible to all jobs
 env:
   # Set the Node.js version to use
-  NODE_VERSION: '18.x' # Or your preferred LTS version
+  NODE_VERSION: '20.x' # Or your preferred LTS version
   # Set the Python version to use
   PYTHON_VERSION: '3.10' # Or your preferred version (>= 3.9)
   # --- !! IMPORTANT !! Code Signing Variables (Set as GitHub Secrets) ---
@@ -92,6 +92,7 @@ jobs:
 
       - name: Build Backend with PyInstaller (${{ matrix.os_name }})
         working-directory: ./seta-api
+        shell: bash
         run: |
           pyinstaller --name seta_api_server \
                       --onedir \
@@ -101,7 +102,6 @@ jobs:
                       --add-data "alembic:alembic" \
                       --add-data "alembic.ini:." \
                       app/main.py
-          # PyInstaller output is in seta-api/dist/seta_api_server/
 
       # --- Frontend Build (seta-ui) ---
       - name: Install Frontend Dependencies
