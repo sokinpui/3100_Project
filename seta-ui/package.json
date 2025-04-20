@@ -104,13 +104,9 @@
             }
         ],
         "mac": {
-            "target": "dmg",
+            "target": "universal",
             "icon": "assets/icon.icns",
             "identity": null,
-            "arch": [
-                "x64",
-                "arm64"
-            ]
         },
         "win": {
             "target": "nsis",
