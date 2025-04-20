@@ -104,7 +104,7 @@
             }
         ],
         "mac": {
-            "target": "universal",
+            "target": "dmg",
             "icon": "assets/icon.icns",
             "identity": null
         },
