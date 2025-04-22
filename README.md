@@ -20,7 +20,7 @@ SETA is a desktop application designed to help users manage their personal finan
 *   `seta-api/`: Contains the FastAPI backend application. See [seta-api/README.md](./seta-api/README.md).
 *   `seta-ui/`: Contains the React/Electron frontend application. See [seta-ui/README.md](./seta-ui/README.md).
 *   `doc/`: Contains detailed documentation:
-    *   **[User Manual](./doc/user_manual.md)** <--- ADDED LINK
+    *   **[User Manual](./doc/user_manual.md)**
     *   [Build and Release Guide](./doc/build_and_release.md)
     *   [Development Workflow](./doc/development_workflow.md)
     *   [Backend API Reference](./doc/api_reference.md)
