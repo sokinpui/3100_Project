@@ -55,7 +55,7 @@ This is the easiest way. We build ready-to-use versions for Windows, macOS, and 
 If you're comfortable with development tools, you can build the application yourself.
 
 1.  **Prerequisites:** Make sure you have Git, Node.js (LTS), Python (3.9+), and OS-specific build tools installed. See the [Build and Release Guide](./build_and_release.md#prerequisites) for details.
-2.  **Clone:** `git clone https://github.com/YourUsername/YourRepoName.git`
+2.  **Clone:** `git clone https://github.com/sokinpui/3100_project.git`
 3.  **Follow Build Steps:** Follow the "Local Build" instructions in the [Build and Release Guide](./build_and_release.md#local-build-for-testing). This involves setting up the backend, building it with PyInstaller, setting up the frontend, and packaging it with Electron.
 
 ### Option C: Run Locally in Development Mode (For Developers)
@@ -63,15 +63,15 @@ If you're comfortable with development tools, you can build the application your
 If you want to run the very latest code or contribute to development:
 
 1.  **Prerequisites:** Git, Node.js, Python.
-2.  **Clone:** `git clone https://github.com/YourUsername/YourRepoName.git`
+2.  **Clone:** `git clone https://github.com/sokinpui/3100_project.git`
 3.  **Backend Setup:**
-    *   `cd YourRepoName/seta-api`
+    *   `cd 3100_project/seta-api`
     *   Set up a Python virtual environment (`python -m venv venv`, activate it).
     *   Install dependencies (`pip install -r requirements.txt`).
     *   Run the backend server: `uvicorn app.main:app --reload --port 8000`
 4.  **Frontend Setup:**
     *   Open a *new* terminal window.
-    *   `cd YourRepoName/seta-ui`
+    *   `cd 3100_project/seta-ui`
     *   Install dependencies (`npm install`).
     *   Run the frontend dev server: `npm start`
 5.  Access the app in your browser (usually `http://localhost:3000`). Note: This runs the UI in a browser, not as a packaged desktop app.
@@ -202,7 +202,7 @@ You can restore your data from a previously exported `.json` file. This is usefu
         2.  If you have the **"Data Filters"** widget, ensure no specific categories are selected and the amount slider covers the full range (e.g., $0 to the maximum).
         3.  Go to the specific module (e.g., "Expenses," "Income") - does your data appear in the table there? The tables usually show all data for that type, unfiltered by the dashboard selectors.
 *   **Data Not Updating Immediately After Import/Add:** Sometimes, especially after large imports or adding data quickly, the dashboard widgets might not refresh instantly. Try a simple page refresh (`Ctrl+R` or `Cmd+R` if running in dev mode) or, if needed, close and reopen the SETA application.
-*   **Found a Bug or Have an Idea?** Please report issues or suggest features on the **[SETA GitHub Issues Page](https://github.com/YourUsername/YourRepoName/issues)** (Replace with your actual repo URL!).
+*   **Found a Bug or Have an Idea?** Please report issues or suggest features on the **[SETA GitHub Issues Page](https://github.com/sokinpui/3100_project/issues)** (Replace with your actual repo URL!).
 
 ## 8. Conclusion
 
