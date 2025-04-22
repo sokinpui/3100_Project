@@ -50,7 +50,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `income` (filtered by parent), `isLoading`.
 *   **Key Features:** Displays a single large value representing the average daily income. Shows the number of days within the data range used for the calculation.
 *   **Notes:** Requires at least two days with income data within the period for a meaningful average.
-![[Pasted image 20250422132103.png]]
+![Pasted image 20250422132103.png](images/Pasted%20image%2020250422132103.png)
 
 ---
 
@@ -61,7 +61,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a single large value, colored green for positive net flow or red for negative. Shows the number of days within the transaction range used for calculation.
 *   **Notes:** Requires at least two days with transaction data.
-![[Pasted image 20250422131221.png]]
+![Pasted image 20250422131221.png](images/Pasted%20image%2020250422131221.png)
 
 ---
 
@@ -72,7 +72,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a single large value representing the average daily spending. Shows the number of days within the data range used for calculation.
 *   **Notes:** Requires at least two days with expense data.
-![[Pasted image 20250422131230.png]]
+![Pasted image 20250422131230.png](images/Pasted%20image%2020250422131230.png)
 
 ---
 
@@ -87,7 +87,7 @@ This document describes the individual widgets available for use within the SETA
     *   Bars representing actual spending are colored green (under budget) or red (over budget).
     *   Custom tooltip shows budgeted amount, actual amount, and over/under amount.
 *   **Notes:** Uses translated category and period names. Groups expense data dynamically based on the selected budget's period type (`monthly`, `quarterly`, `yearly`).
-![[Pasted image 20250422131706.png]]
+![Pasted image 20250422131706.png](images/Pasted%20image%2020250422131706.png)
 
 ---
 
@@ -102,7 +102,7 @@ This document describes the individual widgets available for use within the SETA
     *   For each budget, shows category name, spent amount vs limit, and a Linear Progress bar.
     *   Progress bar color indicates status (e.g., green=good, yellow=warning, red=over budget).
 *   **Notes:** Uses translated category names. Calculates spending *within* the dashboard's selected `timePeriod`.
-![[Pasted image 20250422131718.png]]
+![Pasted image 20250422131718.png](images/Pasted%20image%2020250422131718.png)
 
 ---
 
@@ -113,7 +113,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Pie Chart where each slice represents an expense category's total spending. Includes a legend and a tooltip showing exact amounts.
 *   **Notes:** Uses translated category names. Groups expenses by `category_name`.
-![[Pasted image 20250422132148.png]]
+![Pasted image 20250422132148.png](images/Pasted%20image%2020250422132148.png)
 
 ---
 
@@ -124,7 +124,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts stacked Area Chart. Each colored area represents a category's spending per month. Includes a legend and tooltip.
 *   **Notes:** Uses translated category names. Aggregates data monthly. Requires at least two months of data for visualization.
-![[Pasted image 20250422132227.png]]
+![Pasted image 20250422132227.png](images/Pasted%20image%2020250422132227.png)
 
 ---
 
@@ -135,7 +135,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Line Chart plotting the total expense amount for each day. Features an adaptive X-axis (shows fewer labels for longer periods) and a tooltip.
 *   **Notes:** Aggregates expenses daily. Requires at least two days of data.
-![[Pasted image 20250422131820.png]]
+![Pasted image 20250422131820.png](images/Pasted%20image%2020250422131820.png)
 ---
 
 ### Filter Widget
@@ -148,9 +148,9 @@ This document describes the individual widgets available for use within the SETA
     *   Range slider for filtering transactions by amount.
     *   Uses debouncing for the slider to avoid excessive updates.
 *   **Notes:** This widget influences the `filteredExpenses` and `filteredIncome` props passed to other widgets by the parent `DynamicDashboard`. Uses translated category names.
-![[Pasted image 20250422131857.png]]
-![[Pasted image 20250422131912.png]]
-![[Pasted image 20250422131933.png]]
+![Pasted image 20250422131857.png](images/Pasted%20image%2020250422131857.png)
+![Pasted image 20250422131912.png](images/Pasted%20image%2020250422131912.png)
+![Pasted image 20250422131933.png](images/Pasted%20image%2020250422131933.png)
 
 ---
 
@@ -161,7 +161,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `userId` (makes own call for `goals`).
 *   **Key Features:** Fetches goals and displays a list showing Goal Name, Current Amount / Target Amount, and a Linear Progress bar indicating completion percentage.
 *   **Notes:** Uses the `current_amount` and `target_amount` directly from the goal data.
-![[Pasted image 20250422131944.png]]
+![Pasted image 20250422131944.png](images/Pasted%20image%2020250422131944.png)
 
 ---
 
@@ -177,7 +177,7 @@ This document describes the individual widgets available for use within the SETA
     *   Displays the estimated completion date (Month Year format).
     *   Shows warnings if the goal is already met, has an invalid target, the calculated savings rate is negative/zero, or the estimate is later than an existing target date.
 *   **Notes:** The estimation is a simple projection based *only* on the currently selected period's average net flow and may not be accurate for long-term planning.
-![[Pasted image 20250422132035.png]]
+![Pasted image 20250422132035.png](images/Pasted%20image%2020250422132035.png)
 
 ---
 
@@ -188,7 +188,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Pie Chart where each slice represents an income source's total amount. Includes a legend and tooltip. Handles potential missing source names ('Unknown Source').
 *   **Notes:** Groups income by `source`.
-![[Pasted image 20250422132317.png]]
+![Pasted image 20250422132317.png](images/Pasted%20image%2020250422132317.png)
 
 ---
 
@@ -199,7 +199,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Bar Chart showing the total income amount for each month.
 *   **Notes:** Aggregates income monthly.
-![[Pasted image 20250422132347.png]]
+![Pasted image 20250422132347.png](images/Pasted%20image%2020250422132347.png)
 
 ---
 
@@ -210,7 +210,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Line Chart plotting the total income amount for each day. Features an adaptive X-axis and tooltip.
 *   **Notes:** Aggregates income daily. Requires at least two days of data.
-![[Pasted image 20250422132412.png]]
+![Pasted image 20250422132412.png](images/Pasted%20image%2020250422132412.png)
 
 ---
 
@@ -221,7 +221,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a sorted list showing the description (or translated category name), amount, and date for the highest-value expenses.
 *   **Notes:** Limited by `MAX_ITEMS` constant (currently 5). Uses translated category names.
-![[Pasted image 20250422132427.png]]
+![Pasted image 20250422132427.png](images/Pasted%20image%2020250422132427.png)
 
 ---
 
@@ -232,7 +232,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a sorted list showing the source, amount, description (if any), and date for the highest-value income items. Includes icons.
 *   **Notes:** Limited by `MAX_ITEMS` constant (currently 5).
-![[Pasted image 20250422132458.png]]
+![Pasted image 20250422132458.png](images/Pasted%20image%2020250422132458.png)
 
 ---
 
@@ -248,7 +248,7 @@ This document describes the individual widgets available for use within the SETA
     *   Highlights the current day.
     *   Tooltips on hover show the exact net flow amount for that day.
 *   **Notes:** Calculations are performed *per day* within the currently displayed month.
-![[Pasted image 20250422133115.png]]
+![Pasted image 20250422133115.png](images/Pasted%20image%2020250422133115.png)
 
 ---
 
@@ -259,7 +259,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Bar Chart showing the total expense amount for each month.
 *   **Notes:** Aggregates expenses monthly. Functionally similar to `IncomeComparisonWidget` but for expenses.
-![[Pasted image 20250422133141.png]]
+![Pasted image 20250422133141.png](images/Pasted%20image%2020250422133141.png)
 
 ---
 
@@ -270,7 +270,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `userId`, `expenses` (filtered), `timePeriod`. Makes its own API call to fetch `income` (then filters it by `timePeriod`).
 *   **Key Features:** Shows a prominent net flow value, colored green (positive) or red (negative). Also displays the total income and total expense values used in the calculation.
 *   **Notes:** Provides a key performance indicator for the selected period.
-![[Pasted image 20250422133155.png]]
+![Pasted image 20250422133155.png](images/Pasted%20image%2020250422133155.png)
 
 ---
 
@@ -281,7 +281,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Bar Chart. Each bar represents a month's net flow. Bars are colored green (positive) or red (negative). Includes a zero reference line.
 *   **Notes:** Aggregates income and expenses monthly to calculate net flow per month.
-![[Pasted image 20250422133507.png]]
+![Pasted image 20250422133507.png](images/Pasted%20image%2020250422133507.png)
 
 ---
 
@@ -292,7 +292,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a Recharts Line Chart plotting the daily net flow amount. Includes a zero reference line to easily distinguish positive/negative days. Adaptive X-axis.
 *   **Notes:** Aggregates income and expenses daily. Requires at least two days of data.
-![[Pasted image 20250422133518.png]]
+![Pasted image 20250422133518.png](images/Pasted%20image%2020250422133518.png)
 
 ---
 
@@ -303,7 +303,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `income` (filtered), `isLoading`.
 *   **Key Features:** Displays distinct sections (using Paper components within a Grid) for Total Expenses, Total Income, Net Flow, and potentially total entry counts. Uses icons for visual distinction.
 *   **Notes:** Offers a quick snapshot of the user's financial status in the selected period.
-![[Pasted image 20250422133540.png]]
+![Pasted image 20250422133540.png](images/Pasted%20image%2020250422133540.png)
 
 ---
 
@@ -318,8 +318,8 @@ This document describes the individual widgets available for use within the SETA
     *   Submits data directly to the backend API (`/expenses` or `/income`).
     *   Triggers a data refresh in the parent dashboard via `onDataAdded`.
 *   **Notes:** Designed for convenience, not for detailed entry. Uses predefined category/source lists.
-![[Pasted image 20250422133657.png]]
-![[Pasted image 20250422133704.png]]
+![Pasted image 20250422133657.png](images/Pasted%20image%2020250422133657.png)
+![Pasted image 20250422133704.png](images/Pasted%20image%2020250422133704.png)
 
 ---
 
@@ -334,7 +334,7 @@ This document describes the individual widgets available for use within the SETA
     *   Uses icons (up/down arrows) and colors (green/red) to visually differentiate income and expenses.
     *   Shows display name (category/source), amount, description, and date for each item.
 *   **Notes:** Limited by `MAX_ITEMS` constant (currently 7). Uses translated category names.
-![[Pasted image 20250422133737.png]]
+![Pasted image 20250422133737.png](images/Pasted%20image%2020250422133737.png)
 
 ---
 
@@ -348,7 +348,7 @@ This document describes the individual widgets available for use within the SETA
     *   The percentage value is colored based on the rate (e.g., green for good, yellow for okay, red for negative).
     *   A tooltip shows the underlying total income, total expenses, and net flow values.
 *   **Notes:** Handles edge cases like zero income (shows 'N/A' or '-∞%').
-![[Pasted image 20250422133755.png]]
+![Pasted image 20250422133755.png](images/Pasted%20image%2020250422133755.png)
 
 ---
 
@@ -362,9 +362,9 @@ This document describes the individual widgets available for use within the SETA
     *   Dropdown menu offering preset time ranges (Last 7/30 Days, Current Month/Quarter/Half-Year, All Time).
     *   Allows selecting a "Custom Range", which reveals Date Picker components for start and end dates.
 *   **Notes:** This widget is typically placed *outside* the main `react-grid-layout` area but is fundamental to controlling the dashboard's data scope.
-![[Pasted image 20250422133810.png]]
-![[Pasted image 20250422133818.png]]
-![[Pasted image 20250422133827.png]]
+![Pasted image 20250422133810.png](images/Pasted%20image%2020250422133810.png)
+![Pasted image 20250422133818.png](images/Pasted%20image%2020250422133818.png)
+![Pasted image 20250422133827.png](images/Pasted%20image%2020250422133827.png)
 
 ---
 
@@ -375,7 +375,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `income` (filtered), `isLoading`.
 *   **Key Features:** Displays a simple table showing the Source Name and the corresponding Total Amount. Sorted by amount descending.
 *   **Notes:** Limited by `MAX_SOURCES` constant (currently 5). Groups income records by `source`. Handles potentially missing source names.
-![[Pasted image 20250422133843.png]]
+![Pasted image 20250422133843.png](images/Pasted%20image%2020250422133843.png)
 
 ---
 
@@ -386,7 +386,7 @@ This document describes the individual widgets available for use within the SETA
 *   **Data Dependencies:** `expenses` (filtered), `isLoading`.
 *   **Key Features:** Displays a simple table showing the translated Category Name and the corresponding Total Amount. Sorted by amount descending.
 *   **Notes:** Limited by `MAX_CATEGORIES` constant (currently 5). Uses translated category names. Groups expenses by `category_name`.
-![[Pasted image 20250422133854.png]]
+![Pasted image 20250422133854.png](images/Pasted%20image%2020250422133854.png)
 
 ---
 
@@ -401,7 +401,7 @@ This document describes the individual widgets available for use within the SETA
     *   Provides a button linking to the Planning Manager section (`/planning`) to encourage users to set a budget.
     *   Shows a message if all spending is within budgeted categories or if there's no spending.
 *   **Notes:** Requires both expense and budget data to function correctly. Uses translated category names.
-![[Pasted image 20250422133935.png]]
+![Pasted image 20250422133935.png](images/Pasted%20image%2020250422133935.png)
 
 ---
 
@@ -416,6 +416,4 @@ This document describes the individual widgets available for use within the SETA
     *   Filters these rules to show only those with an estimated next due date within the next `UPCOMING_DAYS`.
     *   Displays a list showing the recurring item's Name, Amount, and estimated Due Date.
 *   **Notes:** The accuracy of the "next due date" estimation is basic and might not perfectly handle all scenarios (e.g., complex schedules, end dates).
-![[Pasted image 20250422134212.png]]
-
----
+![Pasted image 20250422134212.png](images/Pasted%20image%2020250422134212.png)
