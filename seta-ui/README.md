@@ -1,178 +1,128 @@
-# setup before run
-```bash
-npx create-react-app seta-ui
-cd seta-ui
-npm install react-router-dom axios bcryptjs styled-components
-npm install --save-dev @testing-library/react @storybook/react
-npm install css-loader style-loader --save-dev
-npm install react-scripts
-```
+# SETA UI Frontend
 
-```bash
-npx storybook init # Optional, for UI documentation
-```
+This directory contains the React frontend application for SETA, packaged as a desktop application using Electron.
 
-# run the code
-```bash
-cd seta-ui
-npm start
-```
+## Overview
 
-# UML Diagram
-https://www.plantuml.com/plantuml/png/TPIzRjim481tFWNX3cs7f42xPGXYE7MNj0YiReM7itYLYKWyWZznYiBl7f87oh8X6nxkxhl_8_JW0xWGXrvyb4turslJ2V-YZGK7Wsnfi6JGX8nG9hUl4sgXVO4EcJbi0vYknud3BZbqZg9HA-h9oSDUXoa7v-Z0wCEtyXEfZLKjwWLNGBbOEp81ZPAVDWXj-BoG_uMKVvRMRYLu2TPczH7yVaVWL36ggcNqarJiSKCne2lK5J6ZHYlS0LizooLt3FiViIRh8YTA_x6fx84cw1Q29iCjfS0dwhGfGNsMsDZepaJBDOgOpCUBVDoZ7nDzVxDeF2uLju2idh4DMdB1yqGipoHkqBtgTf9vQVMperUjaCS6gqUmofj-2smVrPciwKu3cScv9Xi0fKtNM6qCSWNFClFd5F-BmZg_Z48DXRzPALME-H5ii2zRzNjjlG1hvStDFLz1tideyMJaEpDmQ1GwBqPRyU1RrpZMCgZd7WEdaA-NK36T4RxW7Af7ccFrGBEiRk041TTFi2wl3i3bvqYjVebEwMvlxoTNJR0bu-DmodhTeIQ_xb47lEuXaZbrTu4jlqMV3_y80UIwfuDGITf1AhXueXRw9f233XVbDR7C7u4os6yzu3Pht2NwhJXELrWZxkJ1wRnUVahdo26eSSuvzeM3nGCQ5OV-7G00
+The UI provides a user-friendly interface for managing personal finances, interacting with the `seta-api` backend. It features a modular design, a dynamic dashboard, data visualization, and support for internationalization and theming.
 
-# file structure
-```bash
-seta-ui/
-├── README.md
-├── package-lock.json
-├── package.json
-├── public
-│   └── index.html
-└── src
-    ├── App.jsx                 # Main application component
-    ├── index.js                # Application entry point
-    ├── assets
-    │   └── styles
-    │       ├── GlobalStyles.js # Styled-components global styles
-    │       ├── global.css      # CSS global styles
-    │       └── theme.js        # Theme configuration
-    ├── components
-    │   ├── Dashboard
-    │   │   ├── Dashboard.jsx        # Main dashboard layout
-    │   │   ├── DefaultDashboardView.jsx  # Default landing page
-    │   │   ├── ModuleGrid.jsx      # Module navigation grid
-    │   │   └── ModuleRouter.jsx    # Module routing logic
-    │   └── common
-    │       ├── LoadingSpinner.jsx  # Loading indicator
-    │       ├── PageNotFound.jsx    # 404 page component
-    │       └── Sidebar.jsx         # Navigation sidebar
-    ├── contexts
-    │   └── ModuleContext.jsx  # Module routing configuration
-    ├── login
-    │   ├── AuthGuard.jsx     # Session management
-    │   ├── Login.jsx         # Login page
-    │   ├── Login.css         # Login styles
-    │   ├── Signup.jsx        # Signup page
-    │   └── testData.js       # Temporary user data (dev only)
-    ├── modules
-    │   ├── ExpenseManage.jsx      # Expense entry form and table
-    │   ├── ExpenseReports.jsx     # Reports display
-    │   └── Settings.jsx           # User settings page
-    └── services
-        ├── ApiContext.jsx     # API context creation
-        ├── ApiProvider.jsx    # API context provider
-        └── useApi.js         # Custom hook for API access
+## Key Technologies & Libraries
 
+*   **React:** JavaScript library for building user interfaces.
+*   **Electron:** Framework for creating native desktop applications with web technologies.
+*   **React Router:** For handling navigation within the application.
+*   **Material UI (MUI):** React component library for UI design and theming.
+*   **axios:** For making HTTP requests to the backend API.
+*   **Recharts:** Composable charting library for data visualization in the dashboard.
+*   **react-grid-layout:** Draggable and resizable grid layout for the dynamic dashboard.
+*   **i18next & react-i18next:** Framework for internationalization (English, Chinese).
+*   **date-fns & Day.js:** Libraries for date/time manipulation and formatting.
+*   **jsPDF & xlsx:** Libraries used for client-side report generation (PDF, Excel).
+*   **react-csv:** Used for client-side CSV report generation.
+*   **uuid:** For generating unique IDs (e.g., for dashboard widgets).
 
-```
-Here's the recommended file structure for the modular React UI template:
+## Features
 
-```
-seta-ui/
-├── public/
-│   └── index.html
-├── src/
-│   ├── App.jsx                 # Main application component
-│   ├── index.js               # Application entry point
-│   ├── services/              # API and service-related files
-│   │   ├── ApiContext.jsx     # API context creation
-│   │   ├── ApiProvider.jsx    # API context provider
-│   │   └── useApi.js         # Custom hook for API access
-│   ├── contexts/
-│   │   └── ModuleContext.jsx  # Module routing configuration
-│   ├── components/
-│   │   ├── common/
-│   │   │   ├── LoadingSpinner.jsx  # Loading indicator
-│   │   │   ├── PageNotFound.jsx    # 404 page
-│   │   │   └── Sidebar.jsx         # Navigation sidebar
-│   │   └── Dashboard/
-│   │       ├── LayoutContainer.jsx # Container of dashboard
-│   │       ├── ModuleGrid.jsx      # Module navigation grid
-│   │       └── ModuleRouter.jsx    # Module routing logic
-│   ├── login/                 # Authentication related components
-│   │   ├── Login.jsx         # Login page
-│   │   ├── Login.css         # Login styles (Not used now)
-│   │   ├── Signup.jsx        # Signup page
-│   │   ├── AuthGuard.jsx     # Session management
-│   │   └── testData.js       # Temporary user data (dev only)
-│   ├── modules/
-│   │   ├── ExpenseAdd.jsx      # Expense creation form
-│   │   ├── Dashboard.jsx       # Dashboard
-│   │   ├── ExpenseReports.jsx  # Reports display
-|   |   └── Settings.jsx        # Setting page
-│   └── assets/
-│       └── styles/
-│           └── global.css     # Global styles
-├── package.json
-└── README.md
-```
+*   **User Authentication:** Login, Signup, Password Reset flows.
+*   **Modular Interface:** Features are organized into distinct modules (Expenses, Income, Accounts, Planning, Recurring, Reports, Settings, Import).
+*   **Dynamic Dashboard:**
+    *   Customizable grid layout using `react-grid-layout`.
+    *   Variety of widgets for data visualization (Charts, Summaries, Lists) using `Recharts` and custom components.
+    *   Time period selection and data filtering capabilities.
+*   **Data Management:**
+    *   CRUD interfaces for Expenses, Income, Accounts, Budgets, Goals, Recurring Items.
+    *   Bulk deletion options in lists.
+*   **Data Import/Export:**
+    *   CSV import for Expenses and Income.
+    *   Full data backup/restore via JSON (handled in Settings).
+    *   Comprehensive report generation (Excel, PDF, individual CSVs).
+*   **Settings:** User profile management, theme switching (Light/Dark/System), language selection (English/Chinese), data backup/restore, database configuration (triggers backend change).
+*   **Theming:** Light and Dark themes using Material UI, persisting user preference in `localStorage`.
+*   **Internationalization:** UI text translated into English and Chinese using `i18next`, persisting user preference.
 
-### Key Directories and Files:
-1. **Root Level**
-   - `.env`: Environment variables
-   - `package.json`: Project dependencies and scripts
-   - `README.md`: Project documentation
+## Project Structure (`src/`)
 
-2. **src/**
-   - **App.jsx**: Main application component
-   - **index.js**: Application entry point
-   - **services/**: API and service-related files
-     - `ApiProvider.jsx`: API context provider
-     - `ApiContext.jsx`: API context creation
-     - `useApi.js`: Custom hook for API access
-   - **contexts/**: Application-wide contexts
-     - `ModuleContext.jsx`: Module configuration and state
+*   `App.jsx`: Root application component, sets up providers and routing.
+*   `assets/`: Stylesheets (`*.css`) and theme definitions (`theme.js`).
+*   `components/`: Reusable UI components.
+    *   `common/`: General components like `Sidebar`, `LoadingSpinner`.
+    *   `Dashboard/`: Layout components (`LayoutContainer`, `ModuleRouter`).
+*   `constants.js`: Application-wide constants (e.g., expense categories, icons).
+*   `contexts/`: React context providers for global state (Theme, Language, API, Modules).
+*   `locales/`: Translation JSON files (`en.json`, `zh.json`) and i18n configuration (`i18n.jsx`).
+*   `login/`: Components related to authentication (`Login.jsx`, `Signup.jsx`, `AuthGuard.jsx`).
+*   `modules/`: Feature-specific components corresponding to main application sections.
+    *   `DynamicDashboard/`: Core dashboard logic and widget components.
+    *   `ExpenseManager/`, `IncomeManager/`, etc.: Components for managing specific data types.
+*   `modulesConfig.js`: Defines application modules, routes, and sidebar menu items.
+*   `services/`: API interaction logic (`ApiProvider`, `apiService.js`, `useApi.js`).
+*   `utils/`: Utility components and hooks (`T.jsx` for translation, `useLocalizedDateFormat.js`).
+*   `index.js`: Entry point for the React application.
 
-3. **components/**
-   - **common/**: Shared UI components
-     - `LoadingSpinner.jsx`: Loading indicator
-     - `ErrorBoundary.jsx`: Error handling component
-   - **Dashboard/**: Main dashboard components
-     - `Dashboard.jsx`: Main dashboard layout
-     - `ModuleGrid.jsx`: Module navigation grid
-     - `ModuleRouter.jsx`: Module routing logic
-     - `DefaultDashboardView.jsx`: Default dashboard view
+## Setup
 
-4. **modules/**
-   - Each module has its own directory with:
-     - Main component file
-     - Sub-components
-     - Test files
-     - Storybook stories
-     - Module-specific styles
+1.  **Navigate:** Ensure you are in the `seta-ui/` directory.
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
 
-5. **assets**
-   - **images**: Static images and icons
-   - **styles**: Global styles
-     - `global.css`: Global CSS rules
-     - `theme.css`: Theme variables
-     - `variables.css`: CSS custom properties
+## Development
 
-6. **utils**
-   - Shared utility functions
-     - `validators.js`: Validation functions
-     - `formatters.js`: Data formatting utilities
-     - `apiHelpers.js`: API helper functions
+1.  **Run Backend:** Make sure the `seta-api` backend development server is running (usually on `http://localhost:8000`).
+2.  **Run Frontend:** Start the React development server:
+    ```bash
+    npm start
+    ```
+    This will typically open the application in your default web browser (usually at `http://localhost:3000`). The frontend will make API calls to the backend server specified in its service configuration (defaults to `http://localhost:8000`). Hot-reloading is enabled.
 
-### Development Workflow:
+## Building the Application
 
-1. **Adding a New Module**:
-   - Create new directory in `/modules`
-   - Add module configuration in `ModuleContext.jsx`
-   - Develop module components and tests
-   - Add Storybook stories for UI documentation
+1.  **React Build:** To create an optimized production build of the React code:
+    ```bash
+    npm run build
+    ```
+    The output will be in the `build/` directory. This step is usually automatically performed by the Electron build process.
 
-2. **Shared Components**:
-   - Place in `/components/common`
-   - Add tests and stories
-   - Import where needed
+2.  **Package with Electron:** To build the native desktop application (including the React build and potentially the pre-built backend):
+    *   Refer to the main project [Build and Release Guide](../doc/build_and_release.md) for detailed cross-platform instructions.
+    *   Ensure the backend (`seta-api`) has been built natively for the target OS first (`cd ../seta-api && pyinstaller seta_api_server.spec`).
+    *   Run the appropriate command from the `seta-ui/` directory:
+        ```bash
+        # Example for macOS:
+        npm run electron:build -- --mac
 
-3. **API Integration**:
-   - Use `useApi` hook in modules
-   - Add API-related utilities in `/utils/apiHelpers.js`
+        # Example for Windows:
+        npm run electron:build -- --win
 
-4. **Styling**:
-   - Global styles in `/assets/styles`
-   - Module-specific styles using CSS Modules
-   - Theme variables for consistent styling
+        # Example for Linux:
+        npm run electron:build -- --linux
+        ```
+    *   The packaged application will be output to the `seta-ui/release/` directory.
+    *   **Configuration:** The `package.json` file contains settings for `electron-builder`, including application metadata and instructions on how to package extra resources like the native backend executable. Verify the `extraResources` configuration correctly points to `../seta-api/dist/seta_api_server/`.
+
+## Electron Integration (`public/electron.js`)
+
+*   The `public/electron.js` file contains the main process logic for the Electron application.
+*   It handles creating the browser window, loading the React frontend (`index.html`), and managing inter-process communication (IPC).
+*   **Crucially:** This script is responsible for spawning the native `seta-api` backend process when the Electron app starts. It **must** set the `SETA_USER_DATA_PATH` environment variable when launching the backend, pointing it to the Electron app's user data directory (e.g., using `app.getPath('userData')`) so the backend can store its configuration and local database correctly.
+
+## State Management & Context
+
+*   Global state like the current theme and language is managed using React Context (`ThemeContext`, `LanguageContext`).
+*   User preferences for theme and language are persisted in `localStorage`.
+*   API interaction is facilitated through `ApiProvider` and the `axios` instance.
+*   Module definitions and routing information are centralized in `modulesConfig.js` and accessed via `ModuleContext`.
+
+## Styling
+
+*   **Material UI (MUI):** Provides the core component library and styling system.
+*   **Theming:** Uses MUI's theming capabilities (`createTheme`) defined in `assets/styles/theme.js` for light and dark modes.
+*   **CSS:** Global styles are defined in `assets/styles/global.css`. Component-specific or legacy styles might exist in other `.css` files.
+
+## Internationalization (i18n)
+
+*   Uses `i18next` and `react-i18next`.
+*   Translations are stored in `locales/en.json` and `locales/zh.json`.
+*   The `T.jsx` component is a simple wrapper around the `useTranslation` hook for easy text translation in JSX.
+*   Language preference is stored in `localStorage` and detected on startup.

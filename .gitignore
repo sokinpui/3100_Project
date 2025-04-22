@@ -72,3 +72,5 @@ yarn-error.log*
 
 /certificate.txt
 /*.p12
+
+/.obsidian/
