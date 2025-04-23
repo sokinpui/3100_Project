@@ -32,6 +32,8 @@ import BackupIcon from '@mui/icons-material/Backup';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 
+import T from "../utils/T"; // Assuming T is a translation component
+
 import { useTranslation } from 'react-i18next';
 
 export default function Settings() {
@@ -667,14 +669,19 @@ export default function Settings() {
       </Snackbar>
 
       {/* Password Dialog */}
-      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
-        <DialogTitle>{t('settings.passwordDialog.title')}</DialogTitle>
+       <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>
+          {/* Use T component for title */}
+          <T>settings.passwordDialog.title</T>
+        </DialogTitle>
         <DialogContent>
           {!resetEmailSent ? (
             <>
               <DialogContentText sx={{ mb: 2 }}>
-                {t('settings.passwordDialog.text', { email: settings.profile.email || 'loading...' }) ||
-                  `Click the button below to send a password reset link to your registered email address (${settings.profile.email || 'loading...'}).`}
+                {/* Use T component for description, passing the email */}
+                <T email={settings.profile.email || 'loading...'}>
+                  settings.passwordDialog.requestDescription
+                </T>
               </DialogContentText>
               {resetRequestError && (
                 <Alert severity="error" sx={{ mb: 2 }}>{resetRequestError}</Alert>
@@ -686,21 +693,26 @@ export default function Settings() {
                   variant="contained"
                   disabled={resetRequestLoading || !settings.profile.email}
                 >
-                  {resetRequestLoading ? t('settings.sending') || "Sending..." : t('settings.sendResetEmail') || "Send Password Reset Email"}
+                  {/* Use T component for button text */}
+                  {resetRequestLoading
+                    ? <T>settings.passwordDialog.sendingButton</T>
+                    : <T>settings.passwordDialog.sendButton</T>}
                 </Button>
               </Box>
             </>
           ) : (
             <DialogContentText sx={{ textAlign: 'center' }}>
               <Alert severity="success">
-                {t('settings.resetEmailSuccess') || "Password reset instructions have been sent to your email. Please check your inbox (and spam folder)."}
+                 {/* You might want a specific key for this success message too */}
+                 Password reset instructions have been sent to your email. Please check your inbox (and spam folder).
               </Alert>
             </DialogContentText>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePasswordDialog} color="primary">
-            {resetEmailSent ? t('settings.close') || "Close" : t('settings.passwordDialog.cancel') || "Cancel"}
+            {/* Use T component for cancel button */}
+            {resetEmailSent ? <T>common.close</T> : <T>settings.passwordDialog.cancel</T>}
           </Button>
         </DialogActions>
       </Dialog>

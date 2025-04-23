@@ -21,7 +21,10 @@
             "newPassword": "New Password",
             "confirmPassword": "Confirm New Password",
             "cancel": "Cancel",
-            "change": "Change Password"
+            "change": "Change Password",
+            "requestDescription": "Click the button below to send a password reset link to your registered email address.",
+            "sendButton": "Send Password Reset Email",
+            "sendingButton": "Sending..."
         },
         "dataManagementTitle": "Data Management",
         "exportDataTitle": "Export Data",

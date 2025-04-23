@@ -21,7 +21,10 @@
             "newPassword": "新密码",
             "confirmPassword": "确认新密码",
             "cancel": "取消",
-            "change": "更改密码"
+            "change": "更改密码",
+            "requestDescription": "点击下方按钮将密码重设链接发送到您注册的电子邮件地址。",
+            "sendButton": "发送密码重设邮件",
+            "sendingButton": "发送中..."
         },
         "dataManagementTitle": "数据管理",
         "exportDataTitle": "导出数据",
