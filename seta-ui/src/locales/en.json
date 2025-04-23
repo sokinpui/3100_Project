@@ -44,7 +44,20 @@
         "importConfirmConsequence": "This will permanently delete all current data and replace it with the contents of the selected file.",
         "importConfirmProceed": "Do you wish to proceed?",
         "cancelImport": "Cancel",
-        "confirmImport": "Yes, Replace Data"
+        "confirmImport": "Yes, Replace Data",
+        "licenceManagementTitle": "Licence Management",
+        "licenceDescription": "Manage your application licence key.",
+        "currentStatus": "Current Status:",
+        "licenceStatus_active": "Active",
+        "licenceStatus_inactive": "Inactive",
+        "licenceStatus_not_set": "Not Set",
+        "licenceKeyLabel": "Enter Licence Key",
+        "activateLicenceButton": "Update Licence",
+        "licenceUpdateSuccess": "Licence updated successfully!",
+        "licenceUpdateFailed": "Failed to update licence key.",
+        "licencePlaceholderNote": "Note: Licence validation is currently a placeholder.",
+        "saveSuccess": "Settings saved successfully!",
+        "saveFailed": "Failed to save settings."
     },
     "sidebar": {
         "appName": "SETA",
@@ -640,5 +653,18 @@
         "devPasswordSetDuringSignup": "[Set during signup]",
         "devNoteBackendRunning": "Note: Make sure Python backend is running before logging in!",
         "devNoteNewUserCredentials": "Additional Note: Newly registered user credentials appear here for development."
+    },
+    "resetPassword": {
+        "title": "Reset Your Password",
+        "validationPasswordRequired": "New password is required",
+        "validationPasswordLength": "Password must be at least 8 characters",
+        "validationConfirmRequired": "Please confirm your new password",
+        "validationPasswordMatch": "Passwords do not match",
+        "successMessage": "Password reset successfully! Redirecting to login...",
+        "errorMessage": "Failed to reset password. The link might be invalid or expired.",
+        "newPasswordLabel": "New Password",
+        "confirmPasswordLabel": "Confirm New Password",
+        "resetButton": "Reset Password",
+        "goToLoginButton": "Go to Login"
     }
 }

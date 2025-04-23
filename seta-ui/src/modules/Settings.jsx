@@ -1,5 +1,5 @@
 // seta-ui/src/modules/Settings.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
 import {
@@ -21,11 +21,7 @@ import {
   Divider,
   CircularProgress,
   LinearProgress,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  AlertTitle,
-  Collapse
+  InputAdornment
 } from "@mui/material";
 
 import PersonIcon from "@mui/icons-material/Person";
@@ -34,16 +30,13 @@ import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import BackupIcon from '@mui/icons-material/Backup';
 import DangerousIcon from '@mui/icons-material/Dangerous';
-import StorageIcon from '@mui/icons-material/Storage';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
 
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const API_URL = "http://localhost:8000";
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const importFileInputRef = useRef(null);
 
   const defaultSettings = {
@@ -67,82 +60,107 @@ export default function Settings() {
   const [importResult, setImportResult] = useState(null);
   const [confirmImportDialogOpen, setConfirmImportDialogOpen] = useState(false);
 
-  // --- New State for Database Settings ---
-  const [dbType, setDbType] = useState('local');
-  const [customDbUrl, setCustomDbUrl] = useState('');
-  const [dbSettingsLoading, setDbSettingsLoading] = useState(false);
-  const [dbConfigError, setDbConfigError] = useState('');
-  const [restartRequired, setRestartRequired] = useState(false);
-  // ---
+  // Licence Management State
+  const [licenceKeyInput, setLicenceKeyInput] = useState('');
+  const [currentLicenceStatus, setCurrentLicenceStatus] = useState('loading...');
+  const [currentLicenceKeyPrefix, setCurrentLicenceKeyPrefix] = useState('');
+  const [isActivating, setIsActivating] = useState(false);
+  const [activationError, setActivationError] = useState('');
 
-  const userId = localStorage.getItem("userId") || 1;
+  const userId = localStorage.getItem("userId");
 
-  const loadUserProfile = async (userId) => {
+  // Fetch User Profile and Licence Status
+  const loadUserData = useCallback(async () => {
+    if (!userId) {
+      setError(t('settings.userIdNotFound') || "User ID not found. Please log in again.");
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
+    setActivationError('');
+
     try {
-      const response = await axios.get(`${API_URL}/users/${userId}`);
+      const [profileResponse, licenceResponse] = await Promise.all([
+        axios.get(`${API_URL}/users/${userId}`),
+        axios.get(`${API_URL}/users/${userId}/licence`)
+      ]);
+
       setSettings((prevSettings) => ({
         ...prevSettings,
         profile: {
-          firstName: response.data.first_name,
-          lastName: response.data.last_name,
-          email: response.data.email,
-          username: response.data.username,
-          contactNumber: response.data.contact_number || "",
+          firstName: profileResponse.data.first_name,
+          lastName: profileResponse.data.last_name,
+          email: profileResponse.data.email,
+          username: profileResponse.data.username,
+          contactNumber: profileResponse.data.contact_number || "",
         },
       }));
-      setIsLoading(false);
+
+      setCurrentLicenceStatus(licenceResponse.data.status);
+      setCurrentLicenceKeyPrefix(licenceResponse.data.key_prefix || '');
+
     } catch (err) {
-      console.error("Error loading user profile:", err);
-      setError("Failed to load profile data. Please try again later.");
-      setIsLoading(false);
-      setSnackbarMessage("Failed to load profile data");
+      console.error("Error loading user data:", err);
+      const message = t('settings.loadDataFailed') || "Failed to load user data. Please try again later.";
+      setError(message);
+      setSnackbarMessage(message);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-    }
-  };
-
-  useEffect(() => {
-    if (userId) {
-      loadUserProfile(userId);
-    } else {
-      setError("User ID not found. Please log in again.");
+    } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, t]);
 
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
+
+  // Profile Setting Change Handler
   const handleSettingChange = (section, field, value) => {
     setSettings((prev) => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
+      [section]: { ...prev[section], [field]: value },
     }));
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
+  // Profile Validation
   const validateProfileForm = () => {
     const errors = {};
-    if (/[`~!@#$%^&*()_.|+\-=?;:'",<>{}[]\\\/]/g.test(settings.profile.username)) errors.username = "Username should not contain special characters";
+    if (/[`~!@#$%^&*()_.|+\-=?;:'",<>{}[]\\\/]/.test(settings.profile.username)) {
+      errors.username = t('settings.usernameSpecialChars') || "Username should not contain special characters";
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(settings.profile.email)) errors.email = "Please enter a valid email address";
-    if (settings.profile.contactNumber && settings.profile.contactNumber.search(/^[0-9]{8}$/) === -1) errors.contactNumber = "Contact number must be 8 digits";
-    if (!settings.profile.firstName.trim()) errors.firstName = "First name is required";
-    if (!settings.profile.lastName.trim()) errors.lastName = "Last name is required";
-    if (!settings.profile.username.trim()) errors.username = "Username is required";
-    if (!settings.profile.email.trim()) errors.email = "Email is required";
+    if (!emailRegex.test(settings.profile.email)) {
+      errors.email = t('settings.invalidEmail') || "Please enter a valid email address";
+    }
+    if (settings.profile.contactNumber && settings.profile.contactNumber.search(/^[0-9]{8}$/) === -1) {
+      errors.contactNumber = t('settings.invalidContactNumber') || "Contact number must be 8 digits";
+    }
+    if (!settings.profile.firstName.trim()) {
+      errors.firstName = t('settings.firstNameRequired') || "First name is required";
+    }
+    if (!settings.profile.lastName.trim()) {
+      errors.lastName = t('settings.lastNameRequired') || "Last name is required";
+    }
+    if (!settings.profile.username.trim()) {
+      errors.username = t('settings.usernameRequired') || "Username is required";
+    }
+    if (!settings.profile.email.trim()) {
+      errors.email = t('settings.emailRequired') || "Email is required";
+    }
     return errors;
   };
 
+  // Save Profile Settings
   const saveSettings = async () => {
     const errors = validateProfileForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setSnackbarMessage("Please correct the errors in the form");
+      setSnackbarMessage(t('settings.formErrors') || "Please correct the errors in the form");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
       return;
@@ -156,20 +174,22 @@ export default function Settings() {
         last_name: settings.profile.lastName,
         contact_number: settings.profile.contactNumber,
       });
-
-      setSnackbarMessage("Settings saved successfully!");
+      setSnackbarMessage(t('settings.saveSuccess') || "Settings saved successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Error saving settings:", error);
-      setSnackbarMessage("Failed to save settings.");
+      const apiError = error.response?.data?.detail || t('settings.saveFailed') || "Failed to save settings.";
+      setSnackbarMessage(apiError);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
   };
 
+  // Snackbar Handler
   const handleCloseSnackbar = () => setSnackbarOpen(false);
 
+  // Password Dialog Handlers
   const openPasswordDialog = () => {
     setResetEmailSent(false);
     setResetRequestError('');
@@ -185,7 +205,7 @@ export default function Settings() {
 
     const userEmail = settings.profile.email;
     if (!userEmail) {
-      setResetRequestError('User email not found. Cannot send reset link.');
+      setResetRequestError(t('settings.noEmailFound') || 'User email not found. Cannot send reset link.');
       setResetRequestLoading(false);
       return;
     }
@@ -194,12 +214,12 @@ export default function Settings() {
       const response = await axios.post(`${API_URL}/request-password-reset`, {
         email: userEmail
       });
-      setSnackbarMessage(response.data.message || "Password reset email request sent.");
+      setSnackbarMessage(response.data.message || t('settings.resetEmailSent') || "Password reset email request sent.");
       setSnackbarSeverity("success");
       setResetEmailSent(true);
     } catch (error) {
       console.error("Error requesting password reset:", error);
-      const message = error.response?.data?.detail || "Failed to send password reset email. Please try again.";
+      const message = error.response?.data?.detail || t('settings.resetEmailFailed') || "Failed to send password reset email. Please try again.";
       setSnackbarMessage(message);
       setSnackbarSeverity("error");
       setResetRequestError(message);
@@ -209,9 +229,10 @@ export default function Settings() {
     }
   };
 
+  // Data Export/Import Handlers
   const handleExport = async () => {
     setIsExporting(true);
-    setSnackbarMessage(t('settings.exportStarting'));
+    setSnackbarMessage(t('settings.exportStarting') || "Export starting...");
     setSnackbarSeverity('info');
     setSnackbarOpen(true);
 
@@ -240,11 +261,11 @@ export default function Settings() {
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      setSnackbarMessage(t('settings.exportSuccess'));
+      setSnackbarMessage(t('settings.exportSuccess') || "Data exported successfully!");
       setSnackbarSeverity('success');
     } catch (error) {
       console.error("Export error:", error);
-      setSnackbarMessage(t('settings.exportFailed'));
+      setSnackbarMessage(t('settings.exportFailed') || "Failed to export data.");
       setSnackbarSeverity('error');
     } finally {
       setIsExporting(false);
@@ -260,7 +281,7 @@ export default function Settings() {
       setImportResult(null);
     } else {
       setSelectedImportFile(null);
-      setImportError(t('settings.importInvalidFile'));
+      setImportError(t('settings.importInvalidFile') || "Please select a valid JSON file.");
       setImportResult(null);
     }
   };
@@ -299,11 +320,11 @@ export default function Settings() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setImportResult(response.data);
-      setSnackbarMessage(t('settings.importSuccess'));
+      setSnackbarMessage(t('settings.importSuccess') || "Data imported successfully!");
       setSnackbarSeverity('success');
     } catch (err) {
       console.error("Import API error:", err.response?.data || err.message);
-      const apiError = err.response?.data?.detail || t('settings.importFailed');
+      const apiError = err.response?.data?.detail || t('settings.importFailed') || "Failed to import data.";
       setImportError(apiError);
       setSnackbarMessage(apiError);
       setSnackbarSeverity('error');
@@ -315,66 +336,43 @@ export default function Settings() {
     }
   };
 
-  // --- Database Settings Handlers ---
-  const handleDbSettingChange = (event) => {
-    setDbType(event.target.value);
-    setRestartRequired(false);
-    setDbConfigError('');
-    if (event.target.value !== 'custom') {
-      setCustomDbUrl('');
-    }
+  // Licence Handlers
+  const handleLicenceKeyInputChange = (event) => {
+    setLicenceKeyInput(event.target.value);
+    if (activationError) setActivationError('');
   };
 
-  const handleCustomUrlChange = (event) => {
-    setCustomDbUrl(event.target.value);
-    setRestartRequired(false);
-    setDbConfigError('');
-  };
-
-  const saveDatabaseSettings = async () => {
-    setDbSettingsLoading(true);
-    setDbConfigError('');
-    setRestartRequired(false);
-
-    if (dbType === 'custom' && !customDbUrl.trim()) {
-      setDbConfigError("Custom Database URL cannot be empty when 'Custom' is selected.");
-      setDbSettingsLoading(false);
+  const handleActivateLicence = async () => {
+    if (!licenceKeyInput.trim()) {
+      setActivationError(t('settings.licenceKeyRequired') || "Please enter a licence key.");
       return;
     }
-
-    if (dbType === 'custom') {
-      try {
-        new URL(customDbUrl);
-      } catch (_) {
-        setDbConfigError("Invalid Custom Database URL format.");
-        setDbSettingsLoading(false);
-        return;
-      }
-    }
+    setIsActivating(true);
+    setActivationError('');
 
     try {
-      const payload = {
-        db_type: dbType,
-        db_url: dbType === 'custom' ? customDbUrl.trim() : null,
-      };
-      const response = await axios.put(`${API_URL}/settings/database`, payload);
-
-      setSnackbarMessage(response.data.message || "Database settings saved. Restart required.");
-      setSnackbarSeverity("info");
+      const response = await axios.put(`${API_URL}/users/${userId}/licence`, {
+        licence_key: licenceKeyInput.trim(),
+      });
+      if (response.data.licence_status) {
+        setCurrentLicenceStatus(response.data.licence_status.status);
+        setCurrentLicenceKeyPrefix(response.data.licence_status.key_prefix || '');
+      }
+      setSnackbarMessage(response.data.message || t('settings.licenceUpdateSuccess') || "Licence updated successfully!");
+      setSnackbarSeverity('success');
       setSnackbarOpen(true);
-      setRestartRequired(true);
+      setLicenceKeyInput('');
     } catch (error) {
-      console.error("Error saving database settings:", error);
-      const message = error.response?.data?.detail || "Failed to save database settings.";
+      console.error("Error activating licence:", error);
+      const message = error.response?.data?.detail || t('settings.licenceUpdateFailed') || "Failed to update licence key.";
+      setActivationError(message);
       setSnackbarMessage(message);
-      setSnackbarSeverity("error");
+      setSnackbarSeverity('error');
       setSnackbarOpen(true);
-      setDbConfigError(message);
     } finally {
-      setDbSettingsLoading(false);
+      setIsActivating(false);
     }
   };
-  // ---
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -397,23 +395,70 @@ export default function Settings() {
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
           ) : (
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label={t('settings.firstName')} value={settings.profile.firstName} onChange={(e) => handleSettingChange("profile", "firstName", e.target.value)} disabled={isLoading} error={!!formErrors.firstName} helperText={formErrors.firstName} />
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t('settings.firstName')}
+                  value={settings.profile.firstName}
+                  onChange={(e) => handleSettingChange("profile", "firstName", e.target.value)}
+                  disabled={isLoading}
+                  error={!!formErrors.firstName}
+                  helperText={formErrors.firstName}
+                />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label={t('settings.lastName')} value={settings.profile.lastName} onChange={(e) => handleSettingChange("profile", "lastName", e.target.value)} error={!!formErrors.lastName} helperText={formErrors.lastName} />
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t('settings.lastName')}
+                  value={settings.profile.lastName}
+                  onChange={(e) => handleSettingChange("profile", "lastName", e.target.value)}
+                  disabled={isLoading}
+                  error={!!formErrors.lastName}
+                  helperText={formErrors.lastName}
+                />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label={t('settings.username')} value={settings.profile.username} onChange={(e) => handleSettingChange("profile", "username", e.target.value)} error={!!formErrors.username} helperText={formErrors.username} />
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t('settings.username')}
+                  value={settings.profile.username}
+                  onChange={(e) => handleSettingChange("profile", "username", e.target.value)}
+                  disabled={isLoading}
+                  error={!!formErrors.username}
+                  helperText={formErrors.username}
+                />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label={t('settings.contactNumber')} value={settings.profile.contactNumber} onChange={(e) => handleSettingChange("profile", "contactNumber", e.target.value)} error={!!formErrors.contactNumber} helperText={formErrors.contactNumber} />
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label={t('settings.contactNumber')}
+                  value={settings.profile.contactNumber}
+                  onChange={(e) => handleSettingChange("profile", "contactNumber", e.target.value)}
+                  disabled={isLoading}
+                  error={!!formErrors.contactNumber}
+                  helperText={formErrors.contactNumber}
+                />
               </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth label={t('settings.email')} type="email" value={settings.profile.email} onChange={(e) => handleSettingChange("profile", "email", e.target.value)} error={!!formErrors.email} helperText={formErrors.email} />
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label={t('settings.email')}
+                  type="email"
+                  value={settings.profile.email}
+                  onChange={(e) => handleSettingChange("profile", "email", e.target.value)}
+                  disabled={isLoading}
+                  error={!!formErrors.email}
+                  helperText={formErrors.email}
+                />
               </Grid>
-              <Grid item xs={12}>
-                <Button variant="outlined" color="primary" sx={{ mt: 1, borderRadius: 2, textTransform: "none" }} onClick={openPasswordDialog}>
+              <Grid size={{ xs: 12 }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  sx={{ mt: 1, borderRadius: 2, textTransform: "none" }}
+                  onClick={openPasswordDialog}
+                  disabled={isLoading}
+                >
                   {t('settings.changePassword')}
                 </Button>
               </Grid>
@@ -422,13 +467,13 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Database Settings Card */}
+      {/* Licence Management Card */}
       <Card elevation={3} sx={{ mb: 4, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
         <CardHeader
           title={
             <Box sx={{ display: "flex", alignItems: "center" }}>
-              <StorageIcon sx={{ mr: 1 }} />
-              Database Configuration
+              <VpnKeyIcon sx={{ mr: 1 }} />
+              {t('settings.licenceManagementTitle') || "Licence Management"}
             </Box>
           }
           sx={{ backgroundColor: "grey.200", py: 1.5 }}
@@ -436,57 +481,51 @@ export default function Settings() {
         />
         <CardContent sx={{ p: 3 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Select the database connection to use. Changes require an application restart.
+            {t('settings.licenceDescription') || "Manage your application licence key."}
           </Typography>
 
-          <Collapse in={restartRequired}>
-            <Alert severity="warning" icon={<RestartAltIcon />} sx={{ mb: 2 }}>
-              <AlertTitle>Restart Required</AlertTitle>
-              Database settings have been changed. Please close and reopen the application for the changes to take effect.
-            </Alert>
-          </Collapse>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'Madrid' }}>
+            <Typography variant="body1">
+              {t('settings.currentStatus') || "Current Status:"}
+            </Typography>
+            <Typography variant="body1" fontWeight="bold">
+              {isLoading ? <CircularProgress size={20} /> : t(`settings.licenceStatus_${currentLicenceStatus}`) || currentLicenceStatus}
+            </Typography>
+            {currentLicenceKeyPrefix && (
+              <Typography variant="caption" color="text.secondary">({currentLicenceKeyPrefix})</Typography>
+            )}
+          </Box>
 
-          <RadioGroup
-            aria-label="database-type"
-            name="database-type-radio-group"
-            value={dbType}
-            onChange={handleDbSettingChange}
-            row
-            sx={{ mb: 1 }}
-          >
-            <FormControlLabel value="local" control={<Radio />} label="Local Database (Default)" disabled={dbSettingsLoading} />
-            <FormControlLabel value="cloud" control={<Radio />} label="Cloud Database (Online)" disabled={dbSettingsLoading} />
-            <FormControlLabel value="custom" control={<Radio />} label="Custom URL" disabled={dbSettingsLoading}/>
-          </RadioGroup>
-
-          {dbType === 'custom' && (
-            <TextField
-              fullWidth
-              label="Custom Database URL"
-              placeholder="e.g., postgresql://user:pass@host:port/dbname"
-              value={customDbUrl}
-              onChange={handleCustomUrlChange}
-              disabled={dbSettingsLoading}
-              sx={{ mt: 1, mb: 2 }}
-              helperText="Enter the full SQLAlchemy connection string."
-            />
-          )}
-
-          {dbConfigError && (
-            <Alert severity="error" sx={{ mb: 2 }}>{dbConfigError}</Alert>
-          )}
+          <TextField
+            fullWidth
+            label={t('settings.licenceKeyLabel') || "Enter Licence Key"}
+            placeholder="AAAA-BBBB-CCCC-DDDD"
+            value={licenceKeyInput}
+            onChange={handleLicenceKeyInputChange}
+            disabled={isActivating || isLoading}
+            error={!!activationError}
+            helperText={activationError}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <VpnKeyIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
 
           <Button
             variant="contained"
             color="secondary"
-            onClick={saveDatabaseSettings}
-            disabled={dbSettingsLoading}
-            startIcon={dbSettingsLoading ? <CircularProgress size={20} color="inherit"/> : <SaveIcon />}
+            onClick={handleActivateLicence}
+            disabled={isActivating || isLoading || !licenceKeyInput.trim()}
+            startIcon={isActivating ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
           >
-            Save Database Setting
+            {t('settings.activateLicenceButton') || "Update Licence"}
           </Button>
-          <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-            (Requires Application Restart)
+          <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic' }}>
+            {t('settings.licencePlaceholderNote') || "Note: Licence validation is currently a placeholder."}
           </Typography>
         </CardContent>
       </Card>
@@ -512,7 +551,7 @@ export default function Settings() {
             <Button
               variant="contained"
               color="primary"
-              startIcon={isExporting ? <CircularProgress size={20} color="inherit"/> : <DownloadIcon />}
+              startIcon={isExporting ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
               onClick={handleExport}
               disabled={isExporting || isLoading}
             >
@@ -534,13 +573,21 @@ export default function Settings() {
             </Typography>
 
             <input
-              type="file" accept=".json" ref={importFileInputRef}
-              onChange={handleImportFileChange} style={{ display: 'none' }}
+              type="file"
+              accept=".json"
+              ref={importFileInputRef}
+              onChange={handleImportFileChange}
+              style={{ display: 'none' }}
               id="import-json-input"
             />
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-              <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={handleImportButtonClick} disabled={isImporting || isLoading}>
+              <Button
+                variant="outlined"
+                startIcon={<UploadFileIcon />}
+                onClick={handleImportButtonClick}
+                disabled={isImporting || isLoading}
+              >
                 {t('settings.selectImportFile')}
               </Button>
               {selectedImportFile && (
@@ -553,7 +600,7 @@ export default function Settings() {
             <Button
               variant="contained"
               color="secondary"
-              startIcon={isImporting ? <CircularProgress size={20} color="inherit"/> : <UploadFileIcon />}
+              startIcon={isImporting ? <CircularProgress size={20} color="inherit" /> : <UploadFileIcon />}
               onClick={handleOpenImportConfirmDialog}
               disabled={!selectedImportFile || isImporting || isLoading}
             >
@@ -567,12 +614,12 @@ export default function Settings() {
                 <Typography fontWeight="bold">{importResult.message}</Typography>
                 {importResult.errors?.length > 0 && (
                   <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" fontWeight="bold">Errors encountered:</Typography>
+                    <Typography variant="caption" fontWeight="bold">{t('settings.importErrors') || "Errors encountered:"}</Typography>
                     <ul style={{ margin: '0', paddingLeft: '20px', maxHeight: '100px', overflowY: 'auto' }}>
                       {importResult.errors.slice(0, 5).map((err, index) => (
                         <li key={index}><Typography variant="caption">{err}</Typography></li>
                       ))}
-                      {importResult.errors.length > 5 && <li><Typography variant="caption">...and more.</Typography></li>}
+                      {importResult.errors.length > 5 && <li><Typography variant="caption">{t('settings.moreErrors') || "...and more."}</Typography></li>}
                     </ul>
                   </Box>
                 )}
@@ -582,14 +629,15 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      <Grid item xs={12} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+      {/* Save Settings Button */}
+      <Grid size={{ xs: 12 }} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
         <Button
           variant="contained"
           color="primary"
           size="large"
           startIcon={<SaveIcon />}
           onClick={saveSettings}
-          disabled={isLoading || dbSettingsLoading}
+          disabled={isLoading || isActivating}
           sx={{
             py: 1.5,
             px: 4,
@@ -606,17 +654,27 @@ export default function Settings() {
         </Button>
       </Grid>
 
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: "100%" }}>{snackbarMessage}</Alert>
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
       </Snackbar>
 
+      {/* Password Dialog */}
       <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
         <DialogTitle>{t('settings.passwordDialog.title')}</DialogTitle>
         <DialogContent>
           {!resetEmailSent ? (
             <>
               <DialogContentText sx={{ mb: 2 }}>
-                Click the button below to send a password reset link to your registered email address ({settings.profile.email || 'loading...'}).
+                {t('settings.passwordDialog.text', { email: settings.profile.email || 'loading...' }) ||
+                  `Click the button below to send a password reset link to your registered email address (${settings.profile.email || 'loading...'}).`}
               </DialogContentText>
               {resetRequestError && (
                 <Alert severity="error" sx={{ mb: 2 }}>{resetRequestError}</Alert>
@@ -628,25 +686,26 @@ export default function Settings() {
                   variant="contained"
                   disabled={resetRequestLoading || !settings.profile.email}
                 >
-                  {resetRequestLoading ? "Sending..." : "Send Password Reset Email"}
+                  {resetRequestLoading ? t('settings.sending') || "Sending..." : t('settings.sendResetEmail') || "Send Password Reset Email"}
                 </Button>
               </Box>
             </>
           ) : (
             <DialogContentText sx={{ textAlign: 'center' }}>
               <Alert severity="success">
-                Password reset instructions have been sent to your email. Please check your inbox (and spam folder).
+                {t('settings.resetEmailSuccess') || "Password reset instructions have been sent to your email. Please check your inbox (and spam folder)."}
               </Alert>
             </DialogContentText>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePasswordDialog} color="primary">
-            {resetEmailSent ? "Close" : t('settings.passwordDialog.cancel')}
+            {resetEmailSent ? t('settings.close') || "Close" : t('settings.passwordDialog.cancel') || "Cancel"}
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Import Confirm Dialog */}
       <Dialog
         open={confirmImportDialogOpen}
         onClose={handleCloseImportConfirmDialog}
@@ -654,22 +713,32 @@ export default function Settings() {
         aria-describedby="confirm-import-dialog-description"
       >
         <DialogTitle id="confirm-import-dialog-title" sx={{ color: 'error.main', display: 'flex', alignItems: 'center' }}>
-          <DangerousIcon sx={{ mr: 1 }}/> {t('settings.importConfirmTitle')}
+          <DangerousIcon sx={{ mr: 1 }} /> {t('settings.importConfirmTitle') || "Confirm Data Import"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="confirm-import-dialog-description">
-            <Typography fontWeight="bold" paragraph>{t('settings.importConfirmWarning')}</Typography>
-            <Typography paragraph>{t('settings.importConfirmConsequence')}</Typography>
-            <Typography>{t('settings.importConfirmProceed')}</Typography>
+            <Typography fontWeight="bold" paragraph>
+              {t('settings.importConfirmWarning') || "Warning: Importing data will overwrite existing data."}
+            </Typography>
+            <Typography paragraph>
+              {t('settings.importConfirmConsequence') || "This action cannot be undone. All current data will be replaced with the data from the imported file."}
+            </Typography>
+            <Typography>
+              {t('settings.importConfirmProceed') || "Do you want to proceed?"}
+            </Typography>
           </DialogContentText>
-          {selectedImportFile && <Typography variant="caption" sx={{ mt: 2, display: 'block' }}>File: {selectedImportFile.name}</Typography>}
+          {selectedImportFile && (
+            <Typography variant="caption" sx={{ mt: 2, display: 'block' }}>
+              {t('settings.importFile', { file: selectedImportFile.name }) || `File: ${selectedImportFile.name}`}
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseImportConfirmDialog} variant="outlined">
-            {t('settings.cancelImport')}
+            {t('settings.cancelImport') || "Cancel"}
           </Button>
           <Button onClick={handleConfirmImport} color="error" variant="contained" autoFocus>
-            {t('settings.confirmImport')}
+            {t('settings.confirmImport') || "Import"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -44,7 +44,20 @@
         "importConfirmConsequence": "这将永久删除所有当前数据，并用所选文件的内容替换。",
         "importConfirmProceed": "您希望继续吗？",
         "cancelImport": "取消",
-        "confirmImport": "是的，替换数据"
+        "confirmImport": "是的，替换数据",
+        "licenceManagementTitle": "许可证管理",
+        "licenceDescription": "管理您的应用程序许可证密钥。",
+        "currentStatus": "当前状态：",
+        "licenceStatus_active": "有效",
+        "licenceStatus_inactive": "无效",
+        "licenceStatus_not_set": "未设置",
+        "licenceKeyLabel": "输入许可证密钥",
+        "activateLicenceButton": "更新许可证",
+        "licenceUpdateSuccess": "许可证更新成功！",
+        "licenceUpdateFailed": "更新许可证密钥失败。",
+        "licencePlaceholderNote": "注意：许可证验证目前为占位符功能。",
+        "saveSuccess": "设置保存成功！",
+        "saveFailed": "设置保存失败。"
     },
     "sidebar": {
         "appName": "SETA",
@@ -635,5 +648,18 @@
         "devPasswordSetDuringSignup": "[注册时设置]",
         "devNoteBackendRunning": "注意：登录前请确保 Python 后端正在运行！",
         "devNoteNewUserCredentials": "附加说明：新注册用户的凭据会在此处显示（供开发使用）。"
+    },
+    "resetPassword": {
+        "title": "重设您的密码",
+        "validationPasswordRequired": "必须填写新密码",
+        "validationPasswordLength": "密码必须至少包含 8 个字符",
+        "validationConfirmRequired": "请确认您的新密码",
+        "validationPasswordMatch": "两次输入的密码不匹配",
+        "successMessage": "密码重设成功！正在跳转到登录页面...",
+        "errorMessage": "重设密码失败。链接可能无效或已过期。",
+        "newPasswordLabel": "新密码",
+        "confirmPasswordLabel": "确认新密码",
+        "resetButton": "重设密码",
+        "goToLoginButton": "前往登录"
     }
 }
