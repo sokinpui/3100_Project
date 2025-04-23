@@ -26,7 +26,8 @@
             "errorCurrentMismatch": "当前密码不正确。",
             "errorUpdateFailed": "更新密码失败，请重试。",
             "errorNewPasswordMismatch": "新密码与确认密码不匹配。",
-            "errorPasswordStrength": "新密码不符合复杂度要求（至少8个字符，包含大小写字母、数字和特殊符号）。"
+            "errorPasswordStrength": "新密码不符合复杂度要求（至少8个字符，包含大小写字母、数字和特殊符号）。",
+            "errorFieldsRequired": "所有密码字段均为必填项。"
         },
         "dataManagementTitle": "数据管理",
         "exportDataTitle": "导出数据",
@@ -62,7 +63,10 @@
         "licenceUpdateFailed": "更新许可证密钥失败。",
         "licencePlaceholderNote": "注意：许可证验证目前为占位符功能。",
         "saveSuccess": "设置保存成功！",
-        "saveFailed": "设置保存失败。"
+        "saveFailed": "设置保存失败。",
+        "licenceKeyRequiredError": "请输入许可证密钥。",
+        "licenceFormatHelper": "格式：XXXX-XXXX-XXXX-XXXX（字母/数字）",
+        "licenceNoteV2": "注意：输入密钥会更新状态，但在此版本中不会解锁任何功能。"
     },
     "sidebar": {
         "appName": "SETA",
@@ -86,7 +90,24 @@
         "recurring": "周期性项目",
         "planning": "财务规划",
         "recurring": "周期性项目",
-        "accounts": "账户管理"
+        "accounts": "账户管理",
+        "customReports": "自定义报告",
+        "requiresLicenceTooltip": "需要有效许可证",
+        "importData": "导入数据"
+    },
+    "customReport": {
+        "title": "自定义报告",
+        "description": "生成自定义报告以分析您的财务数据。选择所需的数据类型和格式。",
+        "selectDataTypes": "选择数据类型",
+        "configureOptions": "配置选项",
+        "outputFormat": "输出格式",
+        "columnSelectionNote": "选择要在报告中包含的列。",
+        "generateButton": "生成报告",
+        "errorNoDataTypes": "请选择至少一个数据类型。",
+        "errorGenerationFailed": "报告生成失败。",
+        "errorLicenceRequired": "需要有效许可证才能生成报告。",
+        "errorNoDataFound": "未找到数据。",
+        "configureOptions": "配置选项"
     },
     "budgetManager": {
         "fetchError": "加载预算失败。",

@@ -395,42 +395,45 @@ export default function Settings() {
   };
 
   // Licence Handlers
-  const handleLicenceKeyInputChange = (event) => {
-    setLicenceKeyInput(event.target.value);
-    if (activationError) setActivationError('');
-  };
+    // --- Licence Handlers (Keep as is, backend handles validation) ---
+    const handleLicenceKeyInputChange = (event) => {
+        setLicenceKeyInput(event.target.value);
+        if (activationError) setActivationError('');
+    };
 
-  const handleActivateLicence = async () => {
-    if (!licenceKeyInput.trim()) {
-      setActivationError(t('settings.licenceKeyRequired') || "Please enter a licence key.");
-      return;
-    }
-    setIsActivating(true);
-    setActivationError('');
-
-    try {
-      const response = await axios.put(`${API_URL}/users/${userId}/licence`, {
-        licence_key: licenceKeyInput.trim(),
-      });
-      if (response.data.licence_status) {
-        setCurrentLicenceStatus(response.data.licence_status.status);
-        setCurrentLicenceKeyPrefix(response.data.licence_status.key_prefix || '');
-      }
-      setSnackbarMessage(response.data.message || t('settings.licenceUpdateSuccess') || "Licence updated successfully!");
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-      setLicenceKeyInput('');
-    } catch (error) {
-      console.error("Error activating licence:", error);
-      const message = error.response?.data?.detail || t('settings.licenceUpdateFailed') || "Failed to update licence key.";
-      setActivationError(message);
-      setSnackbarMessage(message);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    } finally {
-      setIsActivating(false);
-    }
-  };
+    const handleActivateLicence = async () => {
+        if (!licenceKeyInput.trim()) {
+            // Use a more specific key if desired
+            setActivationError(t('settings.licenceKeyRequiredError') || 'Please enter a licence key.');
+            return;
+        }
+        setIsActivating(true);
+        setActivationError('');
+        try {
+            const response = await axios.put(`${API_URL}/users/${userId}/licence`, {
+                licence_key: licenceKeyInput.trim(), // Send raw key
+            });
+            // Update status display from response
+            if (response.data.licence_status) {
+                setCurrentLicenceStatus(response.data.licence_status.status);
+                setCurrentLicenceKeyPrefix(response.data.licence_status.key_prefix || '');
+            }
+            setSnackbarMessage(response.data.message || t('settings.licenceUpdateSuccess'));
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            setLicenceKeyInput(''); // Clear input field on success
+        } catch (error) {
+            console.error("Error activating licence:", error);
+            const message = error.response?.data?.detail || t('settings.licenceUpdateFailed');
+            setActivationError(message); // Display backend error (e.g., format error)
+            setSnackbarMessage(message);
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+        } finally {
+            setIsActivating(false);
+        }
+    };
+    // ---
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -531,7 +534,7 @@ export default function Settings() {
           title={
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <VpnKeyIcon sx={{ mr: 1 }} />
-              {t('settings.licenceManagementTitle') || "Licence Management"}
+              <T>settings.licenceManagementTitle</T>
             </Box>
           }
           sx={{ backgroundColor: "grey.200", py: 1.5 }}
@@ -539,36 +542,32 @@ export default function Settings() {
         />
         <CardContent sx={{ p: 3 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('settings.licenceDescription') || "Manage your application licence key."}
+            <T>settings.licenceDescription</T>
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'Madrid' }}>
-            <Typography variant="body1">
-              {t('settings.currentStatus') || "Current Status:"}
-            </Typography>
-            <Typography variant="body1" fontWeight="bold">
-              {isLoading ? <CircularProgress size={20} /> : t(`settings.licenceStatus_${currentLicenceStatus}`) || currentLicenceStatus}
-            </Typography>
-            {currentLicenceKeyPrefix && (
-              <Typography variant="caption" color="text.secondary">({currentLicenceKeyPrefix})</Typography>
-            )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+             <Typography variant="body1">
+                 <T>settings.currentStatus</T>
+             </Typography>
+             <Typography variant="body1" fontWeight="bold">
+                 {isLoading ? <CircularProgress size={20} /> : t(`settings.licenceStatus_${currentLicenceStatus}`)}
+             </Typography>
+             {currentLicenceKeyPrefix && !isLoading && ( // Only show prefix if not loading
+                <Typography variant="caption" color="text.secondary">({currentLicenceKeyPrefix})</Typography>
+             )}
           </Box>
 
           <TextField
             fullWidth
-            label={t('settings.licenceKeyLabel') || "Enter Licence Key"}
+            label={t('settings.licenceKeyLabel')}
             placeholder="AAAA-BBBB-CCCC-DDDD"
             value={licenceKeyInput}
             onChange={handleLicenceKeyInputChange}
             disabled={isActivating || isLoading}
             error={!!activationError}
-            helperText={activationError}
+            helperText={activationError || t('settings.licenceFormatHelper') || 'Format: XXXX-XXXX-XXXX-XXXX (Alphanumeric)'} // Add helper text key
             InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <VpnKeyIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
+              startAdornment: ( <InputAdornment position="start"> <VpnKeyIcon fontSize="small" color="action"/> </InputAdornment> ),
             }}
             sx={{ mb: 2 }}
           />
@@ -580,11 +579,12 @@ export default function Settings() {
             disabled={isActivating || isLoading || !licenceKeyInput.trim()}
             startIcon={isActivating ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
           >
-            {t('settings.activateLicenceButton') || "Update Licence"}
+            <T>settings.activateLicenceButton</T>
           </Button>
-          <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic' }}>
-            {t('settings.licencePlaceholderNote') || "Note: Licence validation is currently a placeholder."}
-          </Typography>
+           <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic' }}>
+             {/* Update placeholder note */}
+             <T>settings.licenceNoteV2</T>
+           </Typography>
         </CardContent>
       </Card>
 

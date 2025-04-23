@@ -34,7 +34,8 @@
             "errorCurrentMismatch": "Current password does not match.",
             "errorUpdateFailed": "Failed to update password. Please try again.",
             "errorNewPasswordMismatch": "New passwords do not match.",
-            "errorPasswordStrength": "New password does not meet complexity requirements (min 8 chars, upper, lower, number, symbol)."
+            "errorPasswordStrength": "New password does not meet complexity requirements (min 8 chars, upper, lower, number, symbol).",
+            "errorFieldsRequired": "All password fields are required."
         },
         "dataManagementTitle": "Data Management",
         "exportDataTitle": "Export Data",
@@ -70,7 +71,10 @@
         "licenceUpdateFailed": "Failed to update licence key.",
         "licencePlaceholderNote": "Note: Licence validation is currently a placeholder.",
         "saveSuccess": "Settings saved successfully!",
-        "saveFailed": "Failed to save settings."
+        "saveFailed": "Failed to save settings.",
+        "licenceKeyRequiredError": "Please enter a licence key.",
+        "licenceFormatHelper": "Format: XXXX-XXXX-XXXX-XXXX (Letters/Numbers)",
+        "licenceNoteV2": "Note: Entering a key updates status but does not unlock features in this version."
     },
     "sidebar": {
         "appName": "SETA",
@@ -94,7 +98,24 @@
         "recurring": "Recurring Items",
         "planning": "Planning",
         "recurring": "Recurring Items",
-        "accounts": "Accounts"
+        "accounts": "Accounts",
+        "customReports": "Custom Reports",
+        "requiresLicenceTooltip": "Requires active licence",
+        "importData": "Import data"
+    },
+    "customReport": {
+        "title": "Custom Report Generator",
+        "description": "Select data types, date range, and format for your custom export.",
+        "selectDataTypes": "Select Data Types",
+        "configureOptions": "Configure Options",
+        "outputFormat": "Output Format",
+        "columnSelectionNote": "Column selection coming soon. All default columns will be included.",
+        "generateButton": "Generate Report",
+        "errorNoDataTypes": "Please select at least one data type.",
+        "errorGenerationFailed": "Failed to generate custom report.",
+        "errorLicenceRequired": "Active licence required for this feature.",
+        "errorNoDataFound": "No data found for the selected criteria.",
+        "configureOptions": "Configure Options"
     },
     "common": {
         "close": "Close",

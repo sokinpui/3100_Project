@@ -28,7 +28,7 @@ from models import (
     FrequencyEnum,
 )
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 import hashlib
 import secrets
 import string
@@ -38,14 +38,28 @@ import pandas as pd
 from PyPDF2 import PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 import os  # Ideally use environment variables
 from dotenv import load_dotenv
 import logging
 import json
+import re
+
 
 load_dotenv()
+
+LICENCE_KEY_FORMAT = re.compile(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$")
+ACCEPTED_LICENCE_KEY = "AAAA-BBBB-CCCC-DDDD"
+
+
+def validate_licence_placeholder(licence_key: Optional[str]) -> bool:
+    """Placeholder: Check if the key matches the hardcoded ACCEPTED_LICENCE_KEY."""
+    if not licence_key:
+        return False
+    # Perform case-insensitive comparison against the specific key
+    return licence_key.strip().upper() == ACCEPTED_LICENCE_KEY
+
 
 # Configure basic logging (optional but good practice)
 logging.basicConfig(level=logging.INFO)
@@ -477,6 +491,18 @@ class LicenceStatusResponse(BaseModel):
     key_prefix: Optional[str] = None  # e.g., "****-****-CCCC-DDDD" or None
 
 
+class CustomReportRequest(BaseModel):
+    data_types: List[str] = Field(
+        ..., description="List of data types to include (e.g., ['expenses', 'income'])"
+    )
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    columns: Optional[Dict[str, List[str]]] = (
+        None  # e.g., {"expenses": ["date", "amount"], "income": ["source", "amount"]}
+    )
+    output_format: str = Field("csv", description="Output format (csv, excel)")
+
+
 # --------- Helper Functions ---------
 
 
@@ -554,6 +580,31 @@ async def send_password_reset_email(email_to: str, username: str, token: str):
         raise HTTPException(
             status_code=500, detail="Failed to send password reset email."
         )
+
+
+def validate_licence_placeholder(licence_key: Optional[str]) -> bool:
+    """Placeholder: Assume any non-empty key is valid for now."""
+    return bool(licence_key and licence_key.strip())
+
+
+async def require_active_licence(user_id: int, db: Session = Depends(get_db)):
+    """Dependency to check if the user has an 'active' licence (placeholder)."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    is_valid = validate_licence_placeholder(user.licence_key)  # Use placeholder check
+
+    if not is_valid:
+        logger.warning(
+            f"Licence check failed for user {user_id} accessing protected resource."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Active licence required for this feature.",
+        )
+    logger.info(f"Licence check passed for user {user_id}.")
+    return user  # Return user object if needed by the endpoint
 
 
 # --- NEW Settings Endpoint ---
@@ -2197,7 +2248,7 @@ async def get_all_user_data_for_report(user_id: int, db: Session = Depends(get_d
 
 @app.get("/users/{user_id}/licence", response_model=LicenceStatusResponse)
 async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
-    """Gets the current licence status for the user."""
+    """Gets the current licence status for the user (placeholder validation)."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -2207,22 +2258,21 @@ async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
     prefix = None
 
     if key:
-        # Placeholder validation: Just check if it's not empty for now
-        if len(key.strip()) > 0:
-            status = "active"  # Assume any non-empty key is active for now
+        # Use our updated placeholder validation
+        if validate_licence_placeholder(key):
+            status = "active"  # Exact match means active
             # Mask the key for display
-            parts = key.split("-")
-            if len(parts) == 4:  # Assuming AAAA-BBBB-CCCC-DDDD
+            parts = key.strip().upper().split("-")
+            if len(parts) == 4:
                 prefix = f"****-****-{parts[2]}-{parts[3]}"
             else:
-                prefix = "****" + key[-4:]  # Basic masking otherwise
+                prefix = "****" + key[-4:]
         else:
-            status = "inactive"  # Empty string means inactive? Or treat as not_set? Let's say inactive.
+            # Key exists but doesn't match the accepted key -> inactive
+            status = "inactive"
+            prefix = "****" + key[-4:]  # Show last 4 of invalid key
     else:
         status = "not_set"
-
-    # TODO: Implement actual licence validation logic here later
-    # e.g., check against a database of valid keys, check expiry, etc.
 
     return LicenceStatusResponse(status=status, key_prefix=prefix)
 
@@ -2231,24 +2281,25 @@ async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
 async def update_licence_key(
     user_id: int, payload: LicenceUpdateRequest, db: Session = Depends(get_db)
 ):
-    """Updates the user's licence key."""
+    """Updates the user's licence key after validation against the accepted key."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Placeholder validation: Just store the key for now
-    # TODO: Add real validation (format, check against valid keys) later
-    new_key = payload.licence_key.strip()
+    new_key = payload.licence_key.strip().upper()  # Standardize input
 
-    # Basic format check (optional for placeholder)
-    # if len(new_key.split('-')) != 4:
-    #     raise HTTPException(status_code=400, detail="Invalid licence key format.")
+    # Validate against the specific accepted key
+    if not validate_licence_placeholder(new_key):
+        logger.warning(f"Invalid licence key provided by user {user_id}")
+        # Update error detail to be more specific
+        raise HTTPException(
+            status_code=400, detail="Invalid or incorrect licence key provided."
+        )
 
-    user.licence_key = new_key
+    user.licence_key = new_key  # Store the validated key
     try:
         db.commit()
         logger.info(f"Licence key updated for user {user_id}")
-        # Return the new status after update
         new_status = await get_licence_status(user_id, db)
         return {
             "message": "Licence key updated successfully.",
@@ -2260,6 +2311,201 @@ async def update_licence_key(
             f"Failed to update licence key for user {user_id}: {e}", exc_info=True
         )
         raise HTTPException(status_code=500, detail="Failed to update licence key.")
+
+
+# --- ADD CUSTOM REPORT ENDPOINT (Licensed) ---
+@app.post("/reports/{user_id}/custom", dependencies=[Depends(require_active_licence)])
+async def generate_custom_report(
+    user_id: int,
+    request_body: CustomReportRequest,
+    db: Session = Depends(get_db),
+    # user: models.User = Depends(require_active_licence) # Inject validated user if needed
+):
+    """Generates a custom data report based on user selections (Licence Required)."""
+    logger.info(
+        f"Generating custom report for user {user_id} with params: {request_body.model_dump()}"
+    )
+
+    # Mapping model names to SQLAlchemy models and default columns
+    data_map = {
+        "expenses": {
+            "model": models.Expense,
+            "default_cols": ["date", "category_name", "amount", "description"],
+        },
+        "income": {
+            "model": models.Income,
+            "default_cols": ["date", "source", "amount", "description", "account_id"],
+        },
+        "recurring": {
+            "model": models.RecurringExpense,
+            "default_cols": [
+                "name",
+                "category_name",
+                "amount",
+                "frequency",
+                "start_date",
+                "end_date",
+                "account_id",
+            ],
+        },
+        "budgets": {
+            "model": models.Budget,
+            "default_cols": [
+                "category_name",
+                "amount_limit",
+                "period",
+                "start_date",
+                "end_date",
+            ],
+        },
+        "goals": {
+            "model": models.Goal,
+            "default_cols": ["name", "target_amount", "current_amount", "target_date"],
+        },
+        "accounts": {
+            "model": models.Account,
+            "default_cols": [
+                "name",
+                "account_type",
+                "starting_balance",
+                "balance_date",
+                "currency",
+            ],
+        },
+    }
+
+    selected_data = {}
+    valid_types = [dt for dt in request_body.data_types if dt in data_map]
+
+    if not valid_types:
+        raise HTTPException(
+            status_code=400, detail="No valid data types selected for the report."
+        )
+
+    # Fetch data for selected types
+    for data_type in valid_types:
+        model_info = data_map[data_type]
+        query = db.query(model_info["model"]).filter(
+            model_info["model"].user_id == user_id
+        )
+
+        # Apply date filters if provided
+        if request_body.start_date and hasattr(model_info["model"], "date"):
+            query = query.filter(model_info["model"].date >= request_body.start_date)
+        elif request_body.start_date and hasattr(
+            model_info["model"], "start_date"
+        ):  # For budget/recurring
+            query = query.filter(
+                model_info["model"].start_date >= request_body.start_date
+            )
+
+        if request_body.end_date and hasattr(model_info["model"], "date"):
+            query = query.filter(model_info["model"].date <= request_body.end_date)
+        elif request_body.end_date and hasattr(
+            model_info["model"], "start_date"
+        ):  # Filter based on start date for budget/recurring
+            query = query.filter(
+                model_info["model"].start_date <= request_body.end_date
+            )
+        elif request_body.end_date and hasattr(
+            model_info["model"], "target_date"
+        ):  # For goals
+            query = query.filter(
+                model_info["model"].target_date <= request_body.end_date
+            )
+
+        results = query.order_by(
+            getattr(model_info["model"], "id", None)
+        ).all()  # Basic order
+
+        # Convert to list of dicts and select columns
+        selected_cols = (
+            request_body.columns.get(data_type)
+            if request_body.columns
+            else model_info["default_cols"]
+        )
+        # Validate selected columns against model attributes (basic check)
+        valid_cols = [col for col in selected_cols if hasattr(model_info["model"], col)]
+        if not valid_cols:
+            valid_cols = model_info["default_cols"]  # Fallback to default
+
+        data_list = []
+        for item in results:
+            row = {col: getattr(item, col) for col in valid_cols}
+            data_list.append(row)
+        selected_data[data_type] = data_list
+
+    # --- Generate File Content ---
+    output_format = request_body.output_format.lower()
+    filename = (
+        f"seta_custom_report_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    )
+
+    try:
+        if output_format == "csv":
+            # Combine all selected data into one CSV or provide separate? Let's combine.
+            all_data_frames = []
+            for data_type, data_list in selected_data.items():
+                if data_list:
+                    df = pd.DataFrame(data_list)
+                    df["data_source"] = data_type  # Add column to indicate source
+                    all_data_frames.append(df)
+
+            if not all_data_frames:
+                raise HTTPException(
+                    status_code=404, detail="No data found for the selected criteria."
+                )
+
+            combined_df = pd.concat(all_data_frames, ignore_index=True)
+
+            stream = io.StringIO()
+            combined_df.to_csv(stream, index=False)
+            response = StreamingResponse(
+                iter([stream.getvalue()]), media_type="text/csv"
+            )
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={filename}.csv"
+            )
+            return response
+
+        elif output_format == "excel":
+            stream = io.BytesIO()
+            with pd.ExcelWriter(stream, engine="openpyxl") as writer:
+                has_data = False
+                for data_type, data_list in selected_data.items():
+                    if data_list:
+                        df = pd.DataFrame(data_list)
+                        df.to_excel(
+                            writer, sheet_name=data_type.capitalize(), index=False
+                        )
+                        has_data = True
+                if not has_data:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="No data found for the selected criteria.",
+                    )
+
+            stream.seek(0)
+            response = StreamingResponse(
+                stream,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={filename}.xlsx"
+            )
+            return response
+
+        else:
+            raise HTTPException(
+                status_code=400, detail="Unsupported output format requested."
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Error generating custom report file for user {user_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="Failed to generate report file.")
 
 
 if __name__ == "__main__":

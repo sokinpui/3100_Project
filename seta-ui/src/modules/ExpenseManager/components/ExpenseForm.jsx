@@ -151,7 +151,7 @@ export default function ExpenseForm({
                       fullWidth: true,
                       required: true,
                       // Keep original placeholder usage
-                      placeholder: t('expenseManager.dateFormatHint')
+                      // placeholder: t('expenseManager.dateFormatHint')
                     },
                     // Keep original inputAdornment usage
                     inputAdornment: {
