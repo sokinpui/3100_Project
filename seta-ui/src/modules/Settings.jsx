@@ -21,7 +21,8 @@ import {
   Divider,
   CircularProgress,
   LinearProgress,
-  InputAdornment
+  InputAdornment,
+  IconButton
 } from "@mui/material";
 
 import PersonIcon from "@mui/icons-material/Person";
@@ -31,10 +32,18 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import BackupIcon from '@mui/icons-material/Backup';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import Visibility from '@mui/icons-material/Visibility'; // Added
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 import T from "../utils/T"; // Assuming T is a translation component
 
 import { useTranslation } from 'react-i18next';
+
+const validatePasswordComplexity = (password) => {
+    // Basic check: At least 8 chars, 1 upper, 1 lower, 1 number, 1 symbol
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/;
+    return passwordRegex.test(password);
+};
 
 export default function Settings() {
   const API_URL = "http://localhost:8000";
@@ -68,6 +77,16 @@ export default function Settings() {
   const [currentLicenceKeyPrefix, setCurrentLicenceKeyPrefix] = useState('');
   const [isActivating, setIsActivating] = useState(false);
   const [activationError, setActivationError] = useState('');
+
+  // password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeError, setPasswordChangeError] = useState(''); // Error specific to the dialog
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const userId = localStorage.getItem("userId");
 
@@ -192,44 +211,81 @@ export default function Settings() {
   const handleCloseSnackbar = () => setSnackbarOpen(false);
 
   // Password Dialog Handlers
-  const openPasswordDialog = () => {
-    setResetEmailSent(false);
-    setResetRequestError('');
-    setPasswordDialogOpen(true);
-  };
+    const openPasswordDialog = () => {
+        // Reset state specific to the password change dialog
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setPasswordChangeError('');
+        setPasswordChangeLoading(false);
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+        setPasswordDialogOpen(true); // Open the dialog
+    };
 
-  const handleClosePasswordDialog = () => setPasswordDialogOpen(false);
+    const handleClosePasswordDialog = () => {
+        if (passwordChangeLoading) return; // Prevent closing while loading
+        setPasswordDialogOpen(false);
+    };
 
-  const handleRequestPasswordReset = async () => {
-    setResetRequestLoading(true);
-    setResetRequestError('');
-    setResetEmailSent(false);
+    // Client-side validation before submitting
+    const validatePasswordChangeForm = () => {
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            setPasswordChangeError(t('settings.passwordDialog.errorFieldsRequired') || 'All password fields are required.'); // Add key
+            return false;
+        }
+        if (newPassword !== confirmNewPassword) {
+            setPasswordChangeError(t('settings.passwordDialog.errorNewPasswordMismatch'));
+            return false;
+        }
+        if (!validatePasswordComplexity(newPassword)) {
+            setPasswordChangeError(t('settings.passwordDialog.errorPasswordStrength'));
+            return false;
+        }
+        setPasswordChangeError(''); // Clear error if validation passes
+        return true;
+    };
 
-    const userEmail = settings.profile.email;
-    if (!userEmail) {
-      setResetRequestError(t('settings.noEmailFound') || 'User email not found. Cannot send reset link.');
-      setResetRequestLoading(false);
-      return;
-    }
+    const handleConfirmPasswordChange = async () => {
+        if (!validatePasswordChangeForm()) {
+            return; // Stop if validation fails
+        }
 
-    try {
-      const response = await axios.post(`${API_URL}/request-password-reset`, {
-        email: userEmail
-      });
-      setSnackbarMessage(response.data.message || t('settings.resetEmailSent') || "Password reset email request sent.");
-      setSnackbarSeverity("success");
-      setResetEmailSent(true);
-    } catch (error) {
-      console.error("Error requesting password reset:", error);
-      const message = error.response?.data?.detail || t('settings.resetEmailFailed') || "Failed to send password reset email. Please try again.";
-      setSnackbarMessage(message);
-      setSnackbarSeverity("error");
-      setResetRequestError(message);
-    } finally {
-      setResetRequestLoading(false);
-      setSnackbarOpen(true);
-    }
-  };
+        setPasswordChangeLoading(true);
+        setPasswordChangeError('');
+
+        try {
+            await axios.put(`${API_URL}/users/${userId}/password`, {
+                current_password: currentPassword,
+                new_password: newPassword,
+            });
+
+            setSnackbarMessage(t('settings.passwordDialog.success'));
+            setSnackbarSeverity('success');
+            setSnackbarOpen(true);
+            handleClosePasswordDialog(); // Close dialog on success
+
+        } catch (error) {
+            console.error("Error changing password:", error);
+            let message = t('settings.passwordDialog.errorUpdateFailed'); // Default error
+            if (error.response) {
+                if (error.response.status === 401) {
+                    message = t('settings.passwordDialog.errorCurrentMismatch'); // Specific error for wrong current password
+                } else if (error.response.data?.detail) {
+                    // Use backend detail if available (e.g., if backend adds more validation)
+                    message = error.response.data.detail;
+                }
+            }
+            setPasswordChangeError(message); // Show error within the dialog
+            // Optionally show snackbar error too, but dialog error is often better UX here
+            // setSnackbarMessage(message);
+            // setSnackbarSeverity('error');
+            // setSnackbarOpen(true);
+        } finally {
+            setPasswordChangeLoading(false);
+        }
+    };
 
   // Data Export/Import Handlers
   const handleExport = async () => {
@@ -669,50 +725,90 @@ export default function Settings() {
       </Snackbar>
 
       {/* Password Dialog */}
-       <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
-        <DialogTitle>
-          {/* Use T component for title */}
-          <T>settings.passwordDialog.title</T>
-        </DialogTitle>
+      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="xs" fullWidth>
+        <DialogTitle><T>settings.passwordDialog.title</T></DialogTitle>
         <DialogContent>
-          {!resetEmailSent ? (
-            <>
-              <DialogContentText sx={{ mb: 2 }}>
-                {/* Use T component for description, passing the email */}
-                <T email={settings.profile.email || 'loading...'}>
-                  settings.passwordDialog.requestDescription
-                </T>
-              </DialogContentText>
-              {resetRequestError && (
-                <Alert severity="error" sx={{ mb: 2 }}>{resetRequestError}</Alert>
-              )}
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Button
-                  onClick={handleRequestPasswordReset}
-                  color="primary"
-                  variant="contained"
-                  disabled={resetRequestLoading || !settings.profile.email}
-                >
-                  {/* Use T component for button text */}
-                  {resetRequestLoading
-                    ? <T>settings.passwordDialog.sendingButton</T>
-                    : <T>settings.passwordDialog.sendButton</T>}
-                </Button>
-              </Box>
-            </>
-          ) : (
-            <DialogContentText sx={{ textAlign: 'center' }}>
-              <Alert severity="success">
-                 {/* You might want a specific key for this success message too */}
-                 Password reset instructions have been sent to your email. Please check your inbox (and spam folder).
-              </Alert>
-            </DialogContentText>
+          <DialogContentText sx={{ mb: 2 }}>
+            <T>settings.passwordDialog.description</T>
+          </DialogContentText>
+          {passwordChangeError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{passwordChangeError}</Alert>
           )}
+          <TextField
+            margin="dense"
+            required
+            fullWidth
+            name="currentPassword"
+            label={t('settings.passwordDialog.currentPassword')}
+            type={showCurrentPassword ? "text" : "password"}
+            id="currentPassword"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            disabled={passwordChangeLoading}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowCurrentPassword(!showCurrentPassword)} edge="end">
+                    {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            margin="dense"
+            required
+            fullWidth
+            name="newPassword"
+            label={t('settings.passwordDialog.newPassword')}
+            type={showNewPassword ? "text" : "password"}
+            id="newPassword"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            disabled={passwordChangeLoading}
+             InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end">
+                    {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            margin="dense"
+            required
+            fullWidth
+            name="confirmNewPassword"
+            label={t('settings.passwordDialog.confirmPassword')}
+            type={showConfirmPassword ? "text" : "password"}
+            id="confirmNewPassword"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            disabled={passwordChangeLoading}
+             InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClosePasswordDialog} color="primary">
-            {/* Use T component for cancel button */}
-            {resetEmailSent ? <T>common.close</T> : <T>settings.passwordDialog.cancel</T>}
+          <Button onClick={handleClosePasswordDialog} disabled={passwordChangeLoading}>
+            <T>settings.passwordDialog.cancel</T>
+          </Button>
+          <Button
+             onClick={handleConfirmPasswordChange}
+             variant="contained"
+             disabled={passwordChangeLoading}
+             sx={{ minWidth: 100 }} // Give space for spinner
+          >
+            {passwordChangeLoading ? <CircularProgress size={24} color="inherit" /> : <T>settings.passwordDialog.change</T>}
           </Button>
         </DialogActions>
       </Dialog>

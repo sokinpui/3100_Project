@@ -22,9 +22,11 @@
             "confirmPassword": "确认新密码",
             "cancel": "取消",
             "change": "更改密码",
-            "requestDescription": "点击下方按钮将密码重设链接发送到您注册的电子邮件地址。",
-            "sendButton": "发送密码重设邮件",
-            "sendingButton": "发送中..."
+            "success": "密码更改成功！",
+            "errorCurrentMismatch": "当前密码不正确。",
+            "errorUpdateFailed": "更新密码失败，请重试。",
+            "errorNewPasswordMismatch": "新密码与确认密码不匹配。",
+            "errorPasswordStrength": "新密码不符合复杂度要求（至少8个字符，包含大小写字母、数字和特殊符号）。"
         },
         "dataManagementTitle": "数据管理",
         "exportDataTitle": "导出数据",

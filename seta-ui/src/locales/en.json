@@ -24,7 +24,17 @@
             "change": "Change Password",
             "requestDescription": "Click the button below to send a password reset link to your registered email address.",
             "sendButton": "Send Password Reset Email",
-            "sendingButton": "Sending..."
+            "sendingButton": "Sending...",
+            "currentPassword": "Current Password",
+            "newPassword": "New Password",
+            "confirmPassword": "Confirm New Password",
+            "cancel": "Cancel",
+            "change": "Change Password",
+            "success": "Password changed successfully!",
+            "errorCurrentMismatch": "Current password does not match.",
+            "errorUpdateFailed": "Failed to update password. Please try again.",
+            "errorNewPasswordMismatch": "New passwords do not match.",
+            "errorPasswordStrength": "New password does not meet complexity requirements (min 8 chars, upper, lower, number, symbol)."
         },
         "dataManagementTitle": "Data Management",
         "exportDataTitle": "Export Data",
