@@ -38,6 +38,10 @@ import pandas as pd
 from PyPDF2 import PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 import os  # Ideally use environment variables
@@ -523,7 +527,7 @@ class CustomReportRequest(BaseModel):
     columns: Optional[Dict[str, List[str]]] = (
         None  # e.g., {"expenses": ["date", "amount"], "income": ["source", "amount"]}
     )
-    output_format: str = Field("csv", description="Output format (csv, excel)")
+    output_format: str = Field("csv", description="Output format (csv, excel, pdf)")
 
 
 # --------- Helper Functions ---------
@@ -2362,14 +2366,13 @@ async def generate_custom_report(
     user_id: int,
     request_body: CustomReportRequest,
     db: Session = Depends(get_db),
-    # user: models.User = Depends(require_active_licence) # Inject validated user if needed
 ):
     """Generates a custom data report based on user selections (Licence Required)."""
     logger.info(
         f"Generating custom report for user {user_id} with params: {request_body.model_dump()}"
     )
 
-    # Mapping model names to SQLAlchemy models and default columns
+    # --- Data Fetching Logic (Keep As Is) ---
     data_map = {
         "expenses": {
             "model": models.Expense,
@@ -2416,67 +2419,73 @@ async def generate_custom_report(
             ],
         },
     }
-
     selected_data = {}
     valid_types = [dt for dt in request_body.data_types if dt in data_map]
-
     if not valid_types:
         raise HTTPException(
             status_code=400, detail="No valid data types selected for the report."
         )
 
-    # Fetch data for selected types
+    # --- Helper function to safely format data for output ---
+    def format_for_output(value):
+        if isinstance(value, (datetime, date)):
+            return value.strftime("%Y-%m-%d")  # Standard date format
+        elif isinstance(value, (float)):
+            # Format floats nicely, handle potential None before float conversion
+            return f"{value:.2f}" if value is not None else ""
+        elif value is None:
+            return ""  # Represent None as empty string
+        # Handle Enums if present (like FrequencyEnum)
+        elif hasattr(value, "value"):  # Basic check for Enum-like objects
+            return str(value.value)
+        else:
+            return str(value)  # Convert other types to string
+
+    # --- Fetch and Process Data ---
     for data_type in valid_types:
         model_info = data_map[data_type]
         query = db.query(model_info["model"]).filter(
             model_info["model"].user_id == user_id
         )
-
-        # Apply date filters if provided
+        # Apply date filters (Keep As Is)
         if request_body.start_date and hasattr(model_info["model"], "date"):
             query = query.filter(model_info["model"].date >= request_body.start_date)
-        elif request_body.start_date and hasattr(
-            model_info["model"], "start_date"
-        ):  # For budget/recurring
+        elif request_body.start_date and hasattr(model_info["model"], "start_date"):
             query = query.filter(
                 model_info["model"].start_date >= request_body.start_date
             )
-
         if request_body.end_date and hasattr(model_info["model"], "date"):
             query = query.filter(model_info["model"].date <= request_body.end_date)
-        elif request_body.end_date and hasattr(
-            model_info["model"], "start_date"
-        ):  # Filter based on start date for budget/recurring
+        elif request_body.end_date and hasattr(model_info["model"], "start_date"):
             query = query.filter(
                 model_info["model"].start_date <= request_body.end_date
             )
-        elif request_body.end_date and hasattr(
-            model_info["model"], "target_date"
-        ):  # For goals
+        elif request_body.end_date and hasattr(model_info["model"], "target_date"):
             query = query.filter(
                 model_info["model"].target_date <= request_body.end_date
             )
 
-        results = query.order_by(
-            getattr(model_info["model"], "id", None)
-        ).all()  # Basic order
+        results = query.order_by(getattr(model_info["model"], "id", None)).all()
 
-        # Convert to list of dicts and select columns
+        # Column selection/validation (Keep As Is)
         selected_cols = (
             request_body.columns.get(data_type)
             if request_body.columns
             else model_info["default_cols"]
         )
-        # Validate selected columns against model attributes (basic check)
         valid_cols = [col for col in selected_cols if hasattr(model_info["model"], col)]
         if not valid_cols:
-            valid_cols = model_info["default_cols"]  # Fallback to default
+            valid_cols = model_info["default_cols"]
 
         data_list = []
         for item in results:
-            row = {col: getattr(item, col) for col in valid_cols}
+            # Fetch raw data first
+            row = {col: getattr(item, col, None) for col in valid_cols}
             data_list.append(row)
-        selected_data[data_type] = data_list
+
+        # Store the raw data list along with selected columns
+        selected_data[data_type] = {"data": data_list, "columns": valid_cols}
+    # --- End Fetch and Process Data ---
 
     # --- Generate File Content ---
     output_format = request_body.output_format.lower()
@@ -2486,21 +2495,29 @@ async def generate_custom_report(
 
     try:
         if output_format == "csv":
-            # Combine all selected data into one CSV or provide separate? Let's combine.
+            # --- CSV Generation (Slight modification for formatting) ---
             all_data_frames = []
-            for data_type, data_list in selected_data.items():
-                if data_list:
-                    df = pd.DataFrame(data_list)
-                    df["data_source"] = data_type  # Add column to indicate source
+            for data_type, data_info in selected_data.items():
+                if data_info["data"]:
+                    # Format data *before* creating DataFrame
+                    formatted_data_list = [
+                        {
+                            col: format_for_output(row.get(col))
+                            for col in data_info["columns"]
+                        }
+                        for row in data_info["data"]
+                    ]
+                    df = pd.DataFrame(
+                        formatted_data_list, columns=data_info["columns"]
+                    )  # Ensure column order
+                    df["data_source"] = data_type
                     all_data_frames.append(df)
 
             if not all_data_frames:
                 raise HTTPException(
                     status_code=404, detail="No data found for the selected criteria."
                 )
-
             combined_df = pd.concat(all_data_frames, ignore_index=True)
-
             stream = io.StringIO()
             combined_df.to_csv(stream, index=False)
             response = StreamingResponse(
@@ -2510,14 +2527,26 @@ async def generate_custom_report(
                 f"attachment; filename={filename}.csv"
             )
             return response
+            # --- END CSV Generation ---
 
         elif output_format == "excel":
+            # --- Excel Generation (Apply formatting) ---
             stream = io.BytesIO()
             with pd.ExcelWriter(stream, engine="openpyxl") as writer:
                 has_data = False
-                for data_type, data_list in selected_data.items():
-                    if data_list:
-                        df = pd.DataFrame(data_list)
+                for data_type, data_info in selected_data.items():
+                    if data_info["data"]:
+                        # Format data *before* creating DataFrame
+                        formatted_data_list = [
+                            {
+                                col: format_for_output(row.get(col))
+                                for col in data_info["columns"]
+                            }
+                            for row in data_info["data"]
+                        ]
+                        df = pd.DataFrame(
+                            formatted_data_list, columns=data_info["columns"]
+                        )  # Ensure column order
                         df.to_excel(
                             writer, sheet_name=data_type.capitalize(), index=False
                         )
@@ -2537,12 +2566,104 @@ async def generate_custom_report(
                 f"attachment; filename={filename}.xlsx"
             )
             return response
+            # --- END Excel Generation ---
+
+        # --- ADD PDF Generation ---
+        elif output_format == "pdf":
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(
+                buffer,
+                pagesize=letter,
+                leftMargin=0.5 * inch,
+                rightMargin=0.5 * inch,
+                topMargin=0.5 * inch,
+                bottomMargin=0.5 * inch,
+            )
+            styles = getSampleStyleSheet()
+            story = []
+            has_data = False
+
+            # Add main title
+            story.append(Paragraph("SETA Custom Report", styles["h1"]))
+            story.append(
+                Paragraph(
+                    f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                    styles["Normal"],
+                )
+            )
+            story.append(Spacer(1, 0.2 * inch))
+
+            for data_type, data_info in selected_data.items():
+                if data_info["data"]:
+                    has_data = True
+                    story.append(
+                        Paragraph(f"Data Type: {data_type.capitalize()}", styles["h2"])
+                    )
+                    story.append(Spacer(1, 0.1 * inch))
+
+                    # Prepare data for ReportLab Table
+                    headers = data_info["columns"]
+                    # Format data for PDF display
+                    formatted_data = [
+                        [format_for_output(row.get(col)) for col in headers]
+                        for row in data_info["data"]
+                    ]
+                    table_data = [headers] + formatted_data
+
+                    # Create Table and Style
+                    table = Table(
+                        table_data, repeatRows=1
+                    )  # Repeat headers on new pages
+                    table.setStyle(
+                        TableStyle(
+                            [
+                                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                                ("FONTSIZE", (0, 0), (-1, -1), 8),  # Smaller font size
+                            ]
+                        )
+                    )
+
+                    story.append(table)
+                    story.append(Spacer(1, 0.2 * inch))
+
+            if not has_data:
+                raise HTTPException(
+                    status_code=404, detail="No data found for the selected criteria."
+                )
+
+            # Build PDF
+            try:
+                doc.build(story)
+            except Exception as pdf_error:
+                logger.error(
+                    f"Error building PDF for user {user_id}: {pdf_error}", exc_info=True
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to build PDF report: {pdf_error}"
+                )
+
+            buffer.seek(0)
+            response = StreamingResponse(buffer, media_type="application/pdf")
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={filename}.pdf"
+            )
+            return response
+        # --- END PDF Generation ---
 
         else:
             raise HTTPException(
-                status_code=400, detail="Unsupported output format requested."
+                status_code=400,
+                detail="Unsupported output format requested. Use csv, excel, or pdf.",
             )
 
+    except HTTPException as http_exc:
+        raise http_exc  # Re-raise existing HTTPExceptions
     except Exception as e:
         logger.error(
             f"Error generating custom report file for user {user_id}: {e}",

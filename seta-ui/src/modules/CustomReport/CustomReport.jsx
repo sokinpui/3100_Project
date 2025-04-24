@@ -225,8 +225,7 @@ export default function CustomReport() {
                                 >
                                     <MenuItem value="csv">CSV (.csv)</MenuItem>
                                     <MenuItem value="excel">Excel (.xlsx)</MenuItem>
-                                    {/* PDF option can be added here when ready */}
-                                    {/* <MenuItem value="pdf" disabled>PDF (.pdf) - Soon</MenuItem> */}
+                                    <MenuItem value="pdf">PDF (.pdf)</MenuItem>
                                 </Select>
                             </FormControl>
 
