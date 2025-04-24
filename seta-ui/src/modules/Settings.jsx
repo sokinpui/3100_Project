@@ -426,7 +426,7 @@ export default function Settings() {
             window.location.reload();
         } catch (error) {
             console.error("Error activating licence:", error);
-            const message = error.response?.data?.detail || t('settings.licenceUpdateFailed');
+            const message = t('settings.licenceUpdateFailed');
             setActivationError(message); // Display backend error (e.g., format error)
             setSnackbarMessage(message);
             setSnackbarSeverity('error');
