@@ -449,7 +449,10 @@
         "underBudgetBy": "Under budget by",
         "Entries": "Entries",
         "due": "Due Date",
-        "allTime": "All Time"
+        "allTime": "All Time",
+        "incomeTimeline": "Category Income Over Time",
+        "noIncomeTimelineData": "Not enough income data for timeline view.",
+        "unknownSource": "Unknown Source"
     },
     "planningManager": {
         "title": "Financial Planning",

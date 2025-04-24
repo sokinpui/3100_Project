@@ -441,7 +441,10 @@
         "selectBudgetPrompt": "请选择一个预算以查看对比。",
         "budgeted": "预算金额",
         "actual": "实际支出",
-        "underBudgetBy": "低于预算"
+        "underBudgetBy": "低于预算",
+        "incomeTimeline": "分类收入时间线",
+        "noIncomeTimelineData": "数据不足，无法显示收入时间线视图。",
+        "unknownSource": "未知来源"
     },
     "quickAdd": {
         "addExpense": "添加支出",

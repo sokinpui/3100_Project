@@ -34,6 +34,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import CompareIcon from '@mui/icons-material/Compare';
+import TimelineIcon from '@mui/icons-material/Timeline';
 
 import { useTranslation } from 'react-i18next';
 import T from '../../utils/T';
@@ -71,6 +72,7 @@ const AVAILABLE_WIDGETS = [
   { id: 'topUnbudgetedCategory', titleKey: 'dynamicDashboard.topUnbudgetedCategory', icon: <WarningAmberIcon /> },
   { id: 'goalTargetDateEstimate', titleKey: 'dynamicDashboard.goalTargetDateEstimate', icon: <QueryStatsIcon /> },
   { id: 'accountDetail', titleKey: 'dynamicDashboard.accountDetail', icon: <AccountBoxIcon /> },
+  { id: 'incomeTimeline', titleKey: 'dynamicDashboard.incomeTimeline', icon: <StackedLineChartIcon /> },
 ];
 // --- End Available Widgets ---
 
