@@ -67,5 +67,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 # Common Issue,
 ## Cannot open app on macOS
-refer to [this](./doc/user_manual.md#%20Option%20A:%20Download%20from%20GitHub%20Releases%20(Recommended%20for%20Most%20Users)
+refer to [this](./doc/user_manual.md#option-a-download-from-github-releases-recommended-for-most-users)
 
