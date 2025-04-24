@@ -37,14 +37,11 @@ This is the easiest way. We build ready-to-use versions for Windows, macOS, and 
             *   When you first try to open SETA, macOS might show a scary warning like "`SETA.app` can't be opened because it is from an unidentified developer." or "damaged and can’t be opened." Don't panic! This is macOS being cautious about unsigned apps.
             *   **The Workaround (At Your Own Risk!):** You can tell macOS, "Hey, I trust this app." To do this, you'll need to use the Terminal. It sounds geeky, but it's just one command:
                 1.  **Open Terminal:** Press `Cmd + Space`, type `Terminal`, and press Enter.
-                2.  **Type the Command:** Carefully type the following command, *but don't press Enter yet*:
+                2.  **Enter the Command:** Enter this command if you trust our app:
                     ```bash
-                    xattr -cr
+                    xattr -cr /Applications/SETA.app
                     ```
-                    (Make sure there's a space after `-cr`)
-                3.  **Drag and Drop:** Open your `Applications` folder in Finder. Drag the `SETA.app` icon directly onto the Terminal window. The path to the app will appear after the command, like this: `xattr -cr /Applications/SETA.app`
-                4.  **Press Enter:** Now, press the Enter key in the Terminal window. It might ask for your Mac password. Type it in (you won't see characters appear, that's normal) and press Enter again.
-                5.  **Done!** Close the Terminal. Now you should be able to open SETA from your Applications folder without the scary warning (though you might still get a one-time "Are you sure?" prompt from macOS, which you can approve).
+                3.  **Done!** Close the Terminal. Now you should be able to open SETA from your Applications folder without the warning (though you might still get a one-time "Are you sure?" prompt from macOS, which you can approve).
             *   **What did that command do?** `xattr -cr` simply removes the extended quarantine attributes that macOS adds to downloaded applications from unidentified developers. It doesn't change the app itself. This is a common workaround for unsigned apps from trusted sources. *However, only do this for applications you trust!*
     *   **Linux:** Download the `.AppImage` file (e.g., `SETA-1.2.3.AppImage`).
         *   Make the file executable: Right-click -> Properties -> Permissions -> Check "Allow executing file as program", OR run `chmod +x SETA-1.2.3.AppImage` in your terminal.
@@ -207,3 +204,30 @@ You can restore your data from a previously exported `.json` file. This is usefu
 ## 8. Conclusion
 
 Thanks for using SETA! We hope it helps you gain control and insights into your personal finances. Explore the different modules, customize your dashboard, and make informed financial decisions!
+
+---
+
+# Licence Keys & Feature Access
+
+```
+0IH9-YJ2D-74IE-TJCH
+0VEZ-UZVC-NPVW-EPHE
+2XJB-M1SE-FDIE-55ST
+3AJM-WX1M-886P-KVSW
+6D4K-MP88-8HP1-HZ3Y
+9VJ8-8DQ0-MKUD-UKO1
+F2SV-I38E-EROW-9REZ
+FBQT-HJVQ-QM2M-OPPW
+IARV-E6SJ-03UB-UCH4
+IDKC-7A36-WE4F-300S
+IK4G-7CZJ-DFZI-9WE7
+M7NI-QGLO-D55P-VWGN
+PM0Y-9U9F-FKTP-HJ2O
+R06P-T2RJ-QN1F-5E4X
+UMBJ-PR19-XA4B-TBN8
+W2FV-0GN0-FJ3D-I541
+W35K-GQ7G-320V-T8GQ
+WIC5-JM9W-T3F4-H2CN
+YR1X-PLGN-G9C6-4DCF
+YYNW-CGCU-MPHL-308J
+```
