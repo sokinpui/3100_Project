@@ -61,3 +61,11 @@ Please read the [Development Workflow](./doc/development_workflow.md) guide for 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details (if you add one).
+
+
+---
+
+# Common Issue,
+## Cannot open app on macOS
+refer to [this](./doc/user_manual.md#%20Option%20A:%20Download%20from%20GitHub%20Releases%20(Recommended%20for%20Most%20Users)
+
