@@ -6,6 +6,7 @@ import axios from 'axios';
 import { format, parseISO, addDays, isWithinInterval, addMonths, addWeeks, addYears } from 'date-fns'; // Import date functions
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const API_URL = 'http://localhost:8000';
 const UPCOMING_DAYS = 14; // Show bills due in the next 14 days
@@ -50,6 +51,7 @@ export function UpcomingBillsWidget({ userId }) {
     const [upcomingBills, setUpcomingBills] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const { format: formatLocaleDate } = useLocalizedDateFormat();
 
     useEffect(() => {
         const fetchRecurring = async () => {
@@ -111,7 +113,7 @@ export function UpcomingBillsWidget({ userId }) {
                             }
                             secondary={
                                 <Typography variant="caption" color="text.secondary">
-                                <T>common.due</T>: {format(bill.nextDueDate, 'MMM d, yyyy')} {/* We will fix date format later */}
+                                <T>common.due</T>: {formatLocaleDate(bill.nextDueDate, 'MMM d, yyyy')} {/* We will fix date format later */}
                                 </Typography>
                             }
                         />

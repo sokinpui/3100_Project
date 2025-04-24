@@ -1,26 +1,36 @@
-import { useLanguage } from '../contexts/LanguageContext';
-import { format, formatDistanceToNow } from 'date-fns';
-import { enUS, zhCN } from 'date-fns/locale';
+// src/utils/useLocalizedDateFormat.js
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { format as formatFns } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale'; // Import necessary locales
 
 const locales = {
-  'en': enUS,
-  'zh': zhCN,
+    english: enUS,
+    zh: zhCN,
+    // Add other locales as needed
 };
 
 export function useLocalizedDateFormat() {
-  const { language } = useLanguage();
-  // Extract the base language (e.g., 'zh' from 'zh-CN' or 'en' from 'en-US')
-  const lang = language.split('-')[0];
-  // Map to date-fns locale, default to English if language not supported
-  const locale = locales[lang] || enUS;
+    const { i18n } = useTranslation();
+    const currentLanguage = i18n.language.split('-')[0] || 'english'; // Get base language
 
-  // Return an object with both format and formatDistanceToNow functions
-  return {
-    format: (date, formatStr) => {
-      return format(date, formatStr, { locale });
-    },
-    formatDistanceToNow: (date) => {
-      return formatDistanceToNow(date, { addSuffix: true, locale });
-    },
-  };
+    const locale = useMemo(() => {
+        return locales[currentLanguage] || locales.english; // Fallback to English
+    }, [currentLanguage]);
+
+    const format = (date, formatString) => {
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+            // Handle null, undefined, or invalid Date objects gracefully
+            return 'N/A'; // Or return an empty string, or the original value
+        }
+        try {
+            return formatFns(date, formatString, { locale });
+        } catch (error) {
+            console.error("Date formatting error:", error);
+            // Fallback to a basic format if the desired one fails
+            return formatFns(date, 'P', { locale }); // 'P' is localized short date
+        }
+    };
+
+    return { format, locale }; // Return locale object as well if needed elsewhere
 }

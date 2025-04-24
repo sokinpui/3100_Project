@@ -5,11 +5,13 @@ import { format as formatDateFns } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { getCategoryDetails } from '../../../constants';
 import T from '../../../utils/T';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const MAX_ITEMS = 5; // Max items to show
 
 export function LargestExpensesWidget({ expenses, isLoading }) {
   const { t } = useTranslation();
+  const { format: formatLocaleDate } = useLocalizedDateFormat();
 
   const largestExpenses = useMemo(() => {
     if (!expenses || expenses.length === 0) return [];
@@ -19,7 +21,7 @@ export function LargestExpensesWidget({ expenses, isLoading }) {
   }, [expenses]);
 
   const formatDate = (dateString) => {
-    try { return formatDateFns(new Date(dateString), 'MMM d'); } catch { return dateString; }
+    try { return formatLocaleDate(new Date(dateString), 'MMM d'); } catch { return dateString; }
   }
 
   const getTranslatedCategory = (name) => {

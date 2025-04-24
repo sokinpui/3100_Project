@@ -3,6 +3,7 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format as formatDateFns, parseISO } from 'date-fns';
 import T from '../../../utils/T';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -19,6 +20,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export function MonthlyComparisonWidget({ expenses, isLoading }) {
 
+    const { format: formatLocaleDate } = useLocalizedDateFormat();
+
     // Re-use the same data aggregation logic as ExpenseTrendWidget
     const monthlyData = useMemo(() => {
         if (!expenses || expenses.length === 0) return [];
@@ -32,7 +35,7 @@ export function MonthlyComparisonWidget({ expenses, isLoading }) {
         }, {});
         return Object.entries(monthlyMap)
           .map(([monthYear, total]) => ({
-              name: formatDateFns(parseISO(`${monthYear}-01`), 'MMM yy'),
+              name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'),
               total: total,
               monthYear: monthYear
            }))

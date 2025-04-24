@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { format, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -23,6 +24,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
   const { t } = useTranslation(); // Get t function
+  const { format: formatLocaleDate } = useLocalizedDateFormat()
 
   const dailyNetFlowData = useMemo(() => {
     if ((!expenses || expenses.length === 0) && (!income || income.length === 0)) return [];
@@ -59,7 +61,7 @@ export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
     return Object.entries(dailyMap)
       .map(([dateString, totals]) => ({
           date: dateString,
-          name: format(parseISO(dateString), 'MMM d'), // X-axis label
+          name: formatLocaleDate(parseISO(dateString), 'MMM d'), // X-axis label
           netFlow: totals.income - totals.expense,
        }))
       .sort((a, b) => a.date.localeCompare(b.date)); // Sort chronologically

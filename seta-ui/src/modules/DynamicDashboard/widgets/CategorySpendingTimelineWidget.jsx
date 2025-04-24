@@ -6,6 +6,7 @@ import { format as formatDateFns, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { getCategoryDetails } from '../../../constants';
 import T from '../../../utils/T';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 // Re-use or define colors
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ffc658'];
@@ -28,6 +29,7 @@ const CustomTooltip = ({ active, payload, label, categoryNames }) => {
 
 export function CategorySpendingTimelineWidget({ expenses, isLoading }) {
   const { t } = useTranslation();
+  const { format: formatLocaleDate } = useLocalizedDateFormat();
 
   const { timelineData, categoryNames } = useMemo(() => {
     if (!expenses || expenses.length === 0) return { timelineData: [], categoryNames: [] };
@@ -63,7 +65,7 @@ export function CategorySpendingTimelineWidget({ expenses, isLoading }) {
     const data = Object.entries(monthlyCategoryMap)
       .map(([monthYear, categories]) => {
         const monthEntry = {
-          name: formatDateFns(parseISO(`${monthYear}-01`), 'MMM yy'),
+          name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'),
           monthYear: monthYear,
         };
         allCategories.forEach(catName => {

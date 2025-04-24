@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { format as formatDateFns, parseISO, isValid } from 'date-fns'; // Added isValid
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -21,6 +22,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Added timePeriod prop if needed for axis formatting later
   const { t } = useTranslation(); // Get translation function
+  const { format: formatLocaleDate } = useLocalizedDateFormat();
 
   // --- Aggregate data daily ---
   const dailyData = useMemo(() => {
@@ -47,7 +49,7 @@ export function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Add
           date: dateString,
           // Format date for X-axis label (e.g., 'Jan 15')
           // Consider adjusting format based on timePeriod range (e.g., show year if range > 1 year)
-          name: formatDateFns(parseISO(dateString), 'MMM d'),
+          name: formatLocaleDate(parseISO(dateString), 'MMM d'),
           total: total,
        }))
       .sort((a, b) => a.date.localeCompare(b.date)); // Sort by YYYY-MM-DD string

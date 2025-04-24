@@ -10,6 +10,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import T from '../../../utils/T';
 import { useTheme } from '@mui/material/styles'; // To use theme colors
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 // Helper to get days of the month including padding for start day
 const getMonthDays = (monthDate) => {
@@ -43,6 +44,7 @@ const getNetFlowHeatmapColor = (netFlow, maxAbsNetFlow, theme) => {
 export function MiniCalendarWidget({ expenses = [], income = [], timePeriod }) {
     const theme = useTheme();
     const { t } = useTranslation();
+    const { format: formatLocaleDate, locale } = useLocalizedDateFormat();
 
     // State for the currently displayed month
     const [displayMonth, setDisplayMonth] = useState(() => {
@@ -63,7 +65,7 @@ export function MiniCalendarWidget({ expenses = [], income = [], timePeriod }) {
 
 
     const days = useMemo(() => getMonthDays(displayMonth), [displayMonth]);
-    const monthName = isValid(displayMonth) ? format(displayMonth, 'MMMM yyyy') : 'Invalid Date';
+    const monthName = isValid(displayMonth) ? formatLocaleDate(displayMonth, 'MMMM yyyy') : 'Invalid Date';
 
     // Calculate daily net flows and max absolute value for the displayed month
     const { dailyNetFlows, maxAbsNetFlow } = useMemo(() => {
@@ -119,9 +121,13 @@ export function MiniCalendarWidget({ expenses = [], income = [], timePeriod }) {
     };
 
     const weekDays = useMemo(() => {
-        // Generate weekday names based on locale if possible later
-        return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    }, []);
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+            // Get the name for Sunday (index 0) + i days, format as short weekday name
+            days.push(locale.localize.day(i, { width: 'medium' }));
+        }
+        return days;
+    }, [locale]);
 
     const hasDataForMonth = Object.keys(dailyNetFlows).length > 0;
 
