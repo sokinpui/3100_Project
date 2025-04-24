@@ -49,17 +49,6 @@ import re
 
 load_dotenv()
 
-LICENCE_KEY_FORMAT = re.compile(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$")
-ACCEPTED_LICENCE_KEY = "AAAA-BBBB-CCCC-DDDD"
-
-
-def validate_licence_placeholder(licence_key: Optional[str]) -> bool:
-    """Placeholder: Check if the key matches the hardcoded ACCEPTED_LICENCE_KEY."""
-    if not licence_key:
-        return False
-    # Perform case-insensitive comparison against the specific key
-    return licence_key.strip().upper() == ACCEPTED_LICENCE_KEY
-
 
 # Configure basic logging (optional but good practice)
 logging.basicConfig(level=logging.INFO)
@@ -115,6 +104,40 @@ def initialize_local_database():
 # Call initialization right after engine setup
 initialize_local_database()
 # --- End Schema Creation ---
+
+LICENCE_KEY_FORMAT = re.compile(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$")
+
+ACCEPTED_LICENCE_KEYS = {
+    "0IH9-YJ2D-74IE-TJCH",
+    "0VEZ-UZVC-NPVW-EPHE",
+    "2XJB-M1SE-FDIE-55ST",
+    "3AJM-WX1M-886P-KVSW",
+    "6D4K-MP88-8HP1-HZ3Y",
+    "9VJ8-8DQ0-MKUD-UKO1",
+    "F2SV-I38E-EROW-9REZ",
+    "FBQT-HJVQ-QM2M-OPPW",
+    "IARV-E6SJ-03UB-UCH4",
+    "IDKC-7A36-WE4F-300S",
+    "IK4G-7CZJ-DFZI-9WE7",
+    "M7NI-QGLO-D55P-VWGN",
+    "PM0Y-9U9F-FKTP-HJ2O",
+    "R06P-T2RJ-QN1F-5E4X",
+    "UMBJ-PR19-XA4B-TBN8",
+    "W2FV-0GN0-FJ3D-I541",
+    "W35K-GQ7G-320V-T8GQ",
+    "WIC5-JM9W-T3F4-H2CN",
+    "YR1X-PLGN-G9C6-4DCF",
+    "YYNW-CGCU-MPHL-308J",
+}
+
+
+def validate_licence_key(licence_key: Optional[str]) -> bool:
+    """Checks if the provided licence key is in the accepted list."""
+    if not licence_key:
+        return False
+    # Standardize and check against the set
+    standardized_key = licence_key.strip().upper()
+    return standardized_key in ACCEPTED_LICENCE_KEYS
 
 
 app = FastAPI(
@@ -582,29 +605,27 @@ async def send_password_reset_email(email_to: str, username: str, token: str):
         )
 
 
-def validate_licence_placeholder(licence_key: Optional[str]) -> bool:
-    """Placeholder: Assume any non-empty key is valid for now."""
-    return bool(licence_key and licence_key.strip())
-
-
 async def require_active_licence(user_id: int, db: Session = Depends(get_db)):
-    """Dependency to check if the user has an 'active' licence (placeholder)."""
+    """Dependency to check if the user has an 'active' licence."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    is_valid = validate_licence_placeholder(user.licence_key)  # Use placeholder check
+    # --- Use the UPDATED validation function ---
+    # is_valid = validate_licence_placeholder(user.licence_key)
+    is_valid = validate_licence_key(user.licence_key)
+    # --- END Use the UPDATED validation function ---
 
     if not is_valid:
         logger.warning(
-            f"Licence check failed for user {user_id} accessing protected resource."
+            f"Licence check failed for user {user_id} accessing protected resource. Key: {user.licence_key}"
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Active licence required for this feature.",
         )
     logger.info(f"Licence check passed for user {user_id}.")
-    return user  # Return user object if needed by the endpoint
+    return user
 
 
 # --- NEW Settings Endpoint ---
@@ -2248,7 +2269,7 @@ async def get_all_user_data_for_report(user_id: int, db: Session = Depends(get_d
 
 @app.get("/users/{user_id}/licence", response_model=LicenceStatusResponse)
 async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
-    """Gets the current licence status for the user (placeholder validation)."""
+    """Gets the current licence status for the user."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -2258,19 +2279,23 @@ async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
     prefix = None
 
     if key:
-        # Use our updated placeholder validation
-        if validate_licence_placeholder(key):
-            status = "active"  # Exact match means active
-            # Mask the key for display
+        # --- Use the UPDATED validation function ---
+        # if validate_licence_placeholder(key):
+        if validate_licence_key(key):
+            # --- END Use the UPDATED validation function ---
+            status = "active"
+            # Mask the key for display (keep this logic)
             parts = key.strip().upper().split("-")
             if len(parts) == 4:
                 prefix = f"****-****-{parts[2]}-{parts[3]}"
-            else:
-                prefix = "****" + key[-4:]
+            else:  # Fallback mask if format is weird somehow
+                prefix = "****" + key[-4:] if len(key) >= 4 else "****"
         else:
-            # Key exists but doesn't match the accepted key -> inactive
+            # Key exists but isn't valid (maybe wrong format or not in list)
             status = "inactive"
-            prefix = "****" + key[-4:]  # Show last 4 of invalid key
+            prefix = (
+                "****" + key[-4:] if len(key) >= 4 else "****"
+            )  # Show last 4 of invalid key
     else:
         status = "not_set"
 
@@ -2281,29 +2306,47 @@ async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
 async def update_licence_key(
     user_id: int, payload: LicenceUpdateRequest, db: Session = Depends(get_db)
 ):
-    """Updates the user's licence key after validation against the accepted key."""
+    """Updates the user's licence key after format and validity checks."""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    new_key = payload.licence_key.strip().upper()  # Standardize input
+    new_key_input = payload.licence_key.strip()
+    new_key_upper = new_key_input.upper()  # Standardize for checks
 
-    # Validate against the specific accepted key
-    if not validate_licence_placeholder(new_key):
-        logger.warning(f"Invalid licence key provided by user {user_id}")
-        # Update error detail to be more specific
+    # 1. Check the format first
+    if not LICENCE_KEY_FORMAT.match(new_key_upper):
+        logger.warning(
+            f"Invalid licence key format provided by user {user_id}: {new_key_input}"
+        )
         raise HTTPException(
-            status_code=400, detail="Invalid or incorrect licence key provided."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid licence key format. Use XXXX-XXXX-XXXX-XXXX (alphanumeric).",
         )
 
-    user.licence_key = new_key  # Store the validated key
+    # 2. Check if the key is in the accepted list
+    # --- Use the UPDATED validation function ---
+    # if not validate_licence_placeholder(new_key_upper):
+    if not validate_licence_key(new_key_upper):
+        # --- END Use the UPDATED validation function ---
+        logger.warning(
+            f"Incorrect licence key provided by user {user_id}: {new_key_upper}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,  # Use 400 Bad Request for incorrect key
+            detail="Invalid or incorrect licence key provided.",
+        )
+
+    # If format and validity checks pass, store the key (store standardized version)
+    user.licence_key = new_key_upper
     try:
         db.commit()
-        logger.info(f"Licence key updated for user {user_id}")
-        new_status = await get_licence_status(user_id, db)
+        logger.info(f"Licence key updated successfully for user {user_id}")
+        # Fetch the new status to return
+        new_status = await get_licence_status(user_id, db)  # Await the async function
         return {
             "message": "Licence key updated successfully.",
-            "licence_status": new_status,
+            "licence_status": new_status.model_dump(),  # Return Pydantic model as dict
         }
     except Exception as e:
         db.rollback()

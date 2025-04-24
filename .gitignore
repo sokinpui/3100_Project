@@ -73,6 +73,8 @@ seta-api/seta_user_data/
 seta-api/seta_user_data/seta_local.db
 seta-api/seta_user_data/seta_config.json
 
+seta-ui/seta_local.db
+
 /certificate.txt
 /*.p12
 

@@ -422,6 +422,8 @@ export default function Settings() {
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
             setLicenceKeyInput(''); // Clear input field on success
+
+            window.location.reload();
         } catch (error) {
             console.error("Error activating licence:", error);
             const message = error.response?.data?.detail || t('settings.licenceUpdateFailed');
