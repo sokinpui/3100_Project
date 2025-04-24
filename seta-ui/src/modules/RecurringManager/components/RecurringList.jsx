@@ -61,12 +61,15 @@ export default function RecurringList({
             renderCell: (params) => getTranslatedCategory(params.value),
             valueGetter: (value) => getTranslatedCategory(value),
         },
-         {
+        {
             field: 'frequency',
             headerName: t('recurringManager.frequency'),
             width: 120,
             renderCell: (params) => <T>{`recurringManager.frequency_${params.value}`}</T>,
-            valueGetter: (value) => t(`recurringManager.frequency_${value.value}`),
+            // SIMPLIFY valueGetter: It should just return the raw value for sorting/filtering
+            valueGetter: (value) => value,
+            // Optional: If filtering needs the translated value, use renderCell value
+            // valueGetter: (value) => t(`recurringManager.frequency_${value}`), // Use this if filtering needs translation
         },
         {
             field: 'start_date',

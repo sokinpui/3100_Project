@@ -8,12 +8,14 @@ import T from '../../../utils/T';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'; // For Expenses
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';   // For Income
 import { useTheme } from '@mui/material/styles'; // To use theme colors
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const MAX_ITEMS = 7; // Increase slightly to show more mixed items
 
 export function RecentTransactionsWidget({ expenses = [], income = [], isLoading }) {
     const { t } = useTranslation();
     const theme = useTheme();
+    const { format: formatLocaleDate } = useLocalizedDateFormat();
 
     const combinedTransactions = useMemo(() => {
         const mappedExpenses = expenses.map(exp => ({
@@ -53,7 +55,7 @@ export function RecentTransactionsWidget({ expenses = [], income = [], isLoading
         try {
             // Use parseISO for reliability with 'YYYY-MM-DD'
             const date = parseISO(dateString);
-            return isValid(date) ? format(date, 'MMM d') : dateString;
+            return isValid(date) ? formatLocaleDate(date, 'MMM d') : dateString;
         } catch {
             return dateString; // Fallback
         }

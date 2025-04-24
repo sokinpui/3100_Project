@@ -21,7 +21,21 @@
             "newPassword": "New Password",
             "confirmPassword": "Confirm New Password",
             "cancel": "Cancel",
-            "change": "Change Password"
+            "change": "Change Password",
+            "requestDescription": "Click the button below to send a password reset link to your registered email address.",
+            "sendButton": "Send Password Reset Email",
+            "sendingButton": "Sending...",
+            "currentPassword": "Current Password",
+            "newPassword": "New Password",
+            "confirmPassword": "Confirm New Password",
+            "cancel": "Cancel",
+            "change": "Change Password",
+            "success": "Password changed successfully!",
+            "errorCurrentMismatch": "Current password does not match.",
+            "errorUpdateFailed": "Failed to update password. Please try again.",
+            "errorNewPasswordMismatch": "New passwords do not match.",
+            "errorPasswordStrength": "New password does not meet complexity requirements (min 8 chars, upper, lower, number, symbol).",
+            "errorFieldsRequired": "All password fields are required."
         },
         "dataManagementTitle": "Data Management",
         "exportDataTitle": "Export Data",
@@ -44,7 +58,23 @@
         "importConfirmConsequence": "This will permanently delete all current data and replace it with the contents of the selected file.",
         "importConfirmProceed": "Do you wish to proceed?",
         "cancelImport": "Cancel",
-        "confirmImport": "Yes, Replace Data"
+        "confirmImport": "Yes, Replace Data",
+        "licenceManagementTitle": "Licence Management",
+        "licenceDescription": "Manage your application licence key.",
+        "currentStatus": "Current Status:",
+        "licenceStatus_active": "Active",
+        "licenceStatus_inactive": "Inactive",
+        "licenceStatus_not_set": "Not Set",
+        "licenceKeyLabel": "Enter Licence Key",
+        "activateLicenceButton": "Update Licence",
+        "licenceUpdateSuccess": "Licence updated successfully!",
+        "licenceUpdateFailed": "Failed to update licence key.",
+        "licencePlaceholderNote": "Note: Licence validation is currently a placeholder.",
+        "saveSuccess": "Settings saved successfully!",
+        "saveFailed": "Failed to save settings.",
+        "licenceKeyRequiredError": "Please enter a licence key.",
+        "licenceFormatHelper": "Format: XXXX-XXXX-XXXX-XXXX (Letters/Numbers)",
+        "licenceNoteV2": "Note: Entering a key updates status but does not unlock features in this version."
     },
     "sidebar": {
         "appName": "SETA",
@@ -68,7 +98,24 @@
         "recurring": "Recurring Items",
         "planning": "Planning",
         "recurring": "Recurring Items",
-        "accounts": "Accounts"
+        "accounts": "Accounts",
+        "customReports": "Custom Reports",
+        "requiresLicenceTooltip": "Requires active licence",
+        "importData": "Import data"
+    },
+    "customReport": {
+        "title": "Custom Report Generator",
+        "description": "Select data types, date range, and format for your custom export.",
+        "selectDataTypes": "Select Data Types",
+        "configureOptions": "Configure Options",
+        "outputFormat": "Output Format",
+        "columnSelectionNote": "Column selection coming soon. All default columns will be included.",
+        "generateButton": "Generate Report",
+        "errorNoDataTypes": "Please select at least one data type.",
+        "errorGenerationFailed": "Failed to generate custom report.",
+        "errorLicenceRequired": "Active licence required for this feature.",
+        "errorNoDataFound": "No data found for the selected criteria.",
+        "configureOptions": "Configure Options"
     },
     "common": {
         "close": "Close",
@@ -84,7 +131,9 @@
         "createdAt": "Created At",
         "Amount": "Amount",
         "Date": "Date",
-        "Description": "Description"
+        "Description": "Description",
+        "due": "Due Date",
+        "allTime": "All Time"
     },
     "planningManager": {
         "title": "Financial Planning",
@@ -222,7 +271,14 @@
         "deleteMultipleTitle": "Delete Multiple Accounts",
         "confirmBulkDeleteAccounts": "Are you sure you want to delete the selected {{count}} account(s)? This action cannot be undone and may affect linked transactions if not handled properly.",
         "bulkDeleteSuccess": "{{count}} account(s) deleted successfully!",
-        "bulkDeleteError": "Failed to delete selected accounts. Ensure they are not linked to transactions."
+        "bulkDeleteError": "Failed to delete selected accounts. Ensure they are not linked to transactions.",
+        "accountType_checking": "Checking",
+        "accountType_savings": "Savings",
+        "accountType_creditCard": "Credit Card",
+        "accountType_cash": "Cash",
+        "accountType_investment": "Investment",
+        "accountType_loan": "Loan",
+        "accountType_other": "Other"
     },
     "expenseImport": {
         "title": "Import Expenses from CSV",
@@ -271,7 +327,7 @@
         "addWidget": "Add Widget",
         "removeWidget": "Remove Widget",
         "totalExpenses": "Total Expenses",
-        "categoryBreakdown": "Category Breakdown",
+        "categoryBreakdown": "Expense Breakdown",
         "recentTransactions": "Recent Transactions",
         "expenseTrend": "Expense Trend",
         "emptyDashboard": "Your dashboard is empty. Click 'Add Widget' to get started.",
@@ -282,7 +338,7 @@
         "noDescription": "No description",
         "expenseTrend": "Expense Trend",
         "notEnoughDataForTrend": "Not enough data for trend analysis.",
-        "monthlyComparison": "Monthly Comparison",
+        "monthlyComparison": "Monthly Expense Comparison",
         "noMonthlyData": "No monthly data available.",
         "topSpendingCategories": "Top Spending Categories",
         "category": "Category",
@@ -390,7 +446,18 @@
         "selectBudgetPrompt": "Please select a budget to view comparison.",
         "budgeted": "Budgeted",
         "actual": "Actual",
-        "underBudgetBy": "Under budget by"
+        "underBudgetBy": "Under budget by",
+        "Entries": "Entries",
+        "due": "Due Date",
+        "allTime": "All Time",
+        "incomeTimeline": "Category Income Over Time",
+        "noIncomeTimelineData": "Not enough income data for timeline view.",
+        "unknownSource": "Unknown Source"
+    },
+    "planningManager": {
+        "title": "Financial Planning",
+        "budgetsTab": "Budgets",
+        "goalsTab": "Goals"
     },
     "quickAdd": {
         "addExpense": "Add Expense",
@@ -413,7 +480,8 @@
         "startDate": "Start Date",
         "endDate": "End Date",
         "currentQuarter": "Current Quarter",
-        "currentHalfYear": "Current Half Year"
+        "currentHalfYear": "Current Half Year",
+        "allTime": "All Time"
     },
     "expenseManager": {
         "confirm": "Confirm",
@@ -482,7 +550,13 @@
         "downloadExcel": "Excel",
         "downloadPDF": "PDF",
         "loading": "Loading report data...",
-        "noDataToExport": "No data available to export."
+        "noDataToExport": "No data available to export.",
+        "downloadExcelAll": "Excel (All Data)",
+        "downloadPdfAll": "PDF (All Data)",
+        "downloadIndividualCsv": "Download Individual CSV File",
+        "formatCsv": "CSV (.csv)",
+        "formatExcel": "Excel (.xlsx)",
+        "formatPdf": "PDF (.pdf)"
     },
     "dashboard": {
         "overview": {
@@ -640,5 +714,18 @@
         "devPasswordSetDuringSignup": "[Set during signup]",
         "devNoteBackendRunning": "Note: Make sure Python backend is running before logging in!",
         "devNoteNewUserCredentials": "Additional Note: Newly registered user credentials appear here for development."
+    },
+    "resetPassword": {
+        "title": "Reset Your Password",
+        "validationPasswordRequired": "New password is required",
+        "validationPasswordLength": "Password must be at least 8 characters",
+        "validationConfirmRequired": "Please confirm your new password",
+        "validationPasswordMatch": "Passwords do not match",
+        "successMessage": "Password reset successfully! Redirecting to login...",
+        "errorMessage": "Failed to reset password. The link might be invalid or expired.",
+        "newPasswordLabel": "New Password",
+        "confirmPasswordLabel": "Confirm New Password",
+        "resetButton": "Reset Password",
+        "goToLoginButton": "Go to Login"
     }
 }

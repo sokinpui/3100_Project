@@ -54,12 +54,15 @@ export default function BudgetList({
             cellClassName: 'font-tabular-nums',
             headerAlign: 'left', align: 'left'
         },
-         {
+        {
             field: 'period',
             headerName: t('budgetManager.period'),
             width: 120,
             renderCell: (params) => <T>{`recurringManager.frequency_${params.value}`}</T>,
-            valueGetter: (value) => t(`recurringManager.frequency_${value}`),
+            // SIMPLIFY valueGetter:
+            valueGetter: (value) => value,
+            // Optional alternative if filtering needs translated value:
+            // valueGetter: (value) => t(`recurringManager.frequency_${value}`),
         },
         {
             field: 'start_date',

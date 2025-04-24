@@ -1,26 +1,28 @@
+// src/modules/ResetPassword.jsx
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container,
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-  Paper
+  Container, Box, TextField, Button, Typography, Alert,
+  CircularProgress, Paper
 } from '@mui/material';
+// --- ADD Imports ---
+import { useTranslation } from 'react-i18next';
+import T from '../utils/T'; // Assuming T component correctly handles translation
+// --- END ADD ---
 
 export default function ResetPassword() {
-  const { token } = useParams(); // Get token from URL
+  const { token } = useParams();
   const navigate = useNavigate();
   const API_URL = 'http://localhost:8000';
+  // --- ADD useTranslation hook ---
+  const { t } = useTranslation();
+  // --- END ADD ---
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState(''); // Store translation key or fallback message
+  const [success, setSuccess] = useState(''); // Store translation key or fallback message
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({
     password: '',
@@ -32,18 +34,18 @@ export default function ResetPassword() {
     let isValid = true;
 
     if (!password) {
-      errors.password = 'New password is required';
+      errors.password = 'resetPassword.validationPasswordRequired'; // Use key
       isValid = false;
     } else if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
+      errors.password = 'resetPassword.validationPasswordLength'; // Use key
       isValid = false;
     }
 
     if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your new password';
+      errors.confirmPassword = 'resetPassword.validationConfirmRequired'; // Use key
       isValid = false;
     } else if (password && password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = 'resetPassword.validationPasswordMatch'; // Use key
       isValid = false;
     }
 
@@ -65,17 +67,18 @@ export default function ResetPassword() {
     try {
       const response = await axios.post(`${API_URL}/reset-password/${token}`, {
         new_password: password,
-        confirm_password: confirmPassword, // Send confirmation for backend validation
+        confirm_password: confirmPassword,
       });
-      setSuccess(response.data.message || 'Password reset successfully! Redirecting to login...');
-      // Redirect to login after a short delay
+      // Set success message using translation key
+      setSuccess(response.data.message || t('resetPassword.successMessage'));
       setTimeout(() => {
-        navigate('/login', { state: { message: 'Password reset successfully! Please log in.' } });
+        navigate('/login', { state: { message: t('resetPassword.successMessage') } }); // Pass translated message if needed
       }, 3000);
 
     } catch (err) {
       console.error("Password reset error:", err);
-      setError(err.response?.data?.detail || 'Failed to reset password. The link might be invalid or expired.');
+      // Set error message using translation key or fallback
+      setError(err.response?.data?.detail || t('resetPassword.errorMessage'));
     } finally {
       setLoading(false);
     }
@@ -85,20 +88,23 @@ export default function ResetPassword() {
     <Container component="main" maxWidth="xs" sx={{ mt: 8 }}>
       <Paper elevation={3} sx={{ padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
-          Reset Your Password
+          {/* Use T component or t() */}
+          <T>resetPassword.title</T>
         </Typography>
 
-        {success && <Alert severity="success" sx={{ width: '100%', mb: 2 }}>{success}</Alert>}
-        {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
+        {/* Use t() for alert messages */}
+        {success && <Alert severity="success" sx={{ width: '100%', mb: 2 }}>{t(success)}</Alert>}
+        {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{t(error)}</Alert>}
 
-        {!success && ( // Only show form if not successful yet
+        {!success && (
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
             <TextField
               margin="normal"
               required
               fullWidth
               name="password"
-              label="New Password"
+              // Use t() for label
+              label={t('resetPassword.newPasswordLabel')}
               type="password"
               id="password"
               autoComplete="new-password"
@@ -107,8 +113,9 @@ export default function ResetPassword() {
                 setPassword(e.target.value);
                 if (validationErrors.password) setValidationErrors(prev => ({ ...prev, password: '' }));
               }}
+              // Use t() for helperText
               error={!!validationErrors.password}
-              helperText={validationErrors.password}
+              helperText={validationErrors.password ? t(validationErrors.password) : ''}
               disabled={loading}
             />
             <TextField
@@ -116,7 +123,8 @@ export default function ResetPassword() {
               required
               fullWidth
               name="confirmPassword"
-              label="Confirm New Password"
+              // Use t() for label
+              label={t('resetPassword.confirmPasswordLabel')}
               type="password"
               id="confirmPassword"
               autoComplete="new-password"
@@ -125,8 +133,9 @@ export default function ResetPassword() {
                 setConfirmPassword(e.target.value);
                 if (validationErrors.confirmPassword) setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
               }}
+              // Use t() for helperText
               error={!!validationErrors.confirmPassword}
-              helperText={validationErrors.confirmPassword}
+              helperText={validationErrors.confirmPassword ? t(validationErrors.confirmPassword) : ''}
               disabled={loading}
             />
             <Button
@@ -136,18 +145,20 @@ export default function ResetPassword() {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} /> : 'Reset Password'}
+              {/* Use T component or t() */}
+              {loading ? <CircularProgress size={24} /> : <T>resetPassword.resetButton</T>}
             </Button>
           </Box>
         )}
-         {success && ( // Optionally show a link back to login if successful
+         {success && (
             <Button
                 onClick={() => navigate('/login')}
                 fullWidth
                 variant="text"
                 sx={{ mt: 1 }}
             >
-                Go to Login
+                {/* Use T component or t() */}
+                <T>resetPassword.goToLoginButton</T>
             </Button>
          )}
       </Paper>

@@ -51,7 +51,7 @@ Before you begin, ensure you have the following installed on your system:
     # Install Python dependencies
     pip install -r requirements.txt
 
-    # Apply database migrations (if applicable, assumes Alembic setup)
+    # Apply database migrations (if applicable, e.g., for PostgreSQL)
     # alembic upgrade head
 
     # Deactivate environment for now (optional)
@@ -76,28 +76,34 @@ Before relying on automation, it's useful to know how to build the application l
 1.  **Build Backend (Native):**
     *   Navigate to the backend directory: `cd seta-api`
     *   Activate the virtual environment (see activation commands above).
-    *   Run PyInstaller:
+    *   Run PyInstaller (uses `seta_api_server.spec` by default if present, or run command explicitly):
         ```bash
-        pyinstaller --name seta_api_server \
-                    --onedir \
-                    --noconsole \
-                    --add-data "app:app" \
-                    --add-data "alembic:alembic" \
-                    --add-data "alembic.ini:." \
-                    app/main.py
+        # Option 1: Using the spec file (Recommended)
+        pyinstaller seta_api_server.spec
+
+        # Option 2: Explicit command (ensure it matches the spec)
+        # pyinstaller --name seta_api_server \
+        #             --onedir \
+        #             --noconsole \
+        #             --add-data "app:app" \
+        #             --add-data "alembic:alembic" \
+        #             --add-data "alembic.ini:." \
+        #             app/main.py
         ```
-    *   The native backend executable will be in `seta-api/dist/seta_api_server/`.
+        *   The `--add-data` flags ensure necessary files/folders (like the `app` module, `alembic` scripts, and config) are included in the package. Adjust if your structure differs.
+    *   The native backend executable/folder will be in `seta-api/dist/seta_api_server/`.
     *   Deactivate the virtual environment: `deactivate`
     *   Navigate back to the root: `cd ..`
 
 2.  **Build & Package Electron App (Native):**
     *   Navigate to the frontend directory: `cd seta-ui`
     *   Run the Electron build command for your platform:
-        *   **macOS:** `npm run electron:build --mac`
-        *   **Windows:** `npm run electron:build --win`
-        *   **Linux:** `npm run electron:build --linux`
-        *   *(Alternatively, `npm run electron:build` might auto-detect your OS)*
-    *   This command first runs `npm run build` (React build) and then uses `electron-builder`. Because you built the backend natively in the previous step, `electron-builder` will copy the *correct* native backend from `../seta-api/dist/seta_api_server/` into the packaged app's resources.
+        *   **macOS:** `npm run electron:build -- --mac` (Note the extra `--` if passing args)
+        *   **Windows:** `npm run electron:build -- --win`
+        *   **Linux:** `npm run electron:build -- --linux`
+        *   *(Alternatively, `npm run electron:build` might auto-detect your OS based on `package.json` config)*
+    *   This command typically first runs `npm run build` (React build) and then uses `electron-builder`.
+    *   **Crucially:** `electron-builder` must be configured (usually in `package.json` or `electron-builder.yml`) to copy the *correct* native backend from `../seta-api/dist/seta_api_server/` into the packaged app's resources directory (e.g., under `extraResources`).
     *   The final packaged application (e.g., `.dmg`, `.exe`, `.AppImage`) will be in `seta-ui/release/`.
     *   Navigate back to the root: `cd ..`
 
@@ -105,25 +111,26 @@ Before relying on automation, it's useful to know how to build the application l
 
 A GitHub Actions workflow is configured in `.github/workflows/release.yml` to automate the native build process for macOS, Windows, and Linux, and then create a GitHub Release with the built artifacts attached.
 
-**Trigger:** This workflow runs automatically whenever a Git tag matching the pattern `v*.*.*` (e.g., `v1.0.0`, `v0.2.1`) is pushed to the repository.
+**Trigger:** This workflow runs automatically whenever a Git tag matching the pattern `v*.*.*` (e.g., `v1.0.0`, `v0.2.1`) is pushed to the repository (typically pushed on the `release` branch as per the [Development Workflow](./development_workflow.md)).
 
 **Process:**
 
 1.  The workflow starts three parallel jobs, one for each OS (`macos-latest`, `windows-latest`, `ubuntu-latest`).
 2.  Each job checks out the code corresponding to the pushed tag.
 3.  Each job sets up Node.js and Python.
-4.  Each job builds the **backend natively** using PyInstaller *on that specific OS runner*.
-5.  Each job builds and packages the **Electron app natively** using `electron-builder` *on that specific OS runner*, ensuring the correct native backend is included.
-6.  Each job uploads its packaged application files (e.g., `.dmg`, `.exe`, `.AppImage`, `.yml` update files) as build artifacts.
-7.  A final job runs *after* all builds succeed. It downloads all the build artifacts.
-8.  It then creates (or updates) a GitHub Release associated with the triggering tag.
-9.  It uploads all the downloaded artifacts (the packaged apps for all platforms) to that GitHub Release.
+4.  Each job installs backend dependencies (`pip install`) and frontend dependencies (`npm install`).
+5.  Each job builds the **backend natively** using PyInstaller *on that specific OS runner*.
+6.  Each job builds and packages the **Electron app natively** using `electron-builder` *on that specific OS runner*, ensuring the correct native backend (built in the previous step) is included.
+7.  Each job uploads its packaged application files (e.g., `.dmg`, `.exe`, `.AppImage`, `.yml` update files) as build artifacts.
+8.  A final job runs *after* all builds succeed. It downloads all the build artifacts.
+9.  It then creates (or updates) a GitHub Release associated with the triggering tag.
+10. It uploads all the downloaded artifacts (the packaged apps for all platforms) to that GitHub Release.
 
-**(Optional: Add the content of `.github/workflows/release.yml` here or reference it)**
+**(Ensure `.github/workflows/release.yml` exists and reflects this process)**
 
 ```yaml
 # Example structure for .github/workflows/release.yml
-# (Ensure this file exists in your repository)
+# (Verify this matches your actual file)
 
 name: Build and Release SETA
 
@@ -138,19 +145,37 @@ jobs:
     name: Build macOS
     runs-on: macos-latest
     steps:
-      # ... steps to checkout, setup node/python, build backend, build electron (--mac), upload artifact ...
+      # ... steps to checkout code ...
+      # ... setup python, node ...
+      # ... install backend deps (pip install) ...
+      # ... build backend (pyinstaller) ...
+      # ... install frontend deps (npm install in seta-ui) ...
+      # ... build electron app (npm run electron:build -- --mac in seta-ui) ...
+      # ... upload artifact (e.g., ./seta-ui/release/*.dmg) ...
 
   build-windows:
     name: Build Windows
     runs-on: windows-latest
     steps:
-      # ... steps to checkout, setup node/python, build backend, build electron (--win), upload artifact ...
+      # ... steps to checkout code ...
+      # ... setup python, node ...
+      # ... install backend deps (pip install) ...
+      # ... build backend (pyinstaller) ...
+      # ... install frontend deps (npm install in seta-ui) ...
+      # ... build electron app (npm run electron:build -- --win in seta-ui) ...
+      # ... upload artifact (e.g., ./seta-ui/release/*.exe, *.yml) ...
 
   build-linux:
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
-      # ... steps to checkout, setup node/python, build backend, build electron (--linux), upload artifact ...
+      # ... steps to checkout code ...
+      # ... setup python, node ...
+      # ... install backend deps (pip install) ...
+      # ... build backend (pyinstaller) ...
+      # ... install frontend deps (npm install in seta-ui) ...
+      # ... build electron app (npm run electron:build -- --linux in seta-ui) ...
+      # ... upload artifact (e.g., ./seta-ui/release/*.AppImage, *.yml) ...
 
   # --- Create Release Job (Runs after builds) ---
   create-release:
@@ -160,9 +185,9 @@ jobs:
     permissions:
       contents: write # Needed to create releases and upload assets
     steps:
-      # ... steps to download all artifacts ...
+      # ... steps to download all artifacts from build jobs ...
       - name: Create Release and Upload Assets
-        uses: ncipollo/release-action@v1 # Or another release action
+        uses: ncipollo/release-action@v1
         with:
           artifacts: "path/to/downloaded/artifacts/*" # Adjust path as needed
           tag: ${{ github.ref_name }}
@@ -174,21 +199,24 @@ jobs:
 
 To create a new release using the automated workflow:
 
-1.  **Ensure Code Readiness:** Make sure the code on your main branch (or designated release branch) is stable and contains all features/fixes for the release.
-2.  **Update Version:** Increment the `version` number in `seta-ui/package.json`.
-3.  **Commit Version Bump:**
+1.  **Ensure Code Readiness:** Make sure the code on your `main` branch is stable and contains all features/fixes for the release.
+2.  **Prepare Release Branch:** Follow the steps in the [Development Workflow](./development_workflow.md) to merge `main` into `release`.
+3.  **Update Version:** Increment the `version` number in `seta-ui/package.json` *on the `release` branch*.
+4.  **Commit Version Bump:** *On the `release` branch*:
     ```bash
     git add seta-ui/package.json
-    git commit -m "Bump version to vX.Y.Z" # Use the actual new version
-    git push origin main # Or your release branch
+    git commit -m "Prepare release vX.Y.Z" # Use the actual new version
+    # Push the release branch commit
+    git push origin release
     ```
-4.  **Create and Push Tag:** Create a Git tag matching the version number you just set.
+5.  **Create and Push Tag:** Create a Git tag *on the release commit* matching the version number.
     ```bash
     git tag vX.Y.Z # Use the same version number
     git push origin vX.Y.Z # Push the tag to GitHub
     ```
-5.  **Monitor Action:** Go to the "Actions" tab in your GitHub repository. You should see the "Build and Release SETA" workflow running, triggered by the tag push. Monitor its progress.
-6.  **Verify Release:** Once the workflow completes successfully, go to the "Releases" section of your repository. You should find a new release corresponding to your tag, with the `.dmg`, `.exe`, `.AppImage`, and `.yml` files attached.
+6.  **Monitor Action:** Go to the "Actions" tab in your GitHub repository. You should see the "Build and Release SETA" workflow running, triggered by the tag push. Monitor its progress.
+7.  **Verify Release:** Once the workflow completes successfully, go to the "Releases" section of your repository. You should find a new release corresponding to your tag, with the `.dmg`, `.exe`, `.AppImage`, and `.yml` files attached.
+8.  **Sync Back:** Merge the `release` branch (with the version bump) back into `main` as described in the [Development Workflow](./development_workflow.md).
 
 ## Manual Release (Fallback)
 
@@ -196,8 +224,8 @@ If the GitHub Actions workflow fails or is not configured, you can perform a man
 
 1.  Perform the "Local Build" steps on macOS, Windows, and Linux machines/VMs separately.
 2.  Gather the built application files (`.dmg`, `.exe`, `.AppImage`) and the corresponding `.yml` update files from the `seta-ui/release/` directory on each platform.
-3.  Ensure your code is committed and pushed.
-4.  Create and push the Git tag manually (`git tag vX.Y.Z`, `git push origin vX.Y.Z`).
+3.  Ensure your code is committed and pushed, and the `release` branch reflects the final state.
+4.  Create and push the Git tag manually (`git checkout release`, `git tag vX.Y.Z`, `git push origin vX.Y.Z`).
 5.  Go to your GitHub repository -> Releases -> "Draft a new release".
 6.  Select the tag you pushed.
 7.  Write release notes.
@@ -206,10 +234,12 @@ If the GitHub Actions workflow fails or is not configured, you can perform a man
 
 ## Important Notes
 
-*   **Code Signing:** For the automated release (and professional distribution), **code signing is crucial**, especially for macOS and Windows. You will need to:
+*   **Packaged Backend Data Path:** As mentioned in the [Backend README](../seta-api/README.md), the packaged Python backend relies on the `SETA_USER_DATA_PATH` environment variable being set by the Electron frontend at runtime. This ensures the config and local DB are stored correctly. Verify your Electron code (`electron.js`) sets this when spawning the backend process.
+*   **Code Signing:** For the automated release (and professional distribution), **code signing is crucial**, especially for macOS and Windows. Unsigned apps will face significant warnings or blocks during installation and auto-update. You will need to:
     *   Obtain Apple Developer ID and Windows Code Signing certificates.
-    *   Configure **Secrets** in your GitHub repository settings (e.g., `CSC_LINK`, `CSC_KEY_PASSWORD`, `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`).
-    *   Modify the GitHub Actions workflow (`release.yml`) to use these secrets during the `electron-builder` step. Refer to the `electron-builder` documentation on code signing and CI configuration. Unsigned apps will face significant warnings or blocks during installation and auto-update.
-*   **Backend System Dependencies:** If `seta-api` relies on system libraries beyond standard Python packages (e.g., database drivers needing system installation), you may need to add steps to the GitHub Actions workflow (`release.yml`) to install those dependencies on the runners (e.g., using `apt-get install` on Linux).
+    *   Configure **Secrets** in your GitHub repository settings (e.g., `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_ID_PASSWORD`, etc. - refer to `electron-builder` docs).
+    *   Modify the GitHub Actions workflow (`release.yml`) and `electron-builder` configuration to use these secrets during the build step.
+*   **Backend System Dependencies:** If `seta-api` relies on system libraries beyond standard Python packages (e.g., specific database drivers needing system installation like `libpq-dev`), you may need to add steps to the GitHub Actions workflow (`release.yml`) to install those dependencies on the runners (e.g., using `apt-get install` on Linux, `brew install` on macOS).
 *   **Testing:** Always test your local builds thoroughly before tagging and pushing to trigger a release.
 *   **`GITHUB_TOKEN`:** The default token used in Actions has limitations. If you need the release workflow to trigger *other* workflows, you might need to use a Personal Access Token (PAT) stored as a repository secret.
+```

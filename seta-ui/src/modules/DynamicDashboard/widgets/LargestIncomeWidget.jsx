@@ -5,11 +5,13 @@ import { format, parseISO, isValid } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'; // Icon for income list items
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const MAX_ITEMS = 5; // Max items to show
 
 export function LargestIncomeWidget({ income = [], isLoading }) {
   const { t } = useTranslation();
+  const { format: formatLocaleDate } = useLocalizedDateFormat();
 
   const largestIncomes = useMemo(() => {
     if (!income || income.length === 0) return [];
@@ -21,7 +23,7 @@ export function LargestIncomeWidget({ income = [], isLoading }) {
   const formatDate = (dateString) => {
     try {
       const date = parseISO(dateString);
-      return isValid(date) ? format(date, 'MMM d') : dateString;
+      return isValid(date) ? formatLocaleDate(date, 'MMM d') : dateString;
     } catch { return dateString; }
   };
 

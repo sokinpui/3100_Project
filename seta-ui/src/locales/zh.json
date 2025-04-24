@@ -21,7 +21,13 @@
             "newPassword": "新密码",
             "confirmPassword": "确认新密码",
             "cancel": "取消",
-            "change": "更改密码"
+            "change": "更改密码",
+            "success": "密码更改成功！",
+            "errorCurrentMismatch": "当前密码不正确。",
+            "errorUpdateFailed": "更新密码失败，请重试。",
+            "errorNewPasswordMismatch": "新密码与确认密码不匹配。",
+            "errorPasswordStrength": "新密码不符合复杂度要求（至少8个字符，包含大小写字母、数字和特殊符号）。",
+            "errorFieldsRequired": "所有密码字段均为必填项。"
         },
         "dataManagementTitle": "数据管理",
         "exportDataTitle": "导出数据",
@@ -44,7 +50,23 @@
         "importConfirmConsequence": "这将永久删除所有当前数据，并用所选文件的内容替换。",
         "importConfirmProceed": "您希望继续吗？",
         "cancelImport": "取消",
-        "confirmImport": "是的，替换数据"
+        "confirmImport": "是的，替换数据",
+        "licenceManagementTitle": "许可证管理",
+        "licenceDescription": "管理您的应用程序许可证密钥。",
+        "currentStatus": "当前状态：",
+        "licenceStatus_active": "有效",
+        "licenceStatus_inactive": "无效",
+        "licenceStatus_not_set": "未设置",
+        "licenceKeyLabel": "输入许可证密钥",
+        "activateLicenceButton": "更新许可证",
+        "licenceUpdateSuccess": "许可证更新成功！",
+        "licenceUpdateFailed": "更新许可证密钥失败。",
+        "licencePlaceholderNote": "注意：许可证验证目前为占位符功能。",
+        "saveSuccess": "设置保存成功！",
+        "saveFailed": "设置保存失败。",
+        "licenceKeyRequiredError": "请输入许可证密钥。",
+        "licenceFormatHelper": "格式：XXXX-XXXX-XXXX-XXXX（字母/数字）",
+        "licenceNoteV2": "注意：输入密钥会更新状态，但在此版本中不会解锁任何功能。"
     },
     "sidebar": {
         "appName": "SETA",
@@ -68,7 +90,32 @@
         "recurring": "周期性项目",
         "planning": "财务规划",
         "recurring": "周期性项目",
-        "accounts": "账户管理"
+        "accounts": "账户管理",
+        "customReports": "自定义报告",
+        "requiresLicenceTooltip": "需要有效许可证",
+        "importData": "导入数据",
+        "Entries": "条目",
+        "due": "截止日期",
+        "allTime": "所有时间"
+    },
+    "planningManager": {
+        "title": "财务规划",
+        "budgetsTab": "预算",
+        "goalsTab": "目标"
+    },
+    "customReport": {
+        "title": "自定义报告",
+        "description": "生成自定义报告以分析您的财务数据。选择所需的数据类型和格式。",
+        "selectDataTypes": "选择数据类型",
+        "configureOptions": "配置选项",
+        "outputFormat": "输出格式",
+        "columnSelectionNote": "选择要在报告中包含的列。",
+        "generateButton": "生成报告",
+        "errorNoDataTypes": "请选择至少一个数据类型。",
+        "errorGenerationFailed": "报告生成失败。",
+        "errorLicenceRequired": "需要有效许可证才能生成报告。",
+        "errorNoDataFound": "未找到数据。",
+        "configureOptions": "配置选项"
     },
     "budgetManager": {
         "fetchError": "加载预算失败。",
@@ -201,7 +248,14 @@
         "deleteMultipleTitle": "删除多个账户",
         "confirmBulkDeleteAccounts": "您确定要删除选中的 {{count}} 个账户吗？此操作无法撤销，且可能影响关联的交易（如果未正确处理）。",
         "bulkDeleteSuccess": "成功删除 {{count}} 个账户！",
-        "bulkDeleteError": "删除选中的账户失败。请确保它们没有关联任何交易。"
+        "bulkDeleteError": "删除选中的账户失败。请确保它们没有关联任何交易。",
+        "accountType_checking": "支票账户",
+        "accountType_savings": "储蓄账户",
+        "accountType_creditCard": "信用卡",
+        "accountType_cash": "现金",
+        "accountType_investment": "投资账户",
+        "accountType_loan": "贷款账户",
+        "accountType_other": "其他"
     },
     "expenseImport": {
         "title": "从 CSV 导入费用",
@@ -259,14 +313,16 @@
         "createdAt": "创建时间",
         "Amount": "金额",
         "Date": "日期",
-        "Description": "描述"
+        "Description": "描述",
+        "due": "截止日期",
+        "allTime": "所有时间"
     },
     "dynamicDashboard": {
         "title": "动态仪表板",
         "addWidget": "添加小部件",
         "removeWidget": "移除小部件",
         "totalExpenses": "总支出",
-        "categoryBreakdown": "分类明细",
+        "categoryBreakdown": "支出分类",
         "recentTransactions": "最近交易",
         "expenseTrend": "支出趋势",
         "emptyDashboard": "您的仪表板是空的。点击“添加小部件”开始。",
@@ -277,7 +333,7 @@
         "noDescription": "无描述",
         "expenseTrend": "支出趋势",
         "notEnoughDataForTrend": "数据不足，无法进行趋势分析。",
-        "monthlyComparison": "月度比较",
+        "monthlyComparison": "月度支出比较",
         "noMonthlyData": "无月度数据可用。",
         "topSpendingCategories": "最高支出类别",
         "category": "类别",
@@ -385,7 +441,10 @@
         "selectBudgetPrompt": "请选择一个预算以查看对比。",
         "budgeted": "预算金额",
         "actual": "实际支出",
-        "underBudgetBy": "低于预算"
+        "underBudgetBy": "低于预算",
+        "incomeTimeline": "分类收入时间线",
+        "noIncomeTimelineData": "数据不足，无法显示收入时间线视图。",
+        "unknownSource": "未知来源"
     },
     "quickAdd": {
         "addExpense": "添加支出",
@@ -477,7 +536,13 @@
         "downloadExcel": "Excel",
         "downloadPDF": "PDF",
         "loading": "加载报告数据中...",
-        "noDataToExport": "没有可导出的数据。"
+        "noDataToExport": "没有可导出的数据。",
+        "downloadExcelAll": "Excel (所有数据)",
+        "downloadPdfAll": "PDF (所有数据)",
+        "downloadIndividualCsv": "下载单个 CSV 文件",
+        "formatCsv": "CSV (.csv)",
+        "formatExcel": "Excel (.xlsx)",
+        "formatPdf": "PDF (.pdf)"
     },
     "dashboard": {
         "overview": {
@@ -635,5 +700,18 @@
         "devPasswordSetDuringSignup": "[注册时设置]",
         "devNoteBackendRunning": "注意：登录前请确保 Python 后端正在运行！",
         "devNoteNewUserCredentials": "附加说明：新注册用户的凭据会在此处显示（供开发使用）。"
+    },
+    "resetPassword": {
+        "title": "重设您的密码",
+        "validationPasswordRequired": "必须填写新密码",
+        "validationPasswordLength": "密码必须至少包含 8 个字符",
+        "validationConfirmRequired": "请确认您的新密码",
+        "validationPasswordMatch": "两次输入的密码不匹配",
+        "successMessage": "密码重设成功！正在跳转到登录页面...",
+        "errorMessage": "重设密码失败。链接可能无效或已过期。",
+        "newPasswordLabel": "新密码",
+        "confirmPasswordLabel": "确认新密码",
+        "resetButton": "重设密码",
+        "goToLoginButton": "前往登录"
     }
 }

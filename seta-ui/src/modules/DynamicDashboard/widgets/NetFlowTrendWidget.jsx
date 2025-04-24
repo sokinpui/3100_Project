@@ -5,31 +5,40 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { format, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat'; // Import the hook
 
 const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const value = payload[0].value;
-    const color = value >= 0 ? '#4CAF50' : '#f44336'; // Green for positive, red for negative
-    return (
-      <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
-        <Typography variant="caption">{label}</Typography>
-        {/* Add specific translation key */}
-        <Typography variant="body2" sx={{ color: color }}>{T('dynamicDashboard.netFlow')} : ${value.toFixed(2)}</Typography>
-      </Box>
-    );
-  }
-  return null;
+    // UseTranslation hook is needed here if T component isn't used or if t() is preferred
+    const { t } = useTranslation();
+    if (active && payload && payload.length) {
+        const value = payload[0].value;
+        const color = value >= 0 ? '#4CAF50' : '#f44336'; // Green for positive, red for negative
+        return (
+        <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
+            <Typography variant="caption">{label}</Typography>
+            {/* Use t() directly here for simplicity inside the tooltip */}
+            <Typography variant="body2" sx={{ color: color }}>{t('dynamicDashboard.netFlow')} : ${value.toFixed(2)}</Typography>
+        </Box>
+        );
+    }
+    return null;
 };
 
+
 export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
-  const { t } = useTranslation(); // Get t function
+  const { t } = useTranslation();
+  const { format: formatLocaleDate } = useLocalizedDateFormat(); // Use the date formatting hook
 
-  const dailyNetFlowData = useMemo(() => {
-    if ((!expenses || expenses.length === 0) && (!income || income.length === 0)) return [];
+  // --- Calculate daily data AND min/max net flow ---
+  const { dailyNetFlowData, minNetFlow, maxNetFlow } = useMemo(() => {
+    if ((!expenses || expenses.length === 0) && (!income || income.length === 0)) {
+        return { dailyNetFlowData: [], minNetFlow: 0, maxNetFlow: 0 };
+    }
 
-    const dailyMap = {}; // Use date string 'YYYY-MM-DD' as key
+    const dailyMap = {};
+    let overallMin = Infinity;
+    let overallMax = -Infinity;
 
-    // Process Income
     income.forEach(inc => {
       try {
         const date = parseISO(inc.date);
@@ -39,10 +48,9 @@ export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
             if (!dailyMap[dateString]) dailyMap[dateString] = { income: 0, expense: 0 };
             dailyMap[dateString].income += amount;
         }
-      } catch (e) { console.error("Error parsing date for net flow (income):", inc.date, e); }
+      } catch (e) { /* ignore */ }
     });
 
-    // Process Expenses
     expenses.forEach(exp => {
       try {
         const date = parseISO(exp.date);
@@ -52,25 +60,57 @@ export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
             if (!dailyMap[dateString]) dailyMap[dateString] = { income: 0, expense: 0 };
             dailyMap[dateString].expense += amount;
         }
-      } catch (e) { console.error("Error parsing date for net flow (expense):", exp.date, e); }
+      } catch (e) { /* ignore */ }
     });
 
-    // Calculate net flow and format for chart
-    return Object.entries(dailyMap)
-      .map(([dateString, totals]) => ({
-          date: dateString,
-          name: format(parseISO(dateString), 'MMM d'), // X-axis label
-          netFlow: totals.income - totals.expense,
-       }))
-      .sort((a, b) => a.date.localeCompare(b.date)); // Sort chronologically
+    const chartData = Object.entries(dailyMap)
+      .map(([dateString, totals]) => {
+          const netFlow = totals.income - totals.expense;
+          // Update min/max
+          if (netFlow < overallMin) overallMin = netFlow;
+          if (netFlow > overallMax) overallMax = netFlow;
+          return {
+              date: dateString,
+              name: formatLocaleDate(parseISO(dateString), 'MMM d'),
+              netFlow: netFlow,
+          }
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
 
-  }, [expenses, income]);
+    // Handle cases where min/max remain at initial values (e.g., no data)
+    if (overallMin === Infinity) overallMin = 0;
+    if (overallMax === -Infinity) overallMax = 0;
+
+    return { dailyNetFlowData: chartData, minNetFlow: overallMin, maxNetFlow: overallMax };
+
+  }, [expenses, income, formatLocaleDate]); // Add formatLocaleDate dependency
+
+  // --- Calculate Y-axis domain with padding ---
+   const yAxisDomain = useMemo(() => {
+        const padding = Math.max(50, Math.abs(maxNetFlow - minNetFlow) * 0.1); // Add padding (at least 50)
+        let domainMin = minNetFlow - padding;
+        let domainMax = maxNetFlow + padding;
+
+        // Ensure 0 is included if the range crosses it
+        if (minNetFlow < 0 && maxNetFlow > 0) {
+            // Domain already covers 0
+        } else if (minNetFlow >= 0) {
+            domainMin = 0; // Start at 0 if all values are non-negative
+        } else { // maxNetFlow <= 0
+            domainMax = 0; // End at 0 if all values are non-positive
+        }
+
+        // Round to nearest nice number if desired (e.g., multiple of 50 or 100), optional
+        // domainMin = Math.floor(domainMin / 50) * 50;
+        // domainMax = Math.ceil(domainMax / 50) * 50;
+
+        return [domainMin, domainMax];
+   }, [minNetFlow, maxNetFlow]);
 
   if (isLoading) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>;
   }
 
-   // Add specific translation key
    if (dailyNetFlowData.length < 2) {
     return (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', textAlign: 'center', p:1 }}>
@@ -93,11 +133,10 @@ export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
             style={{ fontSize: '10px' }}
             tickFormatter={(value) => `$${value.toFixed(0)}`}
             allowDecimals={false}
-            // Allow negative ticks
-            allowDataOverflow={true}
+            allowDataOverflow={true} // Keep this
+            domain={yAxisDomain} // Explicitly set the domain
             />
         <Tooltip content={<CustomTooltip />} />
-        {/* Add a reference line at y=0 to clearly show positive/negative */}
         <ReferenceLine y={0} stroke="#888" strokeDasharray="3 3" />
         {/* <Legend /> */}
         <Line

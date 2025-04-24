@@ -6,6 +6,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const CustomTooltip = ({ active, payload, label }) => {
     const { t } = useTranslation(); // Need t inside tooltip
@@ -27,6 +28,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 export function NetFlowComparisonWidget({ expenses = [], income = [], isLoading }) {
     const { t } = useTranslation();
     const theme = useTheme(); // For colors
+    const { format: formatLocaleDate } = useLocalizedDateFormat()
 
     const monthlyNetFlowData = useMemo(() => {
         if ((!expenses || expenses.length === 0) && (!income || income.length === 0)) return [];
@@ -62,7 +64,7 @@ export function NetFlowComparisonWidget({ expenses = [], income = [], isLoading 
         // Calculate net flow and format for chart
         return Object.entries(monthlyMap)
             .map(([monthYear, totals]) => ({
-                name: format(parseISO(`${monthYear}-01`), 'MMM yy'), // X-axis label
+                name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'), // X-axis label
                 netFlow: totals.income - totals.expense,
                 monthYear: monthYear // For sorting
             }))

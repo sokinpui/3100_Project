@@ -64,11 +64,23 @@ yarn-debug.log*
 yarn-error.log*
 
 # SETA Specific Config/Data
-/seta_config.json
-/seta_user_data/
+seta-api/seta_config.json
+seta-api/seta_user_data/
 /seta-api/app/seta_config.json
 /seta-api/app/seta_local.db
 /seta_local.db
 
 *.p12
 certificate.txt
+=======
+seta-api/seta_user_data/seta_local.db
+seta-api/seta_user_data/seta_config.json
+
+seta-ui/seta_local.db
+
+/certificate.txt
+/*.p12
+
+/.obsidian/
+
+*.zip
