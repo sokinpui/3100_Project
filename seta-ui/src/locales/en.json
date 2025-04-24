@@ -271,7 +271,14 @@
         "deleteMultipleTitle": "Delete Multiple Accounts",
         "confirmBulkDeleteAccounts": "Are you sure you want to delete the selected {{count}} account(s)? This action cannot be undone and may affect linked transactions if not handled properly.",
         "bulkDeleteSuccess": "{{count}} account(s) deleted successfully!",
-        "bulkDeleteError": "Failed to delete selected accounts. Ensure they are not linked to transactions."
+        "bulkDeleteError": "Failed to delete selected accounts. Ensure they are not linked to transactions.",
+        "accountType_checking": "Checking",
+        "accountType_savings": "Savings",
+        "accountType_creditCard": "Credit Card",
+        "accountType_cash": "Cash",
+        "accountType_investment": "Investment",
+        "accountType_loan": "Loan",
+        "accountType_other": "Other"
     },
     "expenseImport": {
         "title": "Import Expenses from CSV",
@@ -320,7 +327,7 @@
         "addWidget": "Add Widget",
         "removeWidget": "Remove Widget",
         "totalExpenses": "Total Expenses",
-        "categoryBreakdown": "Category Breakdown",
+        "categoryBreakdown": "Expense Breakdown",
         "recentTransactions": "Recent Transactions",
         "expenseTrend": "Expense Trend",
         "emptyDashboard": "Your dashboard is empty. Click 'Add Widget' to get started.",
@@ -331,7 +338,7 @@
         "noDescription": "No description",
         "expenseTrend": "Expense Trend",
         "notEnoughDataForTrend": "Not enough data for trend analysis.",
-        "monthlyComparison": "Monthly Comparison",
+        "monthlyComparison": "Monthly Expense Comparison",
         "noMonthlyData": "No monthly data available.",
         "topSpendingCategories": "Top Spending Categories",
         "category": "Category",

@@ -248,7 +248,14 @@
         "deleteMultipleTitle": "删除多个账户",
         "confirmBulkDeleteAccounts": "您确定要删除选中的 {{count}} 个账户吗？此操作无法撤销，且可能影响关联的交易（如果未正确处理）。",
         "bulkDeleteSuccess": "成功删除 {{count}} 个账户！",
-        "bulkDeleteError": "删除选中的账户失败。请确保它们没有关联任何交易。"
+        "bulkDeleteError": "删除选中的账户失败。请确保它们没有关联任何交易。",
+        "accountType_checking": "支票账户",
+        "accountType_savings": "储蓄账户",
+        "accountType_creditCard": "信用卡",
+        "accountType_cash": "现金",
+        "accountType_investment": "投资账户",
+        "accountType_loan": "贷款账户",
+        "accountType_other": "其他"
     },
     "expenseImport": {
         "title": "从 CSV 导入费用",
@@ -315,7 +322,7 @@
         "addWidget": "添加小部件",
         "removeWidget": "移除小部件",
         "totalExpenses": "总支出",
-        "categoryBreakdown": "分类明细",
+        "categoryBreakdown": "支出分类",
         "recentTransactions": "最近交易",
         "expenseTrend": "支出趋势",
         "emptyDashboard": "您的仪表板是空的。点击“添加小部件”开始。",
@@ -326,7 +333,7 @@
         "noDescription": "无描述",
         "expenseTrend": "支出趋势",
         "notEnoughDataForTrend": "数据不足，无法进行趋势分析。",
-        "monthlyComparison": "月度比较",
+        "monthlyComparison": "月度支出比较",
         "noMonthlyData": "无月度数据可用。",
         "topSpendingCategories": "最高支出类别",
         "category": "类别",

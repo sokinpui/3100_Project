@@ -10,6 +10,18 @@ import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 
+// --- Add this mapping ---
+const ACCOUNT_TYPE_TRANSLATION_KEYS = {
+    'Checking': 'checking',
+    'Savings': 'savings',
+    'Credit Card': 'creditCard',
+    'Cash': 'cash',
+    'Investment': 'investment',
+    'Loan': 'loan',
+    'Other': 'other',
+};
+// --- End mapping ---
+
 // Map language codes to MUI locale objects
 const dataGridLocaleTextMap = {
   english: enUS.components.MuiDataGrid.defaultProps.localeText,
@@ -30,15 +42,35 @@ export default function AccountList({
     const currentLanguage = i18n.language.split('-')[0]; // Get base language ('en', 'zh')
     const dataGridLocale = dataGridLocaleTextMap[currentLanguage] || dataGridLocaleTextMap['english'];
 
+    // --- Helper function to get translated account type ---
+    const getTranslatedAccountType = (value) => {
+        const translationStem = ACCOUNT_TYPE_TRANSLATION_KEYS[value];
+        if (translationStem) {
+            return t(`accountManager.accountType_${translationStem}`, { defaultValue: value });
+        }
+        return value; // Fallback to the raw value if no key found
+    };
+    // --- End helper function ---
+
     const columns: GridColDef[] = [
         { field: 'name', headerName: t('accountManager.accountName'), width: 200 },
-        { field: 'account_type', headerName: t('accountManager.accountType'), width: 150 },
+        {
+            field: 'account_type',
+            headerName: t('accountManager.accountType'),
+            width: 150,
+            // Use renderCell to display the translated value
+            renderCell: (params) => getTranslatedAccountType(params.value),
+            // Use valueGetter to provide translated value for sorting/filtering
+            valueGetter: (value) => getTranslatedAccountType(value),
+        },
         {
             field: 'starting_balance',
             headerName: t('accountManager.startingBalance'),
             width: 150,
             type: 'number',
             valueFormatter: (value) => value != null ? `$${Number(value).toFixed(2)}` : '',
+            cellClassName: 'font-tabular-nums', // Optional: aligns numbers
+            headerAlign: 'left', align: 'left' // Align header and cell content left
         },
         {
             field: 'balance_date',
@@ -109,7 +141,8 @@ export default function AccountList({
                     columns={columns}
                     initialState={{
                         pagination: { paginationModel: { pageSize: 10 } },
-                        columns: { columnVisibilityModel: { created_at: false } },
+                        columns: { columnVisibilityModel: { created_at: false } }, // Hide 'Created At' by default
+                        sorting: { sortModel: [{ field: 'name', sort: 'asc' }] }, // Sort by name initially
                     }}
                     pageSizeOptions={[5, 10, 25]}
                     checkboxSelection
@@ -120,6 +153,9 @@ export default function AccountList({
                     localeText={dataGridLocale} // <-- Apply localization
                     sx={{
                         border: 'none',
+                        '& .MuiDataGrid-cell': {
+                            // Optional: Add some padding or adjust alignment if needed
+                        },
                         '& .MuiDataGrid-row.Mui-selected': {
                             backgroundColor: 'rgba(25, 118, 210, 0.08)',
                         },
