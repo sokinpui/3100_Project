@@ -207,3 +207,30 @@ You can restore your data from a previously exported `.json` file. This is usefu
 ## 8. Conclusion
 
 Thanks for using SETA! We hope it helps you gain control and insights into your personal finances. Explore the different modules, customize your dashboard, and make informed financial decisions!
+
+---
+
+# Licence Keys & Feature Access
+
+```
+0IH9-YJ2D-74IE-TJCH
+0VEZ-UZVC-NPVW-EPHE
+2XJB-M1SE-FDIE-55ST
+3AJM-WX1M-886P-KVSW
+6D4K-MP88-8HP1-HZ3Y
+9VJ8-8DQ0-MKUD-UKO1
+F2SV-I38E-EROW-9REZ
+FBQT-HJVQ-QM2M-OPPW
+IARV-E6SJ-03UB-UCH4
+IDKC-7A36-WE4F-300S
+IK4G-7CZJ-DFZI-9WE7
+M7NI-QGLO-D55P-VWGN
+PM0Y-9U9F-FKTP-HJ2O
+R06P-T2RJ-QN1F-5E4X
+UMBJ-PR19-XA4B-TBN8
+W2FV-0GN0-FJ3D-I541
+W35K-GQ7G-320V-T8GQ
+WIC5-JM9W-T3F4-H2CN
+YR1X-PLGN-G9C6-4DCF
+YYNW-CGCU-MPHL-308J
+```

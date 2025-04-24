@@ -13,6 +13,7 @@ SETA is a desktop application designed to help users manage their personal finan
     *   Import Expenses and Income from CSV files.
     *   Full Application Data Backup & Restore via JSON files.
 *   Reporting: Download comprehensive financial history as Excel, PDF, or individual CSV files.
+*   **Licence Management:** Includes a placeholder for future premium features. **Note:** Currently, licence validation is a placeholder. Several free licence keys are provided within the application/documentation for testing and accessing all features in the current version. (See [Licence Keys & Feature Access](#licence-keys--feature-access) below).
 *   Configurable Backend Database (Local SQLite or Cloud/Custom PostgreSQL - *Note: Cloud/Custom options are experimental*).
 *   User Profile Management.
 *   Application Settings: Theme (Light/Dark/System) and Language (English/Chinese) preferences.
@@ -35,8 +36,16 @@ Detailed guides are available in the `/doc` directory.
 
 ## Getting Started
 
-1.  **Installation & Usage:** Please refer to the **[User Manual](./doc/user_manual.md)** for instructions on downloading from **[GitHub Releases](https://github.com/sokinpui/3100_Project/releases)** (Recommended), installing (including the macOS unsigned app workaround), and using the application.
+1.  **Installation & Usage:** Please refer to the **[User Manual](./doc/user_manual.md)** for instructions on downloading from **[GitHub Releases](https://github.com/sokinpui/3100_Project/releases)** (Recommended), installing (including the macOS unsigned app workaround), and using the application. **The manual also includes information on the provided free licence keys needed to access certain features.**
 2.  **Development Setup:** If you want to contribute or run from source, follow the setup instructions in the README files within the `seta-api/` and `seta-ui/` directories, and consult the [Build and Release Guide](./doc/build_and_release.md).
+
+## Licence Keys & Feature Access
+
+SETA includes a licence management feature primarily as a placeholder for potential future premium tiers. **In the current version, all features are accessible using the freely provided licence keys.**
+
+*   **Purpose:** Some features (like Custom Reports) might indicate they require a licence in the UI.
+*   **Provided Keys:** A set of valid, free licence keys is included for all users. You can find one of these keys listed in the [User Manual](./doc/user_manual.md). Any key from that list will work.
+*   **How to Use:** Simply copy one of the provided keys and enter it into the Licence Management section within the application's **Settings** page to activate all features. **There is no cost associated with using these provided keys.**
 
 ## Development Quick Start
 
