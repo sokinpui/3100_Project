@@ -9,23 +9,27 @@ import {
 import { useTranslation } from 'react-i18next';
 import T from '../../../utils/T';
 import { format, parseISO, isValid, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, getMonth, getYear, isWithinInterval, isSameYear, isSameQuarter, isSameMonth } from 'date-fns';
-import { useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles'; // Keep this import
 import { getCategoryDetails } from '../../../constants';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat'; // Import date format hook
 
 // Helper to get quarter number (1-4)
 const getQuarter = (date) => Math.floor(getMonth(date) / 3) + 1;
 
-// Helper to format period labels
-const formatPeriodLabel = (periodKey, periodType) => {
+// Helper to format period labels - Uses the hook now
+const formatPeriodLabel = (periodKey, periodType, formatLocaleDate) => { // Pass formatLocaleDate
     try {
         if (periodType === 'monthly') {
             const [year, month] = periodKey.split('-');
-            return format(new Date(parseInt(year), parseInt(month) - 1), 'MMM yy');
+            // Use the localized formatter
+            return formatLocaleDate(new Date(parseInt(year), parseInt(month) - 1), 'MMM yy');
         } else if (periodType === 'quarterly') {
             const [year, quarter] = periodKey.split('-Q');
-            return `Q${quarter} ${year}`;
+            // Format year, but quarter is just a number
+            return `Q${quarter} ${formatLocaleDate(new Date(parseInt(year), 0), 'yy')}`; // Format year part
         } else if (periodType === 'yearly') {
-            return periodKey; // Year is the key itself
+             // Format the year
+            return formatLocaleDate(new Date(parseInt(periodKey), 0), 'yyyy');
         }
     } catch (e) {
         console.error("Error formatting period label:", e);
@@ -34,26 +38,37 @@ const formatPeriodLabel = (periodKey, periodType) => {
     return periodKey;
 };
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload, label, budgetAmount, currency = '$' }) => {
+
+// Custom Tooltip Component - ACCEPT theme prop
+const CustomTooltip = ({ active, payload, label, budgetAmount, currency = '$', theme }) => { // Add theme prop
     const { t } = useTranslation();
-    if (active && payload && payload.length) {
-        const actual = payload[0]?.value || 0;
-        const overUnder = actual - budgetAmount;
+    if (active && payload && payload.length >= 2) {
+        const budgetPayload = payload.find(p => p.dataKey === 'budgetAmount');
+        const actualPayload = payload.find(p => p.dataKey === 'actualSpending');
+
+        const actual = actualPayload?.value ?? 0;
+        const budgeted = budgetPayload?.value ?? budgetAmount;
+
+        const overUnder = actual - budgeted;
         const overUnderText = overUnder > 0
             ? `${t('dynamicDashboard.overBudgetBy')} ${currency}${overUnder.toFixed(2)}`
-            : `${t('dynamicDashboard.underBudgetBy')} ${currency}${Math.abs(overUnder).toFixed(2)}`; // You'll need a new translation key for 'underBudgetBy'
+            : `${t('dynamicDashboard.underBudgetBy')} ${currency}${Math.abs(overUnder).toFixed(2)}`;
+
+        // Define fallback colors IN CASE theme is not passed somehow
+        const budgetColorFallback = '#8884d8';
+        const actualColorFallback = '#82ca9d';
+        const actualColor = actualPayload?.payload?.actualColor || theme?.palette?.error?.main || actualColorFallback; // Use theme
 
         return (
             <Paper elevation={3} sx={{ p: 1.5, bgcolor: 'background.paper', borderRadius: 1 }}>
                 <Typography variant="caption" display="block" gutterBottom>{label}</Typography>
-                <Typography variant="body2" sx={{ color: payload[0]?.payload?.budgetColor || '#8884d8' }}>
-                    {t('dynamicDashboard.budgeted')}: {currency}{budgetAmount.toFixed(2)}
+                <Typography variant="body2" sx={{ color: budgetPayload?.color || theme?.palette?.primary?.main || budgetColorFallback }}> {/* Use theme */}
+                    {t('dynamicDashboard.budgeted')}: {currency}{budgeted.toFixed(2)}
                 </Typography>
-                <Typography variant="body2" sx={{ color: payload[0]?.payload?.actualColor || '#82ca9d' }}>
+                <Typography variant="body2" sx={{ color: actualColor }}>
                     {t('dynamicDashboard.actual')}: {currency}{actual.toFixed(2)}
                 </Typography>
-                <Typography variant="caption" sx={{ color: overUnder > 0 ? 'error.main' : 'success.main' }}>
+                <Typography variant="caption" sx={{ color: overUnder > 0 ? theme?.palette?.error?.main : theme?.palette?.success?.main }}> {/* Use theme */}
                     ({overUnderText})
                 </Typography>
             </Paper>
@@ -62,22 +77,21 @@ const CustomTooltip = ({ active, payload, label, budgetAmount, currency = '$' })
     return null;
 };
 
+
 export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading }) {
     const { t } = useTranslation();
-    const theme = useTheme();
+    const theme = useTheme(); // Get theme here in the main component
+    const { format: formatLocaleDate } = useLocalizedDateFormat(); // Get localized date formatter
     const [selectedBudgetId, setSelectedBudgetId] = useState('');
 
-    // Find available budgets (those with a category name)
     const availableBudgets = useMemo(() => {
         return budgets.filter(b => b.category_name);
     }, [budgets]);
 
-    // Set default selection when budgets load
     useEffect(() => {
         if (!selectedBudgetId && availableBudgets.length > 0) {
             setSelectedBudgetId(availableBudgets[0].id);
         }
-         // If the currently selected budget disappears, clear the selection
         if (selectedBudgetId && !availableBudgets.some(b => b.id === selectedBudgetId)) {
              setSelectedBudgetId(availableBudgets.length > 0 ? availableBudgets[0].id : '');
         }
@@ -93,12 +107,10 @@ export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading 
         const { category_name, period: budgetPeriod, amount_limit } = selectedBudget;
         const budgetAmount = parseFloat(amount_limit) || 0;
 
-        // Filter expenses for the selected category
         const categoryExpenses = expenses.filter(exp => exp.category_name === category_name);
 
-        if (categoryExpenses.length === 0) return []; // No expenses for this category
+        if (categoryExpenses.length === 0) return [];
 
-        // Group expenses by the budget's period type
         const groupedExpenses = categoryExpenses.reduce((acc, exp) => {
             try {
                 const date = parseISO(exp.date);
@@ -106,41 +118,38 @@ export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading 
 
                 let periodKey = '';
                 if (budgetPeriod === 'monthly') {
-                    periodKey = format(date, 'yyyy-MM');
+                    periodKey = format(date, 'yyyy-MM'); // Use standard format for key
                 } else if (budgetPeriod === 'quarterly') {
                     periodKey = `${getYear(date)}-Q${getQuarter(date)}`;
                 } else if (budgetPeriod === 'yearly') {
                     periodKey = format(date, 'yyyy');
                 } else {
-                    return acc; // Skip if period type is unknown
+                    return acc;
                 }
 
                 const amount = parseFloat(exp.amount) || 0;
                 acc[periodKey] = (acc[periodKey] || 0) + amount;
 
-            } catch (e) {
-                console.error("Error grouping expense:", e);
-            }
+            } catch (e) { console.error("Error grouping expense:", e); }
             return acc;
         }, {});
 
-        // Prepare data for the chart
         return Object.entries(groupedExpenses)
             .map(([periodKey, actualSpending]) => {
                 const isOverBudget = actualSpending > budgetAmount;
                 return {
-                    periodKey: periodKey, // Keep original key for sorting
-                    periodLabel: formatPeriodLabel(periodKey, budgetPeriod),
+                    periodKey: periodKey,
+                    // Use the formatting helper with the locale formatter
+                    periodLabel: formatPeriodLabel(periodKey, budgetPeriod, formatLocaleDate),
                     budgetAmount: budgetAmount,
                     actualSpending: actualSpending,
-                    // Add colors for conditional cell styling
-                    budgetColor: theme.palette.primary.main,
+                    budgetColor: theme.palette.primary.light, // Use lighter primary for budget
                     actualColor: isOverBudget ? theme.palette.error.main : theme.palette.success.main,
                 };
             })
-            .sort((a, b) => a.periodKey.localeCompare(b.periodKey)); // Sort chronologically
+            .sort((a, b) => a.periodKey.localeCompare(b.periodKey));
 
-    }, [selectedBudget, expenses, theme.palette]);
+    }, [selectedBudget, expenses, theme.palette, formatLocaleDate]); // Added formatLocaleDate dependency
 
 
     const handleBudgetChange = (event) => {
@@ -164,7 +173,6 @@ export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading 
     return (
         <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                {/* Add translation key */}
                 <InputLabel id="budget-compare-select-label"><T>dynamicDashboard.selectBudgetToCompare</T></InputLabel>
                 <Select
                     labelId="budget-compare-select-label"
@@ -182,13 +190,14 @@ export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading 
 
             {selectedBudget && chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}> {/* Adjust margins */}
+                    <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false}/>
                         <XAxis dataKey="periodLabel" style={{ fontSize: '10px' }} tickMargin={5}/>
                         <YAxis style={{ fontSize: '10px' }} tickFormatter={(value) => `$${value.toFixed(0)}`} allowDecimals={false} />
-                        <Tooltip content={<CustomTooltip budgetAmount={selectedBudget ? parseFloat(selectedBudget.amount_limit) : 0} />} cursor={{ fill: theme.palette.action.hover }}/>
+                        {/* Pass theme down to the tooltip */}
+                        <Tooltip content={<CustomTooltip budgetAmount={selectedBudget ? parseFloat(selectedBudget.amount_limit) : 0} theme={theme} />} cursor={{ fill: theme.palette.action.hover }}/>
                         <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}/>
-                        <Bar dataKey="budgetAmount" name={t('dynamicDashboard.budgeted')} fill={theme.palette.primary.light} barSize={20}/>
+                        <Bar dataKey="budgetAmount" name={t('dynamicDashboard.budgeted')} fill={theme.palette.primary.light} barSize={20}/> {/* Use lighter primary */}
                         <Bar dataKey="actualSpending" name={t('dynamicDashboard.actual')} barSize={20}>
                              {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.actualColor} />
@@ -198,7 +207,6 @@ export function BudgetComparisonWidget({ budgets = [], expenses = [], isLoading 
                 </ResponsiveContainer>
             ) : selectedBudget ? (
                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-                    {/* Add translation key */}
                     <Typography color="text.secondary"><T>dynamicDashboard.noExpenseDataForCategory</T></Typography>
                  </Box>
             ) : (
