@@ -93,7 +93,15 @@
         "accounts": "账户管理",
         "customReports": "自定义报告",
         "requiresLicenceTooltip": "需要有效许可证",
-        "importData": "导入数据"
+        "importData": "导入数据",
+        "Entries": "条目",
+        "due": "截止日期",
+        "allTime": "所有时间"
+    },
+    "planningManager": {
+        "title": "财务规划",
+        "budgetsTab": "预算",
+        "goalsTab": "目标"
     },
     "customReport": {
         "title": "自定义报告",
@@ -298,7 +306,9 @@
         "createdAt": "创建时间",
         "Amount": "金额",
         "Date": "日期",
-        "Description": "描述"
+        "Description": "描述",
+        "due": "截止日期",
+        "allTime": "所有时间"
     },
     "dynamicDashboard": {
         "title": "动态仪表板",
@@ -516,7 +526,13 @@
         "downloadExcel": "Excel",
         "downloadPDF": "PDF",
         "loading": "加载报告数据中...",
-        "noDataToExport": "没有可导出的数据。"
+        "noDataToExport": "没有可导出的数据。",
+        "downloadExcelAll": "Excel (所有数据)",
+        "downloadPdfAll": "PDF (所有数据)",
+        "downloadIndividualCsv": "下载单个 CSV 文件",
+        "formatCsv": "CSV (.csv)",
+        "formatExcel": "Excel (.xlsx)",
+        "formatPdf": "PDF (.pdf)"
     },
     "dashboard": {
         "overview": {

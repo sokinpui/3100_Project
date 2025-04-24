@@ -111,7 +111,7 @@ export function UpcomingBillsWidget({ userId }) {
                             }
                             secondary={
                                 <Typography variant="caption" color="text.secondary">
-                                    Due: {format(bill.nextDueDate, 'MMM d, yyyy')}
+                                <T>common.due</T>: {format(bill.nextDueDate, 'MMM d, yyyy')} {/* We will fix date format later */}
                                 </Typography>
                             }
                         />

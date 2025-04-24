@@ -48,9 +48,9 @@ export function OverviewSummaryWidget({ expenses = [], income = [], isLoading })
           <Typography variant="h6" component="div" fontWeight="bold" noWrap>
             {formatValue(totalExpenses)}
           </Typography>
-           <Typography variant="caption" color="text.disabled" noWrap>
-             ({totalExpenseEntries} <T>Entries</T>) {/* Add translation for Entries */}
-           </Typography>
+              <Typography variant="caption" color="text.disabled" noWrap>
+              ({totalExpenseEntries} <T>dynamicDashboard.Entries</T>)
+              </Typography>
         </Paper>
       </Grid>
 
@@ -64,9 +64,9 @@ export function OverviewSummaryWidget({ expenses = [], income = [], isLoading })
           <Typography variant="h6" component="div" fontWeight="bold" noWrap>
             {formatValue(totalIncome)}
           </Typography>
-           <Typography variant="caption" color="text.disabled" noWrap>
-             ({totalIncomeEntries} <T>Entries</T>)
-           </Typography>
+              <Typography variant="caption" color="text.disabled" noWrap>
+              ({totalIncomeEntries} <T>dynamicDashboard.Entries</T>)
+              </Typography>
         </Paper>
       </Grid>
 

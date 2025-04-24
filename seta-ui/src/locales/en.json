@@ -131,7 +131,9 @@
         "createdAt": "Created At",
         "Amount": "Amount",
         "Date": "Date",
-        "Description": "Description"
+        "Description": "Description",
+        "due": "Due Date",
+        "allTime": "All Time"
     },
     "planningManager": {
         "title": "Financial Planning",
@@ -437,7 +439,15 @@
         "selectBudgetPrompt": "Please select a budget to view comparison.",
         "budgeted": "Budgeted",
         "actual": "Actual",
-        "underBudgetBy": "Under budget by"
+        "underBudgetBy": "Under budget by",
+        "Entries": "Entries",
+        "due": "Due Date",
+        "allTime": "All Time"
+    },
+    "planningManager": {
+        "title": "Financial Planning",
+        "budgetsTab": "Budgets",
+        "goalsTab": "Goals"
     },
     "quickAdd": {
         "addExpense": "Add Expense",
@@ -460,7 +470,8 @@
         "startDate": "Start Date",
         "endDate": "End Date",
         "currentQuarter": "Current Quarter",
-        "currentHalfYear": "Current Half Year"
+        "currentHalfYear": "Current Half Year",
+        "allTime": "All Time"
     },
     "expenseManager": {
         "confirm": "Confirm",
@@ -529,7 +540,13 @@
         "downloadExcel": "Excel",
         "downloadPDF": "PDF",
         "loading": "Loading report data...",
-        "noDataToExport": "No data available to export."
+        "noDataToExport": "No data available to export.",
+        "downloadExcelAll": "Excel (All Data)",
+        "downloadPdfAll": "PDF (All Data)",
+        "downloadIndividualCsv": "Download Individual CSV File",
+        "formatCsv": "CSV (.csv)",
+        "formatExcel": "Excel (.xlsx)",
+        "formatPdf": "PDF (.pdf)"
     },
     "dashboard": {
         "overview": {

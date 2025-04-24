@@ -326,19 +326,19 @@ export default function ExpenseReports() {
               </Typography>
 
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={5}>
                   <Button fullWidth variant="contained" startIcon={<DownloadIcon />} onClick={generateExcel}>
-                    <T>expenseReports.downloadExcel</T> (All Data)
+                    <T>expenseReports.downloadExcelAll</T>
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <Button fullWidth variant="contained" startIcon={<DownloadIcon />} onClick={generatePDF}>
-                    <T>expenseReports.downloadPDF</T> (All Data)
+                    <T>expenseReports.downloadPdfAll</T>
                   </Button>
                 </Grid>
               </Grid>
 
-              <Divider sx={{ my: 3 }}><Typography variant="overline">Download Individual CSV</Typography></Divider>
+              <Divider sx={{ my: 3 }}><Typography variant="overline"><T>expenseReports.downloadIndividualCsv</T></Typography></Divider>
 
               <Grid container spacing={2}>
                 <Grid item xs={6} sm={4} md={3}>

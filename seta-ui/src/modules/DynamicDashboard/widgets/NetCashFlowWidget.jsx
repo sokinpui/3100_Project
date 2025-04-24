@@ -78,12 +78,12 @@ export function NetCashFlowWidget({ userId, expenses, timePeriod }) {
             <Typography variant="h5" fontWeight="bold" color={netFlow >= 0 ? 'success.main' : 'error.main'}>
                 ${netFlow.toFixed(2)}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                <T>Income:</T> ${totalIncome.toFixed(2)} | <T>Expenses:</T> ${totalExpenses.toFixed(2)}
-            </Typography>
-             {(!timePeriod?.startDate || !timePeriod?.endDate) && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                <T>common.Income</T>: ${totalIncome.toFixed(2)} | <T>common.Expenses</T>: ${totalExpenses.toFixed(2)}
+                </Typography>
+            {(!timePeriod?.startDate || !timePeriod?.endDate) && (
                  <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5 }}>
-                    (<T>All Time</T>) {/* Indicate if showing all time */}
+                     (<T>timePeriods.allTime</T>)
                  </Typography>
              )}
         </Box>
