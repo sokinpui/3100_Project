@@ -429,6 +429,8 @@ Provides a highly customizable dashboard experience where users can add, remove,
 
 ---
 
+---
+
 ## Settings Module
 
 ### Files
@@ -437,50 +439,61 @@ Provides a highly customizable dashboard experience where users can add, remove,
 
 ### Overview
 
-Provides a central place for users to manage their profile information, application settings (handled via Contexts but UI might be here), perform data backups/restores, and configure the backend database connection.
+Provides a central place for users to manage their profile information, change their password (in-app), manage their application licence key, perform data backups/restores, and configure the backend database connection.
 
 ### Key Components
 
-*   **`Settings.jsx`:** A single component managing different settings sections within Cards.
+*   **`Settings.jsx`:** A single component managing different settings sections (Profile, Licence, Data, Database) within Cards. Includes a dialog for the in-app password change.
 
 ### Functionality
 
-*   **Profile:** Load and display user profile data (first name, last name, username, email, contact). Allow users to edit and save changes. Validate input before saving.
-*   **Change Password:** Provide a button to trigger a password reset email flow (calls backend endpoint). Does *not* handle the actual password change form here.
+*   **Profile:** Load, display, validate, edit, and save user profile data (name, username, email, contact).
+*   **Change Password (In-App):**
+    *   Button opens a dialog prompting for Current Password, New Password, and Confirmation.
+    *   Performs client-side validation (required, match, complexity).
+    *   Calls the `/users/{userId}/password` backend endpoint to update the password.
+    *   Displays success/error feedback within the dialog or via Snackbar.
+*   **Licence Management:**
+    *   Fetches and displays current licence status (Active/Inactive/Not Set) and masked key prefix.
+    *   Provides input field for new licence key.
+    *   Calls `/users/{userId}/licence` PUT endpoint to update the key after format check.
+    *   Displays success/error messages.
 *   **Data Management:**
-    *   **Export:** Trigger a full data export (all types) as a JSON file via the backend API.
-    *   **Import:** Allow users to select a JSON backup file. Display a strong warning about data replacement. Upon confirmation, upload the file to the backend API to replace existing user data. Display import results/errors.
+    *   **Export:** Trigger full JSON data export (`/export/all/{userId}`).
+    *   **Import:** Upload JSON backup (`/import/all/{userId}`), warns about data replacement, shows confirmation dialog, displays results.
 *   **Database Configuration:**
-    *   Allow users to select database type (Local, Cloud, Custom).
-    *   Provide input for a custom database URL if 'Custom' is selected.
-    *   Save the selected configuration via the backend API.
-    *   Display a persistent warning if a restart is required after changing DB settings.
+    *   Select DB type (Local, Cloud, Custom), input custom URL.
+    *   Calls `/settings/database` PUT endpoint.
+    *   Warns about required restart.
 
 ### State Management
 
 *   `Settings.jsx` uses `useState` for:
-    *   `settings`: Holds the loaded profile data.
-    *   `isLoading`, `isExporting`, `isImporting`, `dbSettingsLoading`: Various loading states.
-    *   `error`, `importError`, `dbConfigError`: Error message states.
-    *   `snackbar*`: State for notification messages.
-    *   `passwordDialogOpen`, `confirmImportDialogOpen`: Dialog visibility.
-    *   `reset*`: State related to the password reset request flow.
-    *   `selectedImportFile`, `importResult`: State for the import process.
-    *   `dbType`, `customDbUrl`, `restartRequired`: State for database configuration.
-    *   `formErrors`: Client-side validation errors for the profile form.
+    *   `settings` (profile data).
+    *   Loading states (`isLoading`, `isExporting`, `isImporting`, `dbSettingsLoading`, `isActivating` [licence], `passwordChangeLoading`).
+    *   Error states (`error`, `importError`, `dbConfigError`, `activationError`, `passwordChangeError`).
+    *   `snackbar*` (notifications).
+    *   Dialog visibility (`passwordDialogOpen`, `confirmImportDialogOpen`).
+    *   Import state (`selectedImportFile`, `importResult`).
+    *   Licence state (`licenceKeyInput`, `currentLicenceStatus`, `currentLicenceKeyPrefix`).
+    *   Password dialog state (`currentPassword`, `newPassword`, `confirmNewPassword`, show password toggles).
+    *   DB config state (`dbType`, `customDbUrl`, `restartRequired`).
+    *   `formErrors` (profile validation).
 
 ### API Interaction
 
 *   `GET /users/{userId}`: Load user profile.
 *   `PUT /users/{userId}`: Save updated profile data.
-*   `POST /request-password-reset`: Initiate the password reset email flow.
-*   `GET /export/all/{userId}`: Trigger data export and download file.
-*   `POST /import/all/{userId}`: Upload JSON file for data import/restore.
-*   `PUT /settings/database`: Update the backend database configuration.
+*   `PUT /users/{userId}/password`: Change password in-app.
+*   `GET /users/{userId}/licence`: Get licence status.
+*   `PUT /users/{userId}/licence`: Update licence key.
+*   `GET /export/all/{userId}`: Trigger data export.
+*   `POST /import/all/{userId}`: Upload JSON for import.
+*   `PUT /settings/database`: Update DB config.
 
 ### UI Library
 
-*   Material UI (`Container`, `Card`, `CardHeader`, `CardContent`, `Grid`, `TextField`, `Button`, `Snackbar`, `Alert`, `Dialog`, `CircularProgress`, `LinearProgress`, `Divider`, `RadioGroup`, `FormControlLabel`, `Radio`).
+*   Material UI (`Container`, `Card`, `CardHeader`, `CardContent`, `Grid`, `TextField`, `Button`, `Snackbar`, `Alert`, `Dialog`, `CircularProgress`, `LinearProgress`, `Divider`, `RadioGroup`, `FormControlLabel`, `Radio`, `IconButton`, `InputAdornment`).
 
 ---
 

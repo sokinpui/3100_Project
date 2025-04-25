@@ -207,8 +207,21 @@ Thanks for using SETA! We hope it helps you gain control and insights into your 
 
 ---
 
-# Licence Keys & Feature Access
+## 9. Managing Your Licence Key
 
+Certain advanced features, like generating Custom Reports, may require an active licence key.
+
+1.  Click **"Settings"** in the sidebar.
+2.  Scroll down to the **"Licence Management"** section.
+3.  **View Status:** You can see your current licence status (e.g., "Active", "Inactive", "Not Set") and a partially masked version of your key if one is entered.
+4.  **Update Key:**
+    *   Enter your full licence key into the "Enter Licence Key" field. The format is typically XXXX-XXXX-XXXX-XXXX (using letters and numbers).
+    *   Click the **"Update Licence"** button.
+    *   The application will verify the key with the backend.
+    *   You will see a success or error message, and the status display will update accordingly.
+    *   An application restart might be required for licence changes to fully take effect everywhere.
+
+**Available Licence Keys:**
 ```
 0IH9-YJ2D-74IE-TJCH
 0VEZ-UZVC-NPVW-EPHE
@@ -231,3 +244,18 @@ WIC5-JM9W-T3F4-H2CN
 YR1X-PLGN-G9C6-4DCF
 YYNW-CGCU-MPHL-308J
 ```
+
+## 10. Generating Custom Reports (Licence Required)
+
+SETA allows you to generate highly customized reports if you have an active licence key. This provides more flexibility than the standard "Generate Reports" feature.
+
+1.  **Navigate:** Click **"Custom Reports"** in the sidebar. You may see a lock icon next to it if your licence is not active.
+2.  **Select Data Types:** Check the boxes next to the data types you want to include in your report (e.g., Expenses, Income, Accounts).
+3.  **Configure Options:**
+    *   **Time Period:** Use the "Time Period Selector" at the top (similar to the Dashboard) to filter the data by a specific date range (e.g., Last 30 Days, Custom Range).
+    *   **Output Format:** Choose the desired file format (CSV, Excel, or PDF) from the dropdown menu.
+    *   **(Future Feature):** Column Selection - *Currently, all default columns for the selected data types are included. Future versions might allow choosing specific columns.*
+4.  **Generate:** Click the **"Generate Report"** button.
+5.  **Download:** The application will process your request and initiate a file download in the selected format.
+
+This feature is useful for creating targeted reports for specific analysis needs (e.g., only income and expenses for the last quarter in Excel format).
