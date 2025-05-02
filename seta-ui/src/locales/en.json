@@ -101,7 +101,9 @@
         "accounts": "Accounts",
         "customReports": "Custom Reports",
         "requiresLicenceTooltip": "Requires active licence",
-        "importData": "Import data"
+        "importData": "Import data",
+        "incomeEntries": "Income Entries",
+        "Entries": "Entries"
     },
     "customReport": {
         "title": "Custom Report Generator",
@@ -452,7 +454,9 @@
         "allTime": "All Time",
         "incomeTimeline": "Category Income Over Time",
         "noIncomeTimelineData": "Not enough income data for timeline view.",
-        "unknownSource": "Unknown Source"
+        "unknownSource": "Unknown Source",
+        "incomeEntries": "Income Entries",
+        "Entries": "Entries"
     },
     "planningManager": {
         "title": "Financial Planning",

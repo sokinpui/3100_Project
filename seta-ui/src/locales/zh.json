@@ -444,7 +444,9 @@
         "underBudgetBy": "低于预算",
         "incomeTimeline": "分类收入时间线",
         "noIncomeTimelineData": "数据不足，无法显示收入时间线视图。",
-        "unknownSource": "未知来源"
+        "unknownSource": "未知来源",
+        "incomeEntries": "收入条目",
+        "Entries": "条目"
     },
     "quickAdd": {
         "addExpense": "添加支出",
