@@ -1,21 +1,30 @@
 // src/modules/VerificationResultPage.jsx
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom'; // Removed useNavigate as it's not used
 import {
     Container, Typography, Paper, CircularProgress
-} from '@mui/material'; // Removed Button and MuiLink
+} from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { useTranslation } from 'react-i18next';
-import T from '../utils/T'; // Your translation component
+// Import useTranslation but mainly for accessing keys, not switching
+// We don't need the T component if showing both languages explicitly
+// import T from '../utils/T';
+
+// Explicitly get translations for both languages within the component
+import enTranslations from '../locales/en.json';
+import zhTranslations from '../locales/zh.json';
 
 export default function VerificationResultPage() {
     const location = useLocation();
-    const [verificationStatus, setVerificationStatus] = useState('loading'); // loading, success, error, already_verified
-    const [errorCode, setErrorCode] = useState(''); // invalid_token, server_error
+    // Keep t for accessing keys, but we won't rely on its automatic switching here
+    const [verificationStatus, setVerificationStatus] = useState('loading');
+    const [errorCode, setErrorCode] = useState('');
+
+    // Remove the useEffect that sets language from localStorage
 
     useEffect(() => {
+        // Determine status (keep this logic)
         const params = new URLSearchParams(location.search);
         const status = params.get('status');
         const code = params.get('code');
@@ -29,7 +38,17 @@ export default function VerificationResultPage() {
             setVerificationStatus('error');
             setErrorCode('invalid_access');
         }
-    }, [location.search]);
+    }, [location.search]); // Only depends on location.search
+
+    // Helper to get nested translation value safely
+    const getTranslation = (langObj, key) => {
+        try {
+            return key.split('.').reduce((obj, k) => obj && obj[k], langObj);
+        } catch (e) {
+            console.warn(`Translation key not found: ${key}`);
+            return key; // Fallback to the key itself
+        }
+    };
 
     const renderContent = () => {
         switch (verificationStatus) {
@@ -38,13 +57,13 @@ export default function VerificationResultPage() {
                     <>
                         <CheckCircleOutlineIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
                         <Typography variant="h5" gutterBottom>
-                            <T>verifyEmail.successTitle</T>
+                            {getTranslation(enTranslations, 'verifyEmail.successTitle')} / {getTranslation(zhTranslations, 'verifyEmail.successTitle')}
                         </Typography>
                         <Typography sx={{ mb: 3 }}>
-                            {/* Adjusted Message */}
-                            <T>verifyEmail.successMessageDesktop</T>
+                            {getTranslation(enTranslations, 'verifyEmail.successMessageDesktop')}
+                            <br /> {/* Line break */}
+                            {getTranslation(zhTranslations, 'verifyEmail.successMessageDesktop')}
                         </Typography>
-                        {/* Button Removed */}
                     </>
                 );
             case 'already_verified':
@@ -52,35 +71,43 @@ export default function VerificationResultPage() {
                     <>
                         <InfoOutlinedIcon color="info" sx={{ fontSize: 60, mb: 2 }} />
                         <Typography variant="h5" gutterBottom>
-                            <T>verifyEmail.alreadyVerifiedTitle</T>
+                            {getTranslation(enTranslations, 'verifyEmail.alreadyVerifiedTitle')} / {getTranslation(zhTranslations, 'verifyEmail.alreadyVerifiedTitle')}
                         </Typography>
                         <Typography sx={{ mb: 3 }}>
-                             {/* Adjusted Message */}
-                            <T>verifyEmail.alreadyVerifiedMessageDesktop</T>
+                            {getTranslation(enTranslations, 'verifyEmail.alreadyVerifiedMessageDesktop')}
+                            <br /> {/* Line break */}
+                            {getTranslation(zhTranslations, 'verifyEmail.alreadyVerifiedMessageDesktop')}
                         </Typography>
-                         {/* Button Removed */}
                     </>
                 );
             case 'error':
                 let errorTitleKey = 'verifyEmail.errorTitle';
-                let errorMessageKey = 'verifyEmail.errorGenericDesktop'; // Adjusted key
+                let errorMessageKeyEN = 'verifyEmail.errorGenericDesktop';
+                let errorMessageKeyZH = 'verifyEmail.errorGenericDesktop'; // Use same key structure
+
                 if (errorCode === 'invalid_token') {
-                    errorMessageKey = 'verifyEmail.errorInvalidTokenDesktop'; // Adjusted key
+                    errorMessageKeyEN = 'verifyEmail.errorInvalidTokenDesktop';
+                    errorMessageKeyZH = 'verifyEmail.errorInvalidTokenDesktop';
                 } else if (errorCode === 'server_error') {
-                    errorMessageKey = 'verifyEmail.errorServerDesktop'; // Adjusted key
+                    errorMessageKeyEN = 'verifyEmail.errorServerDesktop';
+                    errorMessageKeyZH = 'verifyEmail.errorServerDesktop';
                 }
 
                 return (
                      <>
                         <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
                         <Typography variant="h5" gutterBottom>
-                            <T>{errorTitleKey}</T>
+                             {getTranslation(enTranslations, errorTitleKey)} / {getTranslation(zhTranslations, errorTitleKey)}
                         </Typography>
-                        <Typography sx={{ mb: 3 }}><T>{errorMessageKey}</T></Typography>
-                         {/* Button Removed */}
-                         {/* Optionally suggest closing the window */}
+                        <Typography sx={{ mb: 3 }}>
+                            {getTranslation(enTranslations, errorMessageKeyEN)}
+                            <br /> {/* Line break */}
+                            {getTranslation(zhTranslations, errorMessageKeyZH)}
+                        </Typography>
                          <Typography variant="caption" color="text.secondary">
-                             <T>verifyEmail.closeWindowHint</T>
+                            {getTranslation(enTranslations, 'verifyEmail.closeWindowHint')}
+                            <br /> {/* Line break */}
+                            {getTranslation(zhTranslations, 'verifyEmail.closeWindowHint')}
                          </Typography>
                      </>
                 );
@@ -89,6 +116,7 @@ export default function VerificationResultPage() {
                 return <CircularProgress sx={{ mt: 4 }} />;
         }
     };
+
 
     return (
         <Container component="main" maxWidth="sm" sx={{ mt: 8, display: 'flex', justifyContent: 'center' }}>

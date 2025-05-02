@@ -689,7 +689,10 @@
         "validationPasswordRequired": "Password is required.",
         "validationConfirmPasswordRequired": "Please confirm your password.",
         "hidePassword": "Hide password",
-        "showPassword": "Show password"
+        "showPassword": "Show password",
+        "successTitle": "Account Created!",
+        "successMessageDefault": "Your account has been created successfully. You can now log in.",
+        "successMessageVerification": "Signup successful. Please check your email to activate your account."
     },
     "login": {
         "title": "Login",

@@ -675,7 +675,10 @@
         "validationPasswordRequired": "密码为必填项。",
         "validationConfirmPasswordRequired": "请确认您的密码。",
         "hidePassword": "隐藏密码",
-        "showPassword": "显示密码"
+        "showPassword": "显示密码",
+        "successTitle": "账户已创建！",
+        "successMessageDefault": "您的账户已成功创建。您现在可以登录了。",
+        "successMessageVerification": "注册成功。请检查您的电子邮件以激活您的账户。"
     },
     "login": {
         "title": "登录",
