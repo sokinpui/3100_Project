@@ -101,7 +101,6 @@ jobs:
                       --add-data "alembic:alembic" \
                       --add-data "alembic.ini:." \
                       app/main.py
-          # PyInstaller output is in seta-api/dist/seta_api_server/
 
       # --- Frontend Build (seta-ui) ---
       - name: Install Frontend Dependencies
