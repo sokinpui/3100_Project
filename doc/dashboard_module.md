@@ -417,3 +417,14 @@ This document describes the individual widgets available for use within the SETA
     *   Displays a list showing the recurring item's Name, Amount, and estimated Due Date.
 *   **Notes:** The accuracy of the "next due date" estimation is basic and might not perfectly handle all scenarios (e.g., complex schedules, end dates).
 ![Pasted image 20250422134212.png](images/Pasted%20image%2020250422134212.png)
+
+---
+
+### Income Timeline Widget
+
+*   **File:** `IncomeTimelineWidget.jsx`
+*   **Purpose:** Shows how income from different sources evolves month-over-month. This is the income counterpart to the Category Spending Timeline widget.
+*   **Data Dependencies:** `income` (filtered by parent), `isLoading`.
+*   **Key Features:** Displays a Recharts stacked Area Chart. Each colored area represents an income source's total amount per month. Includes a legend and tooltip. Handles potential missing source names ('Unknown Source').
+*   **Notes:** Aggregates data monthly. Requires at least two months of income data for visualization. Uses distinct colors for income sources.
+![Pasted image 20250424180200.png](images/Pasted%20image%2020250424180200.png)

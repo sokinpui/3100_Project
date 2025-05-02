@@ -23,15 +23,7 @@ import datetime
 import enum
 
 # Database connection string
-DATABASE_URL = "postgresql://postgres.wuakwojmykjicsgwcwgr:postgres123.@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
-
-# Create engine
-engine = create_engine(DATABASE_URL)
-
-# Create base class (adjust import based on your SQLAlchemy version)
-# class Base(DeclarativeBase): # Modern SQLAlchemy
-#     pass
-Base = declarative_base()  # Older SQLAlchemy
+Base = declarative_base()
 
 
 # --- New Enum for Frequency ---
@@ -233,25 +225,3 @@ Account.expenses = relationship(
 )
 Account.income = relationship("Income", order_by=Income.date, back_populates="account")
 # --- End Relationships ---
-
-
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-# Dependency function
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# --- Create Tables ---
-# This line should be executed to create the tables in the database
-# Run `python app/models.py` from your terminal after defining models
-# if __name__ == "__main__":
-#     print("Creating database tables...")
-#     Base.metadata.create_all(bind=engine)
-#     print("Tables created (if they didn't exist).")

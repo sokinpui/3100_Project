@@ -1,15 +1,15 @@
 // file: Signup.jsx
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom'; // Use RouterLink
+import { Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 import {
     Box, Paper, Typography, TextField, Button, Container, InputAdornment,
-    Alert, IconButton, Avatar, CircularProgress, AlertTitle, Menu, MenuItem, Tooltip, Link // Added Link
+    Alert, IconButton, Avatar, CircularProgress, AlertTitle, Menu, MenuItem, Tooltip, Link
 } from '@mui/material';
 import {
     AccountCircle, Person, Email, Phone, Lock, Visibility, VisibilityOff,
     HowToReg, Brightness4 as DarkModeIcon, Brightness7 as LightModeIcon,
-    Language as LanguageIcon
+    Language as LanguageIcon, CheckCircleOutline as CheckCircleOutlineIcon
 } from '@mui/icons-material';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -18,14 +18,12 @@ import T from '../utils/T';
 
 const API_URL = 'http://localhost:8000';
 
-// Password validation function (keep as is or adjust if needed)
 const validatePassword = (password) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/;
     return passwordRegex.test(password);
 };
 
 export default function Signup() {
-    const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { themeMode, updateTheme } = useTheme();
     const { language, updateLanguage } = useLanguage();
@@ -35,33 +33,31 @@ export default function Signup() {
         username: '', first_name: '', last_name: '', email: '',
         contact_number: '', password: '', rePassword: ''
     });
-    const [errors, setErrors] = useState({}); // Field-specific validation errors (keys)
+    const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
     const [showRePassword, setShowRePassword] = useState(false);
-    const [signupSuccessMessage, setSignupSuccessMessage] = useState(''); // Success message string
-    const [generalError, setGeneralError] = useState(''); // General/API error string
+    const [signupSuccessMessageKey, setSignupSuccessMessageKey] = useState(''); // Store translation key
+    const [generalError, setGeneralError] = useState('');
     const [languageAnchorEl, setLanguageAnchorEl] = useState(null);
     const isLanguageMenuOpen = Boolean(languageAnchorEl);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        // Clear specific field error on change
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
-        // Clear general error on any input change
         if (generalError) setGeneralError('');
     };
 
     const validateForm = () => {
         const validationErrors = {};
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[0-9]{8}$/; // Simple 8-digit check
+        const phoneRegex = /^[0-9]{8}$/;
 
         if (!formData.username.trim()) validationErrors.username = 'signup.validationUsernameRequired';
-        else if (/\s/.test(formData.username)) validationErrors.username = 'signup.validationUsernameNoSpaces'; // Added check for spaces
-        else if (/[^a-zA-Z0-9_]/.test(formData.username)) validationErrors.username = 'signup.validationUsernameAlphaNumeric'; // Allow only letters, numbers, underscore
+        else if (/\s/.test(formData.username)) validationErrors.username = 'signup.validationUsernameNoSpaces';
+        else if (/[^a-zA-Z0-9_]/.test(formData.username)) validationErrors.username = 'signup.validationUsernameAlphaNumeric';
 
         if (!formData.first_name.trim()) validationErrors.first_name = 'signup.validationFirstNameRequired';
         if (!formData.last_name.trim()) validationErrors.last_name = 'signup.validationLastNameRequired';
@@ -81,16 +77,15 @@ export default function Signup() {
         return validationErrors;
     };
 
-
     const handleSignup = async (e) => {
         e.preventDefault();
         setGeneralError('');
-        setSignupSuccessMessage('');
+        setSignupSuccessMessageKey('');
         const validationErrors = validateForm();
-        setErrors(validationErrors); // Set errors based on validation
+        setErrors(validationErrors);
 
         if (Object.keys(validationErrors).length > 0) {
-            return; // Stop if validation fails
+            return;
         }
 
         setIsLoading(true);
@@ -103,28 +98,25 @@ export default function Signup() {
                 last_name: formData.last_name.trim(),
                 contact_number: formData.contact_number.trim()
             };
-            const response = await axios.post(`${API_URL}/signup`, userData);
-            setSignupSuccessMessage(response.data.message || t('signup.successMessageDefault'));
-            setFormData({ // Clear form on success
-                 username: '', first_name: '', last_name: '', email: '',
-                 contact_number: '', password: '', rePassword: ''
+            await axios.post(`${API_URL}/signup`, userData);
+            setSignupSuccessMessageKey('signup.successMessageVerification');
+            setFormData({
+                username: '', first_name: '', last_name: '', email: '',
+                contact_number: '', password: '', rePassword: ''
             });
-
         } catch (error) {
             if (error.response) {
-                // Handle specific backend errors (like username/email exists)
                 const detail = error.response.data.detail;
                 if (detail && typeof detail === 'string') {
                     if (detail.includes('Username already registered')) {
                         setErrors(prev => ({ ...prev, username: 'signup.errorUsernameExists' }));
                     } else if (detail.includes('Email already registered')) {
-                         setErrors(prev => ({ ...prev, email: 'signup.errorEmailExists' }));
+                        setErrors(prev => ({ ...prev, email: 'signup.errorEmailExists' }));
                     } else {
-                         // Set as general error if not specific field
                         setGeneralError(detail || t('signup.errorSignupFailedInput'));
                     }
                 } else {
-                     setGeneralError(t('signup.errorSignupFailedGeneral'));
+                    setGeneralError(t('signup.errorSignupFailedGeneral'));
                 }
             } else if (error.request) {
                 setGeneralError(t('signup.errorServerNotResponding'));
@@ -135,7 +127,6 @@ export default function Signup() {
             setIsLoading(false);
         }
     };
-
 
     const handleTogglePassword = (field) => {
         if (field === 'password') setShowPassword(!showPassword);
@@ -151,13 +142,12 @@ export default function Signup() {
         handleLanguageMenuClose();
     };
 
-    // Determine if there are any validation errors to show the summary
     const hasValidationErrors = Object.values(errors).some(error => !!error);
 
     return (
         <Container
             component="main"
-            maxWidth="sm" // Slightly wider for the signup form
+            maxWidth="sm"
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -179,8 +169,7 @@ export default function Signup() {
                     alignItems: 'center',
                 }}
             >
-                {/* --- Top Right Toggles --- */}
-                 <Box sx={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 1 }}>
+                <Box sx={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 1 }}>
                     <Tooltip title={t('settings.language')}>
                         <IconButton onClick={handleLanguageMenuOpen} size="small">
                             <LanguageIcon fontSize="small" />
@@ -203,7 +192,6 @@ export default function Signup() {
                     <MenuItem onClick={() => handleLanguageChange('zh')} selected={language === 'zh'}>中文</MenuItem>
                 </Menu>
 
-                {/* --- Header --- */}
                 <Avatar sx={{ m: 1, mt: 3, bgcolor: 'primary.main', width: 56, height: 56 }}>
                     <HowToReg fontSize="large" />
                 </Avatar>
@@ -214,92 +202,168 @@ export default function Signup() {
                     <T>signup.createAccountPrompt</T>
                 </Typography>
 
-                {/* --- Alerts --- */}
-                 {generalError && (
+                {generalError && (
                     <Alert severity="error" sx={{ width: '100%', mb: 2, borderRadius: 1 }}>
-                        {generalError} {/* Display general error string */}
+                        {generalError}
                     </Alert>
                 )}
-                {signupSuccessMessage && (
-                    <Alert severity="success" sx={{ width: '100%', mb: 2, borderRadius: 1 }}>
+                {signupSuccessMessageKey && (
+                    <Alert
+                        severity="success"
+                        icon={<CheckCircleOutlineIcon fontSize="inherit" />}
+                        sx={{ width: '100%', mb: 2, borderRadius: 1 }}
+                    >
                         <AlertTitle><T>signup.successTitle</T></AlertTitle>
-                        {signupSuccessMessage} {/* Display success message string */}
+                        <T>{signupSuccessMessageKey}</T>
                     </Alert>
                 )}
-                {/* Optional: Show a summary warning if validation errors exist but no general/success message */}
-                {hasValidationErrors && !generalError && !signupSuccessMessage && (
-                  <Alert severity="warning" sx={{ width: '100%', mb: 2, borderRadius: 1 }}>
-                    <T>signup.validationWarning</T>
-                  </Alert>
+                {hasValidationErrors && !generalError && !signupSuccessMessageKey && (
+                    <Alert severity="warning" sx={{ width: '100%', mb: 2, borderRadius: 1 }}>
+                        <T>signup.validationWarning</T>
+                    </Alert>
                 )}
 
-                {/* --- Form (Conditionally Rendered) --- */}
-                {!signupSuccessMessage && (
+                {!signupSuccessMessageKey && (
                     <Box component="form" onSubmit={handleSignup} noValidate sx={{ width: '100%', mt: 1 }}>
-                        {/* Using Box with flex for simple two-column layout for names */}
                         <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                             <TextField
-                                margin="normal" required fullWidth id="first_name"
-                                label={t('signup.firstNameLabel')} name="first_name"
-                                value={formData.first_name} onChange={handleInputChange}
-                                error={!!errors.first_name} helperText={errors.first_name ? t(errors.first_name) : ''}
-                                InputProps={{ startAdornment: (<InputAdornment position="start"><Person color="action" /></InputAdornment>) }}
-                                sx={{ flexGrow: 1 }} // Allow fields to grow equally
+                                margin="normal"
+                                required
+                                fullWidth
+                                id="first_name"
+                                label={t('signup.firstNameLabel')}
+                                name="first_name"
+                                value={formData.first_name}
+                                onChange={handleInputChange}
+                                error={!!errors.first_name}
+                                helperText={errors.first_name ? t(errors.first_name) : ''}
+                                InputProps={{
+                                    startAdornment: (<InputAdornment position="start"><Person color="action" /></InputAdornment>)
+                                }}
+                                sx={{ flexGrow: 1 }}
                             />
                             <TextField
-                                margin="normal" required fullWidth id="last_name"
-                                label={t('signup.lastNameLabel')} name="last_name"
-                                value={formData.last_name} onChange={handleInputChange}
-                                error={!!errors.last_name} helperText={errors.last_name ? t(errors.last_name) : ''}
-                                InputProps={{ startAdornment: (<InputAdornment position="start"><Person color="action" /></InputAdornment>) }}
+                                margin="normal"
+                                required
+                                fullWidth
+                                id="last_name"
+                                label={t('signup.lastNameLabel')}
+                                name="last_name"
+                                value={formData.last_name}
+                                onChange={handleInputChange}
+                                error={!!errors.last_name}
+                                helperText={errors.last_name ? t(errors.last_name) : ''}
+                                InputProps={{
+                                    startAdornment: (<InputAdornment position="start"><Person color="action" /></InputAdornment>)
+                                }}
                                 sx={{ flexGrow: 1 }}
                             />
                         </Box>
-                         <TextField
-                            margin="normal" required fullWidth id="username"
-                            label={t('signup.usernameLabel')} name="username"
-                            value={formData.username} onChange={handleInputChange}
-                            error={!!errors.username} helperText={errors.username ? t(errors.username) : ''}
-                            InputProps={{ startAdornment: (<InputAdornment position="start"><AccountCircle color="action" /></InputAdornment>) }}
-                        />
                         <TextField
-                            margin="normal" required fullWidth id="email"
-                            label={t('signup.emailLabel')} name="email" type="email"
-                            value={formData.email} onChange={handleInputChange}
-                            error={!!errors.email} helperText={errors.email ? t(errors.email) : ''}
-                            InputProps={{ startAdornment: (<InputAdornment position="start"><Email color="action" /></InputAdornment>) }}
-                        />
-                         <TextField
-                            margin="normal" required fullWidth id="contact_number"
-                            label={t('signup.contactNumberLabel')} name="contact_number"
-                            value={formData.contact_number} onChange={handleInputChange}
-                            error={!!errors.contact_number} helperText={errors.contact_number ? t(errors.contact_number) : ''}
-                            InputProps={{ startAdornment: (<InputAdornment position="start"><Phone color="action" /></InputAdornment>) }}
-                        />
-                         <TextField
-                            margin="normal" required fullWidth id="password"
-                            label={t('signup.passwordLabel')} name="password"
-                            type={showPassword ? "text" : "password"}
-                            value={formData.password} onChange={handleInputChange}
-                            error={!!errors.password} helperText={errors.password ? t(errors.password) : ''}
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="username"
+                            label={t('signup.usernameLabel')}
+                            name="username"
+                            value={formData.username}
+                            onChange={handleInputChange}
+                            error={!!errors.username}
+                            helperText={errors.username ? t(errors.username) : ''}
                             InputProps={{
-                                startAdornment: (<InputAdornment position="start"><Lock color="action" /></InputAdornment>),
-                                endAdornment: (<InputAdornment position="end"><IconButton aria-label={t(showPassword ? 'signup.hidePassword' : 'signup.showPassword')} onClick={() => handleTogglePassword('password')} edge="end">{showPassword ? <VisibilityOff /> : <Visibility />}</IconButton></InputAdornment>),
+                                startAdornment: (<InputAdornment position="start"><AccountCircle color="action" /></InputAdornment>)
                             }}
                         />
                         <TextField
-                            margin="normal" required fullWidth id="rePassword"
-                            label={t('signup.confirmPasswordLabel')} name="rePassword"
-                            type={showRePassword ? "text" : "password"}
-                            value={formData.rePassword} onChange={handleInputChange}
-                            error={!!errors.rePassword} helperText={errors.rePassword ? t(errors.rePassword) : ''}
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="email"
+                            label={t('signup.emailLabel')}
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            error={!!errors.email}
+                            helperText={errors.email ? t(errors.email) : ''}
+                            InputProps={{
+                                startAdornment: (<InputAdornment position="start"><Email color="action" /></InputAdornment>)
+                            }}
+                        />
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="contact_number"
+                            label={t('signup.contactNumberLabel')}
+                            name="contact_number"
+                            value={formData.contact_number}
+                            onChange={handleInputChange}
+                            error={!!errors.contact_number}
+                            helperText={errors.contact_number ? t(errors.contact_number) : ''}
+                            InputProps={{
+                                startAdornment: (<InputAdornment position="start"><Phone color="action" /></InputAdornment>)
+                            }}
+                        />
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="password"
+                            label={t('signup.passwordLabel')}
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            error={!!errors.password}
+                            helperText={errors.password ? t(errors.password) : ''}
                             InputProps={{
                                 startAdornment: (<InputAdornment position="start"><Lock color="action" /></InputAdornment>),
-                                endAdornment: (<InputAdornment position="end"><IconButton aria-label={t(showRePassword ? 'signup.hidePassword' : 'signup.showPassword')} onClick={() => handleTogglePassword('rePassword')} edge="end">{showRePassword ? <VisibilityOff /> : <Visibility />}</IconButton></InputAdornment>),
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label={t(showPassword ? 'signup.hidePassword' : 'signup.showPassword')}
+                                            onClick={() => handleTogglePassword('password')}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="rePassword"
+                            label={t('signup.confirmPasswordLabel')}
+                            name="rePassword"
+                            type={showRePassword ? "text" : "password"}
+                            value={formData.rePassword}
+                            onChange={handleInputChange}
+                            error={!!errors.rePassword}
+                            helperText={errors.rePassword ? t(errors.rePassword) : ''}
+                            InputProps={{
+                                startAdornment: (<InputAdornment position="start"><Lock color="action" /></InputAdornment>),
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label={t(showRePassword ? 'signup.hidePassword' : 'signup.showPassword')}
+                                            onClick={() => handleTogglePassword('rePassword')}
+                                            edge="end"
+                                        >
+                                            {showRePassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
                             }}
                         />
                         <Button
-                            type="submit" fullWidth variant="contained" size="large"
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            size="large"
                             sx={{ mt: 3, mb: 2, py: 1.2, borderRadius: '20px', fontWeight: 'bold' }}
                             disabled={isLoading}
                         >
@@ -308,16 +372,15 @@ export default function Signup() {
                     </Box>
                 )}
 
-                {/* --- Login Link --- */}
-                <Box sx={{ textAlign: 'center', mt: signupSuccessMessage ? 1 : 2 }}>
-                     <Typography variant="body2">
-                        <T>{signupSuccessMessage ? 'signup.loginPromptSuccess' : 'signup.loginPrompt'}</T>{' '}
-                         <Link component={RouterLink} to="/login" variant="body2" fontWeight="bold">
+                <Box sx={{ textAlign: 'center', mt: signupSuccessMessageKey ? 1 : 2 }}>
+                    <Typography variant="body2">
+                        <T>{signupSuccessMessageKey ? 'signup.loginPromptSuccess' : 'signup.loginPrompt'}</T>{' '}
+                        <Link component={RouterLink} to="/login"
+                        variant="body2" fontWeight="bold">
                             <T>signup.loginLink</T>
                         </Link>
                     </Typography>
                 </Box>
-
             </Paper>
         </Container>
     );

@@ -9,16 +9,18 @@ The base URL for the API when running locally is typically `http://localhost:800
 *   `POST /signup`: Creates a new user account. Sends verification email.
 *   `POST /login`: Authenticates a user and returns user details upon success.
 *   `GET /verify-email/{token}`: Verifies a user's email using the token sent during signup. Activates the account.
-*   `POST /request-password-reset`: Sends a password reset link to the user's registered email.
-*   `POST /reset-password/{token}`: Allows setting a new password using a valid reset token.
+*   `POST /request-password-reset`: Sends a password reset link to the user's registered email. (Used for "Forgot Password" flow).
+*   `POST /reset-password/{token}`: Allows setting a new password using a valid reset token. (Used when following email link).
 
 ## User Profile & Settings (`/users`)
 
 *   `GET /users/{user_id}`: Retrieves a user's profile information.
 *   `PUT /users/{user_id}`: Updates a user's profile information (username, email, name, contact).
-*   `PUT /users/{user_id}/password`: Changes the user's password (requires current password).
+*   `PUT /users/{user_id}/password`: Changes the user's password (requires current password). **Used for in-app password change.**
 *   `GET /users/{user_id}/settings`: Retrieves user application settings (stubbed in backend).
 *   `PUT /users/{user_id}/settings`: Updates user application settings (stubbed in backend).
+*   `GET /users/{user_id}/licence`: Retrieves the user's current licence key status (active, inactive, not_set) and a masked prefix.
+*   `PUT /users/{user_id}/licence`: Updates the user's licence key after validation against the accepted list.
 
 ## Expenses (`/expenses`)
 
@@ -28,7 +30,7 @@ The base URL for the API when running locally is typically `http://localhost:800
 *   `DELETE /expenses/{expense_id}`: Deletes a single expense record.
 *   `POST /expenses/bulk/delete`: Deletes multiple expense records based on a list of IDs.
 *   `POST /expenses/import/{user_id}`: Imports expenses from an uploaded CSV file.
-*   `GET /expenses/{user_id}/report`: Generates an expense report (JSON, CSV, XLSX, PDF).
+*   `GET /expenses/{user_id}/report`: Generates an expense report (JSON, CSV, XLSX, PDF). (Likely deprecated in favor of `/reports/all`)
 *   `GET /expenses/{user_id}/total`: Gets the sum of all expenses for a user.
 
 ## Income (`/income`)
@@ -74,7 +76,8 @@ The base URL for the API when running locally is typically `http://localhost:800
 
 ## Reports (`/reports`)
 
-*   `GET /reports/{user_id}/all`: Retrieves a consolidated report containing all data types for a user (used by export and potentially dashboards).
+*   `GET /reports/{user_id}/all`: Retrieves a consolidated report containing all data types for a user (used by the standard report export).
+*   `POST /reports/{user_id}/custom`: Generates a custom report based on requested data types, date range, and output format (CSV, Excel, PDF). **Requires an active licence key.**
 
 ## Settings (`/settings`)
 
@@ -87,4 +90,3 @@ The base URL for the API when running locally is typically `http://localhost:800
 ---
 
 *Remember to consult the interactive `/docs` endpoint for the most up-to-date and detailed information when the API server is running.*
-

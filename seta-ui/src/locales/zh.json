@@ -444,7 +444,9 @@
         "underBudgetBy": "低于预算",
         "incomeTimeline": "分类收入时间线",
         "noIncomeTimelineData": "数据不足，无法显示收入时间线视图。",
-        "unknownSource": "未知来源"
+        "unknownSource": "未知来源",
+        "incomeEntries": "收入条目",
+        "Entries": "条目"
     },
     "quickAdd": {
         "addExpense": "添加支出",
@@ -675,7 +677,10 @@
         "validationPasswordRequired": "密码为必填项。",
         "validationConfirmPasswordRequired": "请确认您的密码。",
         "hidePassword": "隐藏密码",
-        "showPassword": "显示密码"
+        "showPassword": "显示密码",
+        "successTitle": "账户已创建！",
+        "successMessageDefault": "您的账户已成功创建。您现在可以登录了。",
+        "successMessageVerification": "注册成功。请检查您的电子邮件以激活您的账户。"
     },
     "login": {
         "title": "登录",
@@ -713,5 +718,22 @@
         "confirmPasswordLabel": "确认新密码",
         "resetButton": "重设密码",
         "goToLoginButton": "前往登录"
+    },
+    "verifyEmail": {
+        "successTitle": "邮箱已验证！",
+        "successMessage": "您的账户已成功激活。您现在可以登录了。",
+        "successMessageDesktop": "您的账户已成功激活。您可以关闭此页面并在 SETA 应用程序中登录。",
+        "alreadyVerifiedTitle": "已经验证",
+        "alreadyVerifiedMessage": "此邮箱地址已被验证。您可以直接登录。",
+        "alreadyVerifiedMessageDesktop": "此邮箱地址已被验证。您可以关闭此页面并在 SETA 应用程序中登录。",
+        "errorTitle": "验证失败",
+        "errorInvalidToken": "验证链接无效或已过期。请尝试重新注册，或在适用的情况下请求新链接。",
+        "errorInvalidTokenDesktop": "验证链接无效或已过期。请关闭此页面并在 SETA 应用程序中尝试重新注册。",
+        "errorServer": "验证您的邮箱时发生内部错误。请稍后重试或联系支持。",
+        "errorServerDesktop": "验证您的邮箱时发生内部错误。请关闭此页面并稍后重试，或联系支持。",
+        "errorGeneric": "验证过程中出错。请重试或联系支持。",
+        "errorGenericDesktop": "验证过程中出错。请关闭此页面并稍后重试，或联系支持。",
+        "goToLogin": "前往登录",
+        "closeWindowHint": "您现在可以关闭此窗口或标签页。"
     }
 }
