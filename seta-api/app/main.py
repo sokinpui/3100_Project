@@ -1,6 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query, UploadFile, File
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import (
+    JSONResponse,
+    FileResponse,
+    StreamingResponse,
+    RedirectResponse,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
@@ -972,34 +977,43 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/verify-email/{token}", status_code=status.HTTP_200_OK)
+@app.get(
+    "/verify-email/{token}", status_code=status.HTTP_307_TEMPORARY_REDIRECT
+)  # Change status code if needed (302 or 307)
 async def verify_email(token: str, db: Session = Depends(get_db)):
-    """Verify user's email address using the provided token."""
+    """Verify user's email address using the provided token and redirect."""
     user = db.query(models.User).filter(models.User.verification_token == token).first()
+    redirect_base = (
+        f"{FRONTEND_BASE_URL}/#/verify-result"  # Use HashRouter base if needed
+    )
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired verification token.",
-        )
+        logger.warning(f"Verification attempt with invalid token: {token[:10]}...")
+        # Redirect to frontend page indicating failure
+        return RedirectResponse(url=f"{redirect_base}?status=error&code=invalid_token")
 
     if user.email_verified:
-        return {"message": "Email already verified. You can now log in."}
+        logger.info(f"Email already verified for user: {user.username}")
+        # Redirect to frontend page indicating already verified
+        return RedirectResponse(url=f"{redirect_base}?status=already_verified")
 
     user.email_verified = True
-    user.verification_token = None
+    user.verification_token = None  # Invalidate the token
     user.is_active = True
     try:
         db.commit()
         db.refresh(user)
+        logger.info(f"Email successfully verified for user: {user.username}")
+        # Redirect to frontend page indicating success
+        return RedirectResponse(url=f"{redirect_base}?status=success")
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to verify email.",
+        logger.error(
+            f"Database error during email verification for token {token[:10]}...: {e}",
+            exc_info=True,
         )
-
-    return {"message": "Email successfully verified. You can now log in."}
+        # Redirect to frontend page indicating server error
+        return RedirectResponse(url=f"{redirect_base}?status=error&code=server_error")
 
 
 @app.post("/request-password-reset", status_code=status.HTTP_200_OK)

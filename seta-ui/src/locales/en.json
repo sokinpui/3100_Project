@@ -727,5 +727,22 @@
         "confirmPasswordLabel": "Confirm New Password",
         "resetButton": "Reset Password",
         "goToLoginButton": "Go to Login"
+    },
+    "verifyEmail": {
+        "successTitle": "Email Verified!",
+        "successMessage": "Your account has been successfully activated. You can now log in.",
+        "successMessageDesktop": "Your account has been successfully activated. You may now close this page and log in using the SETA application.",
+        "alreadyVerifiedTitle": "Already Verified",
+        "alreadyVerifiedMessage": "This email address has already been verified. You can log in now.",
+        "alreadyVerifiedMessageDesktop": "This email address has already been verified. You may close this page and log in using the SETA application.",
+        "errorTitle": "Verification Failed",
+        "errorInvalidToken": "The verification link is invalid or has expired. Please try signing up again or request a new link if applicable.",
+        "errorInvalidTokenDesktop": "The verification link is invalid or has expired. Please close this page and try signing up again in the SETA application.",
+        "errorServer": "An internal error occurred while verifying your email. Please try again later or contact support.",
+        "errorServerDesktop": "An internal error occurred while verifying your email. Please close this page and try again later, or contact support.",
+        "errorGeneric": "Something went wrong during verification. Please try again or contact support.",
+        "errorGenericDesktop": "Something went wrong during verification. Please close this page and try again later, or contact support.",
+        "goToLogin": "Go to Login",
+        "closeWindowHint": "You may now close this window or tab."
     }
 }
