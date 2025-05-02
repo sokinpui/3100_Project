@@ -9,9 +9,9 @@ on:
 # Environment variables accessible to all jobs
 env:
   # Set the Node.js version to use
-  NODE_VERSION: '18.x' # Or your preferred LTS version
+  NODE_VERSION: '20.x' # Or your preferred LTS version
   # Set the Python version to use
-  PYTHON_VERSION: '3.10' # Or your preferred version (>= 3.9)
+  PYTHON_VERSION: '3.13' # Or your preferred version (>= 3.9)
   # --- !! IMPORTANT !! Code Signing Variables (Set as GitHub Secrets) ---
   # For macOS:
   # CSC_LINK: ${{ secrets.CSC_LINK }} # Base64 encoded .p12 file
@@ -86,8 +86,6 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          # Add packages needed by your requirements.txt here
-          # sudo apt-get install -y build-essential python3-dev libpq-dev etc...
           echo "Skipping Linux system dependency installation for now."
 
       - name: Build Backend with PyInstaller (${{ matrix.os_name }})
@@ -114,7 +112,14 @@ jobs:
         # Pass the OS-specific flag to the build script
         # The electron-builder config in package.json should point to ../seta-api/dist/ for the backend
         # The -- means pass the flag to the underlying electron-builder command
-        run: npm run electron:build -- ${{ matrix.electron_build_flag }}
+        run: npm run electron:build -- ${{ matrix.electron_build_flag }} --publish never
+
+      - name: Fix macOS App Permissions
+        if: matrix.os == 'macos-latest'
+        working-directory: ./seta-ui/release
+        run: |
+          chmod -R +x *.dmg
+          find . -type f -name "*.app" -exec chmod -R +x {} \;
 
       # 4. Prepare Artifacts for Upload
       - name: List release files # Helpful for debugging
@@ -179,3 +184,4 @@ jobs:
           allowUpdates: true
           # Use the default GITHUB_TOKEN for authentication
           token: ${{ secrets.GITHUB_TOKEN }}
+
