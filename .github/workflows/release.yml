@@ -92,6 +92,7 @@ jobs:
 
       - name: Build Backend with PyInstaller (${{ matrix.os_name }})
         working-directory: ./seta-api
+        shell: bash
         run: |
           pyinstaller --name seta_api_server \
                       --onedir \
