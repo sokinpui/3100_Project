@@ -109,6 +109,8 @@ jobs:
 
       - name: Build and Package Electron App (${{ matrix.os_name }})
         working-directory: ./seta-ui
+        env:
+          CI: false
         # Pass the OS-specific flag to the build script
         # The electron-builder config in package.json should point to ../seta-api/dist/ for the backend
         # The -- means pass the flag to the underlying electron-builder command
