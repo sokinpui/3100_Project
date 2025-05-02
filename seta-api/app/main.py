@@ -17,7 +17,6 @@ from datetime import date, datetime, timedelta, timezone  # Add timezone here
 
 # from models import get_db, User, Expense
 from models import (
-    get_db,
     User,
     Expense,
     Income,
