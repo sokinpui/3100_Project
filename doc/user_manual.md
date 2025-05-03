@@ -12,7 +12,8 @@ SETA is your personal desktop assistant for tracking money going in (Income) and
 *   **Stay on top of bills:** Define recurring expenses and income.
 *   **Plan your finances:** Set budgets for spending categories and track savings goals.
 *   **Visualize your data:** Use a customizable dashboard with charts and summaries.
-*   **Import/Export:** Bring in existing data or back up your SETA data.
+*   **Import/Export:** Bring in existing data (CSV) or back up/restore your entire SETA data (JSON).
+*   **Generate Reports:** Create standard or customized reports (requires licence).
 
 The goal is to give you a clear picture of your financial situation, empowering you to make better decisions.
 
@@ -28,21 +29,19 @@ This is the easiest way. We build ready-to-use versions for Windows, macOS, and 
 2.  Find the latest release (usually at the top).
 3.  Look for the "Assets" section.
 4.  Download the file appropriate for your operating system:
-    *   **Windows:** Download the `.exe` file (e.g., `SETA-Setup-1.2.3.exe`). Double-click to install like any other Windows application.
+    *   **Windows:** Download the `.exe` file (e.g., `SETA-Setup-1.2.3.exe`). Double-click to install like any other Windows application. You might see a Windows SmartScreen warning because the app isn't from the Microsoft Store; click "More info" and then "Run anyway" if you trust the source.
     *   **macOS:** Download the `.dmg` file (e.g., `SETA-1.2.3.dmg`).
         *   Double-click the `.dmg` file to open it.
         *   Drag the `SETA.app` icon into your `Applications` folder.
         *   **🚨 The macOS "Unsigned App" Adventure! 🚨**
-            *   Okay, real talk: As an student development team, we haven't enrolled in the Apple Developer Program ($99/year!). This means our macOS app isn't officially "signed."
-            *   When you first try to open SETA, macOS might show a scary warning like "`SETA.app` can't be opened because it is from an unidentified developer." or "damaged and can’t be opened." Don't panic! This is macOS being cautious about unsigned apps.
-            *   **The Workaround (At Your Own Risk!):** You can tell macOS, "Hey, I trust this app." To do this, you'll need to use the Terminal. It sounds geeky, but it's just one command:
-                1.  **Open Terminal:** Press `Cmd + Space`, type `Terminal`, and press Enter.
-                2.  **Enter the Command:** Enter this command if you trust our app:
-                    ```bash
-                    xattr -cr /Applications/SETA.app
-                    ```
-                3.  **Done!** Close the Terminal. Now you should be able to open SETA from your Applications folder without the warning (though you might still get a one-time "Are you sure?" prompt from macOS, which you can approve).
-            *   **What did that command do?** `xattr -cr` simply removes the extended quarantine attributes that macOS adds to downloaded applications from unidentified developers. It doesn't change the app itself. This is a common workaround for unsigned apps from trusted sources. *However, only do this for applications you trust!*
+            *   As a student development team, we haven't paid Apple for an official Developer ID. This means our macOS app isn't "signed."
+            *   When you first try to open SETA, macOS will likely show a warning like "`SETA.app` can't be opened because it is from an unidentified developer." or "damaged and can’t be opened." Don't panic! This is standard macOS behavior for unsigned apps.
+            *   **The Workaround (Do this only if you trust the source!):**
+                1.  Find `SETA.app` in your `Applications` folder.
+                2.  **Right-click** (or Control-click) the `SETA.app` icon and select **"Open"** from the context menu.
+                3.  You might see the same warning again, but this time there should be an **"Open"** button in the dialog. Click it.
+                4.  macOS should remember your choice for this specific version of the app, so you can open it normally afterwards.
+            *   *(Alternative Terminal Method - Usually not needed if Right-click -> Open works):* If the above fails, you can use the Terminal: Open Terminal (Cmd+Space, type Terminal), then run `xattr -cr /Applications/SETA.app`. This removes the quarantine flag. *Again, only do this for apps you trust.*
     *   **Linux:** Download the `.AppImage` file (e.g., `SETA-1.2.3.AppImage`).
         *   Make the file executable: Right-click -> Properties -> Permissions -> Check "Allow executing file as program", OR run `chmod +x SETA-1.2.3.AppImage` in your terminal.
         *   Double-click the `.AppImage` file to run it.
@@ -71,11 +70,14 @@ If you want to run the very latest code or contribute to development:
     *   `cd 3100_project/seta-ui`
     *   Install dependencies (`npm install`).
     *   Run the frontend dev server: `npm start`
-5.  Access the app in your browser (usually `http://localhost:3000`). Note: This runs the UI in a browser, not as a packaged desktop app.
+5.  Access the app in your browser (usually `http://localhost:3000`). Note: This runs the UI in a browser, not as a packaged desktop app. Data export/import might behave differently.
 
-## 3. First Steps: Logging In & The Interface
+## 3. First Steps: Signup, Verification, Login
 
-*   **Login/Signup:** When you first launch SETA, you'll see the Login screen. If you're new, click "Sign Up" to create an account. You'll need to verify your email address (check your inbox!) before you can log in for the first time. You should open verify link in your device that running SETA, will improve in the future.
+*   **Signup:** When you first launch SETA, you'll see the Login screen. If you're new, click "Sign Up" to create an account. Fill in your details.
+*   **Email Verification:** After signing up, **check your email inbox** (and spam folder!) for a message from SETA. Click the verification link in the email.
+    *   **Important:** Open the verification link **on the same computer where you installed/run SETA**. This link confirms your email with the backend. You should be redirected to a page within the SETA app (or a simple success/error page in your browser if running in dev mode) confirming the result.
+*   **Login:** Once your email is verified, return to the SETA application and log in using the username and password you created.
 *   **The Interface:** Once logged in, you'll see the main interface:
     *   **Sidebar (Left):** Your main navigation menu. Click items like "Expenses," "Income," "Dashboard," "Settings," etc., to access different sections.
     *   **Content Area (Right):** This is where the main content for the selected module is displayed.
@@ -92,7 +94,7 @@ SETA helps you organize your finances by tracking different types of data. Here'
     1.  Click **"Expenses"** in the sidebar.
     2.  Use the **"Add New Expense"** form at the top to enter the Amount, Date, Category (select from the list or type your own if you choose "Others"), and an optional Description.
     3.  Click "Add Expense."
-    4.  Your added expenses appear in the **"Expense History"** table below. You can sort, search (using browser find), and delete expenses from the table.
+    4.  Your added expenses appear in the **"Expense History"** table below. You can sort, search (using browser find), and delete expenses from the table. Use checkboxes to select multiple for bulk deletion.
 
 ### Income
 
@@ -102,7 +104,7 @@ SETA helps you organize your finances by tracking different types of data. Here'
     1.  Click **"Income"** in the sidebar.
     2.  Use the **"Add New Income"** form to enter the Amount, Date, Source (where the money came from), optional Description, and optionally link it to an Account.
     3.  Click "Add Income."
-    4.  View your income history in the table.
+    4.  View your income history in the table. Use checkboxes for bulk deletion.
 
 ### Accounts
 
@@ -112,7 +114,7 @@ SETA helps you organize your finances by tracking different types of data. Here'
     1.  Click **"Accounts"** in the sidebar.
     2.  Use the **"Add New Account"** form to enter the Account Name, Type, Starting Balance, and the Date that balance was correct ("Balance As Of Date").
     3.  Click "Add Account."
-    4.  View your accounts in the list. You can link Income and Recurring items to accounts when adding/editing them.
+    4.  View your accounts in the list. You can link Income and Recurring items to accounts when adding/editing them. **Note:** You cannot delete an account if it's linked to any existing expense, income, or recurring item.
 
 ### Recurring Items (Bills & Subscriptions)
 
@@ -138,12 +140,12 @@ SETA helps you organize your finances by tracking different types of data. Here'
 
 ## 5. Using the Dynamic Dashboard
 
-The Dashboard is your customizable financial command center. It displays various "widgets" showing charts, summaries, lists, and tools related to your financial data. For a detailed description of what each available widget does, please refer to the **[Dashboard Widget Documentation](./dashboard_module.md)**.
+The Dashboard is your customizable financial command center. It displays various "widgets" showing charts, summaries, lists, and tools related to your financial data. For a detailed description of what each available widget does, please refer to the **[Dashboard Widget Documentation](./dashboard_widgets.md)**.
 
 *   **Overview:** Mix and match widgets to create the view that makes the most sense for you.
 *   **Adding/Removing Widgets:**
     *   Click the **"Manage Widgets"** button (usually found at the top right of the dashboard page).
-    *   A dialog box will appear listing all available widgets (see the [Widget Documentation](./dashboard_module.md) for details on each).
+    *   A dialog box will appear listing all available widgets (see the [Widget Documentation](./dashboard_widgets.md) for details on each).
     *   Check the boxes next to the widgets you want to display. Uncheck the ones you want to hide.
     *   Click "Apply Changes."
 *   **Moving & Resizing:**
@@ -154,6 +156,7 @@ The Dashboard is your customizable financial command center. It displays various
     *   **By Category/Source:** Select one or more specific categories (for expenses) or sources (for income) from the dropdown. Only transactions matching these will be included in calculations and charts (like the Category Breakdown pie chart or the Trend charts).
     *   **By Amount:** Use the slider to set a minimum and maximum transaction amount. This is useful for focusing on large transactions or excluding small miscellaneous ones.
     *   **Clearing Filters:** To see all data within the selected time period again, simply clear the selections in the filter widget (e.g., ensure no specific categories/sources are checked and reset the amount slider to cover the full range from $0 to the maximum shown).
+
 ## 6. Importing & Exporting Data
 
 ### Importing Expenses/Income from CSV
@@ -162,66 +165,73 @@ If you have expense or income data from another app or spreadsheet, you can impo
 
 1.  Click **"Import Expenses"** in the sidebar.
 2.  You'll see separate sections for importing Expenses and Income.
-3.  **Prepare your CSV file:** Make sure it has columns matching the required headers shown on the import page (e.g., `date`, `amount`, `category_name` for expenses; `date`, `amount`, `source` for income). The date format should be `YYYY-MM-DD`.
+3.  **Prepare your CSV file:** Make sure it has columns matching the required headers shown on the import page (e.g., `date`, `amount`, `category_name`, optional `description` for expenses; `date`, `amount`, `source`, optional `description`, optional `account_id` for income). The date format **must** be `YYYY-MM-DD`. Amounts should be positive numbers.
 4.  Click **"Select CSV File"** in the relevant section and choose your file.
 5.  Click **"Upload and Process."**
-6.  SETA will attempt to import the data and show you a summary of how many rows were imported successfully and if any were skipped due to errors.
+6.  SETA will attempt to import the data and show you a summary of how many rows were imported successfully and if any were skipped due to errors (like invalid dates, amounts, or missing required fields).
 
 ### Exporting Full Data Backup (JSON)
 
-It's a good idea to back up your SETA data periodically.
+It's a good idea to back up your SETA data periodically. This creates a single file containing everything.
 
 1.  Click **"Settings"** in the sidebar.
 2.  Scroll down to the **"Data Management"** section.
 3.  Under **"Export Data,"** click the **"Export All Data"** button.
-4.  Your browser (or the app) will download a `.json` file containing all your expenses, income, accounts, budgets, goals, and recurring items. Keep this file safe!
+4.  Your browser (or the app) will download a `.json` file containing all your expenses, income, accounts, budgets, goals, and recurring items. **Keep this file safe!**
 
-### Importing Full Data Backup (JSON) - Use With Caution!
+### Importing Full Data Backup (JSON) - Use With Extreme Caution!
 
 You can restore your data from a previously exported `.json` file. This is useful if you're moving SETA to a new computer or need to recover after an issue.
 
 1.  Click **"Settings"** in the sidebar.
 2.  Scroll down to the **"Data Management"** section.
-3.  Under **"Import Data,"** read the **WARNING** carefully.
-    *   **🚨 VERY IMPORTANT WARNING! 🚨 Importing a JSON backup will DELETE ALL the data currently in the SETA application and replace it entirely with the data from the file you upload. This cannot be undone! Only proceed if you are absolutely sure.**
-4.  Click **"Select Backup File (.json)"** and choose your previously exported `.json` file.
-5.  Click **"Import Data."**
-6.  A confirmation dialog will appear asking you to confirm the data replacement. Read it again!
-7.  If you are certain, click **"Yes, Replace Data"** (or similar confirm button).
-8.  SETA will process the file and replace your current data. You might need to reload or restart the application afterwards to see the changes everywhere.
+3.  Under **"Import Data,"** click **"Select Backup File (.json)"** and choose your previously exported `.json` file.
+4.  Click the **"Import Data"** button.
+5.  **🚨🚨 CRITICAL WARNING DIALOG 🚨🚨** A confirmation dialog will appear with a **very serious warning**. Read it carefully. Importing this JSON file will **completely erase ALL data currently in your SETA application** (expenses, income, accounts, budgets, goals, recurring items, everything!) and replace it with the data from the file. **This action cannot be undone.**
+6.  **Only if you are absolutely certain** you want to replace all current data with the backup, click the **"Yes, Replace Data"** (or similar confirm button). If you have any doubts, click "Cancel".
+7.  If confirmed, SETA will process the file and replace your current data. You might need to reload or restart the application afterwards to see the changes reflected everywhere.
 
-## 7. Troubleshooting & Tips
+## 7. Managing Settings
+
+Click **"Settings"** in the sidebar to manage various aspects of your account and the application.
+
+*   **Profile:** Update your first name, last name, username, email, and contact number. Click "Save Profile" to apply changes.
+*   **Change Password:** Click the "Change Password" button. Enter your current password and your new password (twice for confirmation). Click "Confirm Change" in the dialog.
+*   **Licence Management:** (See Section 9 below)
+*   **Data Management:** (See Section 6 above for Export/Import)
+*   **Database Configuration:** (Advanced) Allows changing where SETA stores its data (Local file, Cloud, Custom). **Changing this requires restarting the application and should only be done by advanced users.** The default "Local" setting is recommended for most users.
+
+## 8. Troubleshooting & Tips
 
 *   **"Where's my data?" / "Data looks wrong!"**
-    *   **Check the Filters!** This is the most common reason. The widgets on the dashboard only show data matching the **Time Period Selector** *and* the selections in the **Data Filters** widget (if added).
+    *   **Check the Filters!** This is the most common reason on the Dashboard. Widgets only show data matching the **Time Period Selector** *and* the selections in the **Data Filters** widget (if added).
     *   **Troubleshooting Steps:**
         1.  Set the **Time Period Selector** to **"All Time."**
         2.  If you have the **"Data Filters"** widget, ensure no specific categories are selected and the amount slider covers the full range (e.g., $0 to the maximum).
         3.  Go to the specific module (e.g., "Expenses," "Income") - does your data appear in the table there? The tables usually show all data for that type, unfiltered by the dashboard selectors.
-*   **Data Not Updating Immediately After Import/Add:** Sometimes, especially after large imports or adding data quickly, the dashboard widgets might not refresh instantly. Try a simple page refresh (`Ctrl+R` or `Cmd+R` if running in dev mode) or, if needed, close and reopen the SETA application.
+*   **Login Fails:**
+    *   Ensure you have verified your email after signing up by clicking the link sent to you.
+    *   Double-check your username and password.
+    *   Use the "Forgot Password?" link on the Login screen (requires access to your registered email).
+*   **Data Not Updating Immediately After Import/Add:** Sometimes, especially after large imports or adding data quickly, the dashboard widgets might not refresh instantly. Try navigating away and back to the dashboard, or if needed, close and reopen the SETA application.
+*   **Cannot Delete Account:** Remember, you can't delete an account if any expense, income, or recurring item is still linked to it. You need to either delete those linked items first or edit them to remove the account link.
 *   **Found a Bug or Have an Idea?** Please report issues or suggest features on the **[SETA GitHub Issues Page](https://github.com/sokinpui/3100_project/issues)** (Replace with your actual repo URL!).
-
-## 8. Conclusion
-
-Thanks for using SETA! We hope it helps you gain control and insights into your personal finances. Explore the different modules, customize your dashboard, and make informed financial decisions!
-
----
 
 ## 9. Managing Your Licence Key
 
-Certain advanced features, like generating Custom Reports, may require an active licence key.
+Certain advanced features, like generating **Custom Reports**, require an active licence key.
 
 1.  Click **"Settings"** in the sidebar.
 2.  Scroll down to the **"Licence Management"** section.
 3.  **View Status:** You can see your current licence status (e.g., "Active", "Inactive", "Not Set") and a partially masked version of your key if one is entered.
 4.  **Update Key:**
-    *   Enter your full licence key into the "Enter Licence Key" field. The format is typically XXXX-XXXX-XXXX-XXXX (using letters and numbers).
+    *   Enter your full licence key into the "Enter Licence Key" field. The format is XXXX-XXXX-XXXX-XXXX (using uppercase letters and numbers).
     *   Click the **"Update Licence"** button.
     *   The application will verify the key with the backend.
     *   You will see a success or error message, and the status display will update accordingly.
-    *   An application restart might be required for licence changes to fully take effect everywhere.
+    *   An application restart might be required for licence changes to fully take effect everywhere, especially for accessing licensed features in the sidebar.
 
-**Available Licence Keys:**
+**Available Licence Keys (Use one of these):**
 ```
 0IH9-YJ2D-74IE-TJCH
 0VEZ-UZVC-NPVW-EPHE
@@ -245,17 +255,37 @@ YR1X-PLGN-G9C6-4DCF
 YYNW-CGCU-MPHL-308J
 ```
 
-## 10. Generating Custom Reports (Licence Required)
+## 10. Generating Reports
 
-SETA allows you to generate highly customized reports if you have an active licence key. This provides more flexibility than the standard "Generate Reports" feature.
+SETA offers two ways to generate reports:
 
-1.  **Navigate:** Click **"Custom Reports"** in the sidebar. You may see a lock icon next to it if your licence is not active.
-2.  **Select Data Types:** Check the boxes next to the data types you want to include in your report (e.g., Expenses, Income, Accounts).
-3.  **Configure Options:**
-    *   **Time Period:** Use the "Time Period Selector" at the top (similar to the Dashboard) to filter the data by a specific date range (e.g., Last 30 Days, Custom Range).
+### Standard Reports
+
+This option provides a quick way to export all your data in common formats.
+
+1.  Click **"Generate Reports"** in the sidebar.
+2.  This page fetches all your data (Expenses, Income, Accounts, Recurring, Budgets, Goals).
+3.  You'll see buttons to download the data as:
+    *   **Excel (`.xlsx`):** Creates a single Excel file with each data type on a separate sheet.
+    *   **PDF (`.pdf`):** Creates a PDF document with tables for each data type.
+    *   **Individual CSVs:** Provides separate download links for each data type (e.g., `expenses.csv`, `income.csv`).
+
+### Custom Reports (Licence Required)
+
+This feature allows you to create more targeted reports based on your selections.
+
+1.  **Check Licence:** Ensure you have an **Active** licence key entered in Settings (Section 9).
+2.  **Navigate:** Click **"Custom Reports"** in the sidebar. If your licence isn't active, you might see a lock icon or be prevented from accessing the page.
+3.  **Select Data Types:** Check the boxes next to the data types you want to include (e.g., just Expenses and Income).
+4.  **Configure Options:**
+    *   **Time Period:** Use the "Time Period Selector" at the top (similar to the Dashboard) to filter the data by a specific date range (e.g., Last Quarter, Custom Range).
     *   **Output Format:** Choose the desired file format (CSV, Excel, or PDF) from the dropdown menu.
-    *   **(Future Feature):** Column Selection - *Currently, all default columns for the selected data types are included. Future versions might allow choosing specific columns.*
-4.  **Generate:** Click the **"Generate Report"** button.
-5.  **Download:** The application will process your request and initiate a file download in the selected format.
+5.  **Generate:** Click the **"Generate Report"** button.
+6.  **Download:** The application will process your request and initiate a file download containing only the selected data, filtered by the chosen date range, in the specified format.
 
-This feature is useful for creating targeted reports for specific analysis needs (e.g., only income and expenses for the last quarter in Excel format).
+This feature is useful for creating specific reports for analysis (e.g., only income and expenses for the last quarter in Excel format) without needing to manually filter the standard report output.
+
+## 11. Conclusion
+
+Thanks for using SETA! We hope it helps you gain control and insights into your personal finances. Explore the different modules, customize your dashboard, and make informed financial decisions!
+

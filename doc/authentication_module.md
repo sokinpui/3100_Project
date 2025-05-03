@@ -1,3 +1,4 @@
+
 # Frontend Module: Authentication
 
 ## Files
@@ -14,15 +15,15 @@ This module handles user authentication, including login, signup, and password r
 
 ## Key Components
 
-*   **`Login.jsx`:** Displays the login form, handles user input, interacts with the `/login` API endpoint, manages loading and error states, and stores user session information (`userId`, `username`, etc.) in `localStorage` upon successful login. Includes toggles for theme and language.
-*   **`Signup.jsx`:** Displays the registration form, performs client-side validation (password strength, matching, required fields), interacts with the `/signup` API endpoint, and provides feedback on success or failure. Includes toggles for theme and language.
+*   **`Login.jsx`:** Displays the login form, handles user input, interacts with the `/login` API endpoint, manages loading and error states, and stores user session information (`userId`, `username`, etc.) in `localStorage` upon successful login. Includes toggles for theme and language. Handles errors related to inactive or unverified accounts.
+*   **`Signup.jsx`:** Displays the registration form, performs client-side validation (password strength, matching, required fields), interacts with the `/signup` API endpoint, and provides feedback on success or failure (e.g., "Check your email for verification"). Includes toggles for theme and language.
 *   **`ResetPassword.jsx`:** Component displayed when a user follows a password reset link. Takes the token from the URL, prompts for a new password, validates it, and calls the `/reset-password/{token}` API endpoint.
 *   **`AuthGuard.jsx`:** A component that runs on route changes. It checks `localStorage` for authentication status (`userId`) and redirects users accordingly (e.g., non-logged-in users to `/login`, logged-in users away from `/login` or `/signup` towards the dashboard).
 
 ## Functionality
 
-*   User Login with username and password.
-*   New User Registration with details and email verification trigger (backend sends email).
+*   User Login with username and password. Backend checks if account is active and email is verified.
+*   New User Registration with details and **email verification trigger** (backend sends email).
 *   Password Reset using a token-based flow initiated via email (request triggered in `Settings.jsx`, reset performed in `ResetPassword.jsx`).
 *   Protected Routing: Ensures only authenticated users can access protected modules.
 *   Theme and Language selection directly on Login/Signup screens.
@@ -43,3 +44,4 @@ This module handles user authentication, including login, signup, and password r
 ## UI Library
 
 *   Material UI (`Container`, `Paper`, `TextField`, `Button`, `Alert`, `IconButton`, `Avatar`, `CircularProgress`, `Menu`, `MenuItem`, `Tooltip`, `Link`).
+
