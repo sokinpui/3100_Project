@@ -7,7 +7,7 @@ This directory contains all the documentation for the SETA (Smart Expense Tracke
 ## User Guides
 
 *   **[User Manual](./user_manual.md)**
-    *   Provides instructions for end-users on how to install, set up, and use the SETA application, covering all major features. Includes licence key information.
+    *   Provides instructions for end-users on how to install, set up, and use the SETA application, covering all major features. Includes licence key information and custom report usage.
 
 ---
 
@@ -25,7 +25,7 @@ This directory contains all the documentation for the SETA (Smart Expense Tracke
 *   **[Backend API Reference](./api_reference.md)**
     *   A high-level overview of the FastAPI backend endpoints, covering authentication, data management (CRUD, import/export), reporting, settings, and licence management. Links to the interactive Swagger/ReDoc UI for full details.
 *   **[Backend Configuration Guide](./configuration.md)**
-    *   Explains how the backend manages configuration, particularly the database connection (local SQLite vs. cloud/custom PostgreSQL), the role of `config_manager.py`, `seta_config.json`, and the `SETA_USER_DATA_PATH` environment variable. Includes the note about the untested nature of the database switching feature.
+    *   Explains how the backend manages configuration, particularly the database connection (local SQLite vs. cloud/custom PostgreSQL), the role of `config_manager.py`, `seta_config.json`, and the `SETA_USER_DATA_PATH` environment variable. Includes a note about the untested nature of the database switching feature.
 
 ---
 
@@ -52,11 +52,11 @@ Detailed descriptions of the purpose, components, functionality, state managemen
 *   **[Expense Import Module](./expense_import_module.md)**
     *   Details the UI for importing expense and income data from CSV files.
 *   **[Expense Reports Module](./expense_reports_module.md)**
-    *   Explains the UI for generating and downloading standard reports (Excel, PDF, CSVs).
+    *   Explains the UI for generating and downloading **standard** reports (Excel, PDF, CSVs).
 *   **[Custom Reports Module](./custom_report_module.md)**
-    *   Details the UI for generating customized reports based on user-selected data types and filters (requires licence).
+    *   Details the UI for generating **customized** reports based on user-selected data types and filters (requires licence).
 *   **[Dynamic Dashboard Widgets](./dashboard_widgets.md)**
-    *   Provides descriptions for each individual widget available on the customizable dashboard, including the new Income Timeline widget.
+    *   Provides descriptions for each individual widget available on the customizable dashboard, including the Income Timeline widget.
 
 ---
 
@@ -64,3 +64,4 @@ Detailed descriptions of the purpose, components, functionality, state managemen
 
 *   **[Design & Implementation Document](./GroupD2_Design_Implementation.docx)**
     *   *(Requires Microsoft Word or compatible software to view)*. Contains detailed internal design choices and implementation strategies developed during the project.
+

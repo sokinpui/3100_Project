@@ -67,6 +67,7 @@ You can change the database configuration using the API:
     ```
 *   **Action:** This endpoint updates the `seta_config.json` file.
 *   **IMPORTANT:** Changes made via this endpoint **require a full application restart** (both frontend and backend processes) to take effect, as the database engine is initialized only once at startup.
+*   **NOTE:** While the functionality to switch databases exists, it may not have been extensively tested in all deployment scenarios (especially switching *between* local and cloud after initial setup). Proceed with caution when changing the database type on an existing installation.
 
 ## Summary
 
@@ -75,5 +76,6 @@ You can change the database configuration using the API:
 *   The `local` type uses an auto-created SQLite DB (`seta_local.db`) in the user data path.
 *   The `cloud` type uses a predefined URL (override with `DATABASE_URL` env var).
 *   The `custom` type uses the `url` specified in `seta_config.json`.
-*   Use the `/settings/database` endpoint to modify the config, but remember to restart the app.
+*   Use the `/settings/database` endpoint to modify the config, but remember to restart the app. Be cautious when switching database types on existing data.
+
 

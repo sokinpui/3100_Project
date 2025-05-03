@@ -26,7 +26,7 @@ This module enables users to define and manage their financial accounts, such as
 *   Allow users to add new accounts by specifying essential details.
 *   Allow users to delete individual accounts after confirmation.
 *   Allow users to select multiple accounts and delete them in bulk after confirmation.
-*   **Important Deletion Constraint:** The backend API prevents the deletion of an account if it is currently linked to any existing expense, income, or recurring transaction records (`account_id` foreign key). The frontend displays an error message from the backend if such a conflict occurs during deletion.
+*   **Important Deletion Constraint:** The backend API prevents the deletion of an account if it is currently linked to any existing expense, income, or recurring transaction records (`account_id` foreign key). The frontend displays an error message (HTTP 409 Conflict) from the backend if such a conflict occurs during deletion.
 *   Display success/error notifications for add/delete actions (reuses shared `ExpenseNotifications`).
 
 ## State Management
@@ -45,9 +45,10 @@ This module enables users to define and manage their financial accounts, such as
 *   `GET /accounts/{userId}`: Fetch all accounts for the user.
 *   `POST /accounts`: Create a new account record.
 *   `DELETE /accounts/{account_id}`: Delete a single account (backend checks for dependencies).
-*   `POST /accounts/bulk/delete`: Delete multiple accounts (backend checks for dependencies).
+*   `POST /accounts/bulk/delete`: Delete multiple accounts (backend checks for dependencies, returns 409 on conflict).
 
 ## UI Library
 
 *   Material UI (`Container`, `Card`, `DataGrid`, `TextField`, `Button`, `Select`, `MenuItem`, `DatePicker`, `Dialog`, `Snackbar`, `Alert`, `IconButton`, `Tooltip`, `CircularProgress`, `Box`, `Typography`).
 *   Day.js & `@mui/x-date-pickers`: For the "Balance As Of Date" picker.
+
