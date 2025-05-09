@@ -305,6 +305,7 @@ export default function DynamicDashboard() {
         const initialWidgets = [
             { id: uuidv4(), type: 'overviewSummary' },
             { id: uuidv4(), type: 'accountBalance' },
+            { id: uuidv4(), type: 'filterWidget' },
             { id: uuidv4(), type: 'categoryBreakdown' },
             { id: uuidv4(), type: 'recentTransactions' },
         ];
