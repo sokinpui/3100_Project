@@ -74,7 +74,8 @@
         "saveFailed": "Failed to save settings.",
         "licenceKeyRequiredError": "Please enter a licence key.",
         "licenceFormatHelper": "Format: XXXX-XXXX-XXXX-XXXX (Letters/Numbers)",
-        "licenceNoteV2": "Note: Entering a key updates status but does not unlock features in this version."
+        "licenceNoteV2": "Note: Entering a key updates status but does not unlock features in this version.",
+        "importFile": "Import File"
     },
     "sidebar": {
         "appName": "SETA",
@@ -545,7 +546,11 @@
         "category_personalCare": "Personal Care",
         "category_subscriptions": "Subscriptions",
         "category_othersSpecify": "Others (Specify)",
-        "category_unknown": "Uncategorized"
+        "category_unknown": "Uncategorized",
+        "fillRequiredFields": "Please fill in all required fields.",
+        "expenseAddedSuccess": "Expense added successfully!",
+        "bulkDeleteSuccess": "{{count}} expense(s) deleted successfully!"
+
     },
     "expenseReports": {
         "title": "Generate Reports",

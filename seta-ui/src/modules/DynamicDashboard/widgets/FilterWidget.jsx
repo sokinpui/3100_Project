@@ -11,16 +11,24 @@ import { expenseCategories } from '../../../constants';
 // Debounce function
 const debounce = (func, delay) => {
   let timeoutId;
-  return (...args) => {
+  // Store the timeoutId on the returned function for potential clearing
+  const debouncedFunc = (...args) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       func.apply(this, args);
     }, delay);
   };
+  // eslint-disable-next-line no-underscore-dangle
+  debouncedFunc._clearTimeout = () => clearTimeout(timeoutId);
+  // eslint-disable-next-line no-underscore-dangle
+  Object.defineProperty(debouncedFunc, '_timeoutId', {
+    get: () => timeoutId,
+  });
+  return debouncedFunc;
 };
 
 const SLIDER_STEP = 50;
-const AUTO_ADJUST_MAX_STORAGE_KEY = 'dynamicDashboardFilterAutoAdjust_v1'; // New localStorage key
+const AUTO_ADJUST_MAX_STORAGE_KEY = 'dynamicDashboardFilterAutoAdjust_v1';
 
 export default function FilterWidget({
   onFilterChange,
@@ -32,19 +40,17 @@ export default function FilterWidget({
   const { t } = useTranslation();
   const [tempAmountRange, setTempAmountRange] = useState(currentFilters.amountRange);
 
-  // Initialize autoAdjustMax from localStorage, default to true
   const [autoAdjustMax, setAutoAdjustMax] = useState(() => {
     const savedState = localStorage.getItem(AUTO_ADJUST_MAX_STORAGE_KEY);
     return savedState !== null ? JSON.parse(savedState) : true;
   });
 
-  // Save autoAdjustMax to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(AUTO_ADJUST_MAX_STORAGE_KEY, JSON.stringify(autoAdjustMax));
   }, [autoAdjustMax]);
 
-
-  // Sync internal tempAmountRange with currentFilters from props
+  // Sync internal tempAmountRange with currentFilters.amountRange from props
+  // This handles external changes to currentFilters.amountRange
   useEffect(() => {
     if (
       currentFilters.amountRange[0] !== tempAmountRange[0] ||
@@ -66,22 +72,57 @@ export default function FilterWidget({
 
     if (autoAdjustMax) {
       targetMax = maxAmount;
-      targetMin = Math.min(propMin, targetMax);
+      targetMin = Math.min(propMin, targetMax); // Ensure min doesn't exceed new targetMax
     } else {
+      // If autoAdjustMax is false, currentFilters.amountRange is the authority,
+      // but it must be capped by maxAmount.
       if (propMax > maxAmount) {
         targetMax = maxAmount;
       }
+      // targetMin remains propMin, but also capped by the new targetMax
       targetMin = Math.min(propMin, targetMax);
     }
 
     const newRange = [Math.max(0, targetMin), Math.max(0, targetMax)]; // Ensure range values are not negative
 
-    if (tempAmountRange[0] !== newRange[0] || tempAmountRange[1] !== newRange[1]) {
-      setTempAmountRange(newRange);
-    }
-
+    // If currentFilters.amountRange needs to be updated based on these rules
     if (propMin !== newRange[0] || propMax !== newRange[1]) {
       onFilterChange({ ...currentFilters, amountRange: newRange });
+      // After onFilterChange, currentFilters.amountRange prop will update,
+      // and the sync effect above will update tempAmountRange.
+    } else {
+      // If onFilterChange was not called, it means currentFilters.amountRange is already consistent.
+      // However, tempAmountRange might still need adjustment if:
+      // 1. autoAdjustMax is true and tempAmountRange isn't reflecting maxAmount.
+      // 2. autoAdjustMax is false, but maxAmount changed, and tempAmountRange is now out of bounds.
+      let tempNeedsUpdate = false;
+      let updatedTempRange = [...tempAmountRange]; // Create a mutable copy
+
+      if (autoAdjustMax) {
+        // If autoAdjustMax is true, tempAmountRange must conform to newRange (which reflects maxAmount)
+        if (tempAmountRange[0] !== newRange[0] || tempAmountRange[1] !== newRange[1]) {
+          tempNeedsUpdate = true;
+          updatedTempRange = newRange;
+        }
+      } else {
+        // If autoAdjustMax is false, tempAmountRange is generally user-driven.
+        // It only needs updating if it violates the current maxAmount.
+        // Slider handlers already cap against maxAmount, but maxAmount itself might change.
+        const cappedTempMin = Math.max(0, Math.min(tempAmountRange[0], maxAmount));
+        // Ensure max is not less than min, and also capped
+        const cappedTempMax = Math.max(cappedTempMin, Math.min(tempAmountRange[1], maxAmount));
+
+        const effectivelyCappedTemp = [cappedTempMin, cappedTempMax];
+
+        if (tempAmountRange[0] !== effectivelyCappedTemp[0] || tempAmountRange[1] !== effectivelyCappedTemp[1]) {
+          tempNeedsUpdate = true;
+          updatedTempRange = effectivelyCappedTemp;
+        }
+      }
+
+      if (tempNeedsUpdate) {
+        setTempAmountRange(updatedTempRange);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxAmount, autoAdjustMax, currentFilters.amountRange, isLoadingData, onFilterChange]);
@@ -93,21 +134,28 @@ export default function FilterWidget({
         onFilterChange(filtersToApply);
       }
     }, 300),
-    [onFilterChange]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onFilterChange] // onFilterChange should be stable (e.g., memoized by parent)
   );
 
   const handleCategoryChange = (event) => {
     const { target: { value } } = event;
     const newCategories = typeof value === 'string' ? value.split(',') : value;
     const newFilters = { ...currentFilters, categories: newCategories };
-    onFilterChange(newFilters);
+    onFilterChange(newFilters); // Category changes are immediate
   };
 
   const handleAmountSliderChange = (event, newValue) => {
+    // If user interacts with slider and autoAdjustMax is true, uncheck it.
+    if (autoAdjustMax) {
+      setAutoAdjustMax(false);
+    }
+
     const newSliderValue = [
       Math.min(Math.max(0, newValue[0]), maxAmount),
       Math.min(Math.max(0, newValue[1]), maxAmount)
     ];
+    // Ensure min is not greater than max
     if (newSliderValue[0] > newSliderValue[1]) {
       newSliderValue[0] = newSliderValue[1];
     }
@@ -118,20 +166,24 @@ export default function FilterWidget({
 
   const handleAmountSliderChangeCommitted = (event, newValue) => {
     // eslint-disable-next-line no-underscore-dangle
-    if (debouncedNotifyParent._timeoutId) clearTimeout(debouncedNotifyParent._timeoutId);
+    if (debouncedNotifyParent._clearTimeout) debouncedNotifyParent._clearTimeout();
 
+    // If user interacts with slider (e.g. clicks, or finishes drag) and autoAdjustMax is true, uncheck it.
+    if (autoAdjustMax) {
+      setAutoAdjustMax(false);
+    }
 
     const finalSliderValue = [
       Math.min(Math.max(0, newValue[0]), maxAmount),
       Math.min(Math.max(0, newValue[1]), maxAmount)
     ];
+    // Ensure min is not greater than max
     if (finalSliderValue[0] > finalSliderValue[1]) {
       finalSliderValue[0] = finalSliderValue[1];
     }
 
-    setTempAmountRange(finalSliderValue);
-
-    onFilterChange({ ...currentFilters, amountRange: finalSliderValue });
+    setTempAmountRange(finalSliderValue); // Update temp range immediately for UI
+    onFilterChange({ ...currentFilters, amountRange: finalSliderValue }); // Notify parent immediately
   };
 
 
@@ -188,7 +240,7 @@ export default function FilterWidget({
           onChangeCommitted={handleAmountSliderChangeCommitted}
           valueLabelDisplay="auto"
           min={0}
-          max={maxAmount > 0 ? maxAmount : 100} // Ensure max is at least a small positive number to prevent slider issues
+          max={maxAmount > 0 ? maxAmount : 100}
           step={SLIDER_STEP > 0 ? SLIDER_STEP : 1}
           getAriaValueText={(value) => `$${value}`}
           aria-labelledby="amount-range-slider-label"

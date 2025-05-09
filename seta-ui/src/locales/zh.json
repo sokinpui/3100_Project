@@ -66,7 +66,8 @@
         "saveFailed": "设置保存失败。",
         "licenceKeyRequiredError": "请输入许可证密钥。",
         "licenceFormatHelper": "格式：XXXX-XXXX-XXXX-XXXX（字母/数字）",
-        "licenceNoteV2": "注意：输入密钥会更新状态，但在此版本中不会解锁任何功能。"
+        "licenceNoteV2": "注意：输入密钥会更新状态，但在此版本中不会解锁任何功能。",
+        "importFile": "导入文件"
     },
     "sidebar": {
         "appName": "SETA",
@@ -451,7 +452,6 @@
         "widgetPreviewAlt": "{{widgetName}}小部件预览",
         "noPreviewAvailable": "没有可用的预览。",
         "hoverForPreview": "悬停以查看预览"
-
     },
     "quickAdd": {
         "addExpense": "添加支出",
@@ -530,7 +530,10 @@
         "category_personalCare": "个人护理",
         "category_subscriptions": "订阅",
         "category_othersSpecify": "其他 (请注明)",
-        "category_unknown": "未分类"
+        "category_unknown": "未分类",
+        "fillRequiredFields": "请填写所有必填字段。",
+        "expenseAddedSuccess": "支出添加成功！",
+        "bulkDeleteSuccess": "成功删除 {{count}} 条支出！"
     },
     "expenseReports": {
         "title": "生成报告",
