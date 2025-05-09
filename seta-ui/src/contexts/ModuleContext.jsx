@@ -59,7 +59,14 @@ export const ModuleProvider = ({ children }) => {
       name: 'Settings',
       path: '/settings',
       component: React.lazy(() => import('../modules/Settings.jsx')),
-    }
+    },
+      {
+      id: 'verify-result', // Important: this should match the "hostname" part of your custom protocol URL
+      name: 'Email Verification', // For internal reference
+      path: '/verify-result',     // The React Router path
+      component: React.lazy(() => import('../modules/VerificationResultPage.jsx')),
+      isPublic: true, // This page must be public
+    },
   ];
 
   return (

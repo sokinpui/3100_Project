@@ -101,7 +101,13 @@
         ],
         "mac": {
             "target": "dmg",
-            "icon": "assets/icon.icns"
+            "icon": "assets/icon.icns",
+            "protocols": [
+                {
+                    "name": "SETA Protocol",
+                    "schemes": ["setaapp"]
+                }
+            ]
         },
         "win": {
             "target": "nsis",
