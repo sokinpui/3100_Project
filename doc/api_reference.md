@@ -7,8 +7,8 @@ The base URL for the API when running locally is typically `http://localhost:800
 ## Authentication (`/`)
 
 *   `POST /signup`: Creates a new user account. Sends verification email.
-*   `POST /login`: Authenticates a user and returns user details upon success.
-*   `GET /verify-email/{token}`: Verifies a user's email using the token sent during signup. Activates the account.
+*   `POST /login`: Authenticates a user and returns user details upon success. Requires email to be verified and account to be active.
+*   `GET /verify-email/{token}`: Verifies a user's email using the token sent during signup. Activates the account. Redirects to frontend with status query parameter.
 *   `POST /request-password-reset`: Sends a password reset link to the user's registered email. (Used for "Forgot Password" flow).
 *   `POST /reset-password/{token}`: Allows setting a new password using a valid reset token. (Used when following email link).
 
@@ -30,7 +30,7 @@ The base URL for the API when running locally is typically `http://localhost:800
 *   `DELETE /expenses/{expense_id}`: Deletes a single expense record.
 *   `POST /expenses/bulk/delete`: Deletes multiple expense records based on a list of IDs.
 *   `POST /expenses/import/{user_id}`: Imports expenses from an uploaded CSV file.
-*   `GET /expenses/{user_id}/report`: Generates an expense report (JSON, CSV, XLSX, PDF). (Likely deprecated in favor of `/reports/all`)
+*   `GET /expenses/{user_id}/report`: Generates an expense report (JSON, CSV, XLSX, PDF). (Likely deprecated in favor of `/reports/all` or `/reports/custom`)
 *   `GET /expenses/{user_id}/total`: Gets the sum of all expenses for a user.
 
 ## Income (`/income`)
@@ -66,8 +66,8 @@ The base URL for the API when running locally is typically `http://localhost:800
 
 *   `GET /accounts/{user_id}`: Retrieves all accounts (e.g., bank, cash) for a user.
 *   `POST /accounts`: Creates a new account.
-*   `DELETE /accounts/{account_id}`: Deletes a single account.
-*   `POST /accounts/bulk/delete`: Deletes multiple accounts based on a list of IDs. (Note: Fails if account is linked to transactions).
+*   `DELETE /accounts/{account_id}`: Deletes a single account. (Fails if account is linked to transactions).
+*   `POST /accounts/bulk/delete`: Deletes multiple accounts based on a list of IDs. (Note: Fails with 409 Conflict if any account is linked to transactions).
 
 ## Data Management (`/export`, `/import`)
 
@@ -87,6 +87,4 @@ The base URL for the API when running locally is typically `http://localhost:800
 
 *   `GET /`: Root endpoint, returns a welcome message.
 
----
 
-*Remember to consult the interactive `/docs` endpoint for the most up-to-date and detailed information when the API server is running.*

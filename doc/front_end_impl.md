@@ -18,15 +18,15 @@ Handles user authentication, including login, signup, and password reset process
 
 ### Key Components
 
-*   **`Login.jsx`:** Displays the login form, handles user input, interacts with the `/login` API endpoint, manages loading and error states, and stores user session information (`userId`, `username`, etc.) in `localStorage` upon successful login. Includes toggles for theme and language.
-*   **`Signup.jsx`:** Displays the registration form, performs client-side validation (password strength, matching, required fields), interacts with the `/signup` API endpoint, and provides feedback on success or failure. Includes toggles for theme and language.
+*   **`Login.jsx`:** Displays the login form, handles user input, interacts with the `/login` API endpoint, manages loading and error states, and stores user session information (`userId`, `username`, etc.) in `localStorage` upon successful login. Includes toggles for theme and language. Handles errors related to inactive or unverified accounts.
+*   **`Signup.jsx`:** Displays the registration form, performs client-side validation (password strength, matching, required fields), interacts with the `/signup` API endpoint, and provides feedback on success or failure (e.g., "Check your email for verification"). Includes toggles for theme and language.
 *   **`ResetPassword.jsx`:** Component displayed when a user follows a password reset link. Takes the token from the URL, prompts for a new password, validates it, and calls the `/reset-password/{token}` API endpoint.
 *   **`AuthGuard.jsx`:** A component that runs on route changes. It checks `localStorage` for authentication status (`userId`) and redirects users accordingly (e.g., non-logged-in users to `/login`, logged-in users away from `/login` or `/signup` towards the dashboard).
 
 ### Functionality
 
-*   User Login with username and password.
-*   New User Registration with details and email verification trigger (backend sends email).
+*   User Login with username and password. Backend checks if account is active and email is verified.
+*   New User Registration with details and **email verification trigger** (backend sends email).
 *   Password Reset using a token-based flow initiated via email (request triggered in `Settings.jsx`, reset performed in `ResetPassword.jsx`).
 *   Protected Routing: Ensures only authenticated users can access protected modules.
 *   Theme and Language selection directly on Login/Signup screens.
@@ -66,42 +66,49 @@ Handles user authentication, including login, signup, and password reset process
 
 ### Overview
 
-Sets up the main application structure, including routing, the persistent sidebar, global context providers (Theme, Language, API), and the container for displaying feature modules.
+Sets up the main application structure, including routing, the persistent sidebar, global context providers (Theme, Language, API), and the container for displaying feature modules. It also handles visual cues for features requiring specific conditions (like an active licence).
 
 ### Key Components
 
 *   **`App.jsx`:** Root component. Initializes context providers (`I18nextProvider`, `ThemeProvider`, `LanguageProvider`, `ApiProvider`, `ModuleProvider`), sets up the `HashRouter`, and renders `AuthGuard` and `LayoutContainer`. Checks initial login status.
-*   **`LayoutContainer.jsx`:** A simple wrapper that currently renders the `ModuleRouter`. Could be expanded to include headers/footers if needed.
-*   **`ModuleRouter.jsx`:** Defines application routes based on `modulesConfig.js`. Uses `React Router` (`Routes`, `Route`) and `React.Suspense` for lazy loading components. Wraps protected routes within the `Sidebar` component using a `ProtectedRoute` HOC. Redirects users based on authentication status (e.g., logged-in users away from `/login`).
-*   **`Sidebar.jsx`:** Persistent sidebar component displayed for authenticated users. Renders navigation links based on `modulesConfig.js` (`sidebarMenuItems`). Includes toggles for theme and language, user profile information display (username/email from `localStorage`), and a logout button with confirmation dialog. Adapts its width (collapsed/expanded).
-*   **`modulesConfig.js`:** Central configuration file defining all application modules (both public and protected), their paths, associated components (lazy-loaded), icons, and whether they appear in the sidebar.
+*   **`LayoutContainer.jsx`:** A simple wrapper that renders the `ModuleRouter`, effectively defining the main content area next to the sidebar.
+*   **`ModuleRouter.jsx`:** Defines application routes based on `modulesConfig.js`. Uses `React Router` (`Routes`, `Route`) and `React.Suspense` for lazy loading components. Wraps protected routes within the `Sidebar` component using a `ProtectedRoute` HOC. Redirects users based on authentication status.
+*   **`Sidebar.jsx`:** Persistent sidebar component displayed for authenticated users.
+    *   Fetches the user's licence status from the backend (`GET /users/{userId}/licence`).
+    *   Renders navigation links based on `sidebarMenuItems` from `modulesConfig.js`.
+    *   Conditionally renders or adds visual indicators (e.g., lock icon, tooltip) to menu items that require an active licence (like "Custom Reports"), based on the fetched `licenceStatus` and the `requiresLicence` flag in `modulesConfig.js`.
+    *   Includes toggles for theme and language, user profile information display (username/email from `localStorage`), and a logout button with confirmation.
+    *   Adapts its width (collapsed/expanded).
+*   **`modulesConfig.js`:** Central configuration file defining all application modules (public and protected), their paths, associated components (lazy-loaded), icons, whether they appear in the sidebar, and **whether they require an active licence**.
 *   **Context Providers:** (`ThemeProvider`, `LanguageProvider`, `ApiProvider`, `ModuleProvider`) Wrap the application to provide global access to theme, language, API instance, and module definitions.
 
 ### Functionality
 
 *   Provides the main application frame (Sidebar + Content Area).
-*   Handles routing between different feature modules.
+*   Handles routing between different feature modules using `HashRouter`.
 *   Lazy loads module components for better initial performance.
-*   Protects routes requiring authentication.
+*   Protects routes requiring authentication via `AuthGuard` and `ProtectedRoute`.
 *   Manages and persists global theme and language settings.
-*   Provides a global Axios instance for API calls.
-*   Allows users to logout.
+*   Provides a global Axios instance for API calls via `ApiProvider`.
+*   Allows users to logout via the Sidebar.
+*   **Visually indicates (in the Sidebar) which features require an active licence and restricts access based on fetched licence status.**
 
 ### State Management
 
 *   Global theme and language state managed via `ThemeContext` and `LanguageContext`, persisted in `localStorage`.
-*   Sidebar uses `useState` for its open/closed state and dialog visibility.
+*   Sidebar uses `useState` for its open/closed state, dialog visibility, and **licence status (`licenceStatus`)**.
 *   `AuthGuard` uses `useState` (passed via prop) to signal login status to `App.jsx`.
 
 ### API Interaction
 
 *   Primarily facilitates API calls made by child modules through the `ApiProvider` context.
-*   Sidebar reads user info directly from `localStorage` (set during login). Logout clears `localStorage`.
+*   **Sidebar fetches licence status: `GET /users/{userId}/licence`**.
+*   Sidebar reads user info directly from `localStorage`. Logout clears relevant `localStorage` items.
 
 ### UI Library
 
-*   Material UI (`Box`, `Drawer`, `List`, `ListItem`, `ListItemIcon`, `ListItemText`, `Button`, `Dialog`, `Avatar`, `IconButton`, `Tooltip`, `Menu`, `MenuItem`).
-*   React Router (`Routes`, `Route`, `Navigate`, `useNavigate`, `useLocation`, `Link`).
+*   Material UI (`Box`, `Drawer`, `List`, `ListItem`, `ListItemIcon`, `ListItemText`, `Button`, `Dialog`, `Avatar`, `IconButton`, `Tooltip`, `Menu`, `MenuItem`, `CircularProgress`, `LockIcon`).
+*   React Router (`HashRouter`, `Routes`, `Route`, `Navigate`, `useNavigate`, `useLocation`, `Link`).
 
 ---
 
@@ -233,7 +240,7 @@ Enables users to define and manage their financial accounts (e.g., Checking, Sav
 
 *   Fetch and display user's accounts.
 *   Add new accounts.
-*   Delete single or multiple accounts (backend prevents deletion if linked to transactions).
+*   Delete single or multiple accounts (backend prevents deletion if linked to transactions, returns 409 Conflict).
 *   Show notifications (reuses `ExpenseNotifications`).
 
 ### State Management
@@ -245,7 +252,7 @@ Enables users to define and manage their financial accounts (e.g., Checking, Sav
 *   `GET /accounts/{userId}`
 *   `POST /accounts`
 *   `DELETE /accounts/{account_id}`
-*   `POST /accounts/bulk/delete` (Backend performs check for linked transactions).
+*   `POST /accounts/bulk/delete` (Backend performs check for linked transactions, returns 409 on conflict).
 
 ### UI Library
 
@@ -366,6 +373,7 @@ Provides a tabbed interface for managing financial Budgets and Goals.
 *   `src/modules/DynamicDashboard/DynamicDashboard.jsx`
 *   `src/modules/DynamicDashboard/AddWidgetDialog.jsx`
 *   `src/modules/DynamicDashboard/widgets/*` (numerous widget components)
+*   `src/modules/DynamicDashboard/widgets/WidgetWrapper.jsx`
 
 ### Overview
 
@@ -383,7 +391,7 @@ Provides a highly customizable dashboard experience where users can add, remove,
 *   **`AddWidgetDialog.jsx`:** A dialog allowing users to select which widgets to display on the dashboard. Shows checkboxes for all available widgets defined in `WIDGET_COMPONENTS`.
 *   **`TimePeriodSelectorWidget.jsx`:** A dedicated widget (though placed outside the grid in the example) for selecting the time range (presets or custom dates) for the dashboard data. Persists selection to `localStorage`.
 *   **`FilterWidget.jsx`:** A dedicated widget for filtering data shown in *other* widgets by category/source and amount range.
-*   **Widget Components (`widgets/*.jsx`):** Individual components responsible for displaying specific information (e.g., `OverviewSummaryWidget`, `CategoryBreakdownWidget`, `ExpenseTrendWidget`, `AccountBalanceWidget`, `NetCashFlowWidget`, etc.). Each widget typically receives filtered data props from `DynamicDashboard.jsx` and uses libraries like `Recharts` for visualization.
+*   **Widget Components (`widgets/*.jsx`):** Individual components responsible for displaying specific information (e.g., `OverviewSummaryWidget`, `CategoryBreakdownWidget`, `ExpenseTrendWidget`, `AccountBalanceWidget`, `NetCashFlowWidget`, `IncomeTimelineWidget`, etc.). Each widget typically receives filtered data props from `DynamicDashboard.jsx` and uses libraries like `Recharts` for visualization. See `dashboard_widgets.md` for details on each.
 *   **`WidgetWrapper.jsx`:** A HOC that wraps each specific widget component. Provides a consistent card structure with a title, a drag handle (`.widget-drag-handle`), and a remove button (`.widget-remove-button`).
 
 ### Functionality
@@ -429,21 +437,20 @@ Provides a highly customizable dashboard experience where users can add, remove,
 
 ---
 
----
-
 ## Settings Module
 
 ### Files
 
 *   `src/modules/Settings.jsx`
+*   Uses shared component: `ExpenseNotifications`.
 
 ### Overview
 
-Provides a central place for users to manage their profile information, change their password (in-app), manage their application licence key, perform data backups/restores, and configure the backend database connection.
+Provides a central place for users to manage their profile information, change their password (in-app), manage their application licence key, perform data backups/restores (JSON), and configure the backend database connection.
 
 ### Key Components
 
-*   **`Settings.jsx`:** A single component managing different settings sections (Profile, Licence, Data, Database) within Cards. Includes a dialog for the in-app password change.
+*   **`Settings.jsx`:** A single component managing different settings sections (Profile, Licence, Data, Database) within Cards. Includes dialogs for in-app password change and import confirmation.
 
 ### Functionality
 
@@ -454,17 +461,17 @@ Provides a central place for users to manage their profile information, change t
     *   Calls the `/users/{userId}/password` backend endpoint to update the password.
     *   Displays success/error feedback within the dialog or via Snackbar.
 *   **Licence Management:**
-    *   Fetches and displays current licence status (Active/Inactive/Not Set) and masked key prefix.
+    *   Fetches and displays current licence status (Active/Inactive/Not Set) and masked key prefix using `GET /users/{userId}/licence`.
     *   Provides input field for new licence key.
-    *   Calls `/users/{userId}/licence` PUT endpoint to update the key after format check.
-    *   Displays success/error messages.
+    *   Calls `PUT /users/{userId}/licence` endpoint to update the key after format check. Backend validates against accepted list.
+    *   Displays success/error messages and refreshes status.
 *   **Data Management:**
-    *   **Export:** Trigger full JSON data export (`/export/all/{userId}`).
-    *   **Import:** Upload JSON backup (`/import/all/{userId}`), warns about data replacement, shows confirmation dialog, displays results.
+    *   **Export:** Trigger full JSON data export via `GET /export/all/{userId}`. Initiates browser download.
+    *   **Import:** Upload JSON backup via `POST /import/all/{userId}`. Warns about data replacement, shows confirmation dialog, displays backend processing results (success/errors).
 *   **Database Configuration:**
     *   Select DB type (Local, Cloud, Custom), input custom URL.
-    *   Calls `/settings/database` PUT endpoint.
-    *   Warns about required restart.
+    *   Calls `PUT /settings/database` endpoint.
+    *   Warns about required application restart.
 
 ### State Management
 
@@ -487,8 +494,8 @@ Provides a central place for users to manage their profile information, change t
 *   `PUT /users/{userId}/password`: Change password in-app.
 *   `GET /users/{userId}/licence`: Get licence status.
 *   `PUT /users/{userId}/licence`: Update licence key.
-*   `GET /export/all/{userId}`: Trigger data export.
-*   `POST /import/all/{userId}`: Upload JSON for import.
+*   `GET /export/all/{userId}`: Trigger data export (returns JSON file).
+*   `POST /import/all/{userId}`: Upload JSON for import/restore.
 *   `PUT /settings/database`: Update DB config.
 
 ### UI Library
@@ -505,7 +512,7 @@ Provides a central place for users to manage their profile information, change t
 
 ### Overview
 
-Provides dedicated interfaces for users to bulk import expense and income data from CSV files.
+Provides dedicated interfaces for users to bulk import **expense** and **income** data from CSV files.
 
 ### Key Components
 
@@ -536,7 +543,7 @@ Provides dedicated interfaces for users to bulk import expense and income data f
 
 ---
 
-## Expense Reports Module
+## Expense Reports Module (Standard Reports)
 
 ### Files
 
@@ -544,15 +551,15 @@ Provides dedicated interfaces for users to bulk import expense and income data f
 
 ### Overview
 
-Allows users to generate and download comprehensive reports containing all their financial data (expenses, income, accounts, budgets, goals, recurring items) in various formats.
+Allows users to generate and download comprehensive **standard** reports containing all their financial data (expenses, income, accounts, budgets, goals, recurring items) in various formats.
 
 ### Key Components
 
-*   **`ExpenseReports.jsx`:** Main component for the reporting feature.
+*   **`ExpenseReports.jsx`:** Main component for the standard reporting feature.
 
 ### Functionality
 
-*   **Fetch Data:** Retrieves all necessary data for the report using the consolidated backend endpoint (`/reports/{userId}/all`).
+*   **Fetch Data:** Retrieves all necessary data for the report using the consolidated backend endpoint (`GET /reports/{userId}/all`).
 *   **Display Summary:** Shows the total number of records found across all data types.
 *   **Download Options:** Provides buttons to trigger the generation and download of reports in different formats:
     *   **Excel:** Uses the `xlsx` library to generate a multi-sheet `.xlsx` file client-side from the fetched data.
@@ -568,7 +575,7 @@ Allows users to generate and download comprehensive reports containing all their
 
 ### API Interaction
 
-*   `GET /reports/{userId}/all`: Fetches the consolidated data required for generating reports.
+*   `GET /reports/{userId}/all`: Fetches the consolidated data required for generating standard reports.
 
 ### UI Library
 
@@ -578,3 +585,45 @@ Allows users to generate and download comprehensive reports containing all their
 *   `jspdf` & `jspdf-autotable`: For client-side PDF generation.
 
 ---
+
+## Custom Reports Module (Licence Required)
+
+### Files
+
+*   `src/modules/CustomReports.jsx` (Assuming this exists)
+
+### Overview
+
+Allows users with an **active licence** to generate customized reports by selecting specific data types, date ranges, and output formats.
+
+### Key Components
+
+*   **`CustomReports.jsx`:** Main component for the custom reporting feature.
+
+### Functionality
+
+*   **Licence Check:** Access to this module is typically gated by the Sidebar based on the user's licence status. The component itself might also perform a check or rely on the backend rejecting the API call.
+*   **UI Controls:** Provides UI elements (checkboxes, date pickers, dropdowns) for selecting:
+    *   Data Types (e.g., Expenses, Income, Accounts)
+    *   Date Range (Start Date, End Date)
+    *   Output Format (CSV, Excel, PDF)
+*   **Report Generation:** Sends a `POST` request to the `/reports/{userId}/custom` backend endpoint with the selected parameters.
+*   **Download:** The backend processes the request based on the parameters and returns the generated report file for download.
+
+### State Management
+
+*   `CustomReports.jsx` uses `useState` for:
+    *   Selected data types, start/end dates, output format.
+    *   `isLoading`: Tracks the report generation state.
+    *   `error`: Stores any error message (e.g., from API call, licence issue).
+
+### API Interaction
+
+*   `POST /reports/{userId}/custom`: Sends report parameters and receives the generated file. Requires active licence (backend enforced).
+
+### UI Library
+
+*   Material UI (`Container`, `Card`, `Checkbox`, `DatePicker`, `Select`, `MenuItem`, `Button`, `CircularProgress`, `Alert`).
+*   Day.js & `@mui/x-date-pickers`.
+
+

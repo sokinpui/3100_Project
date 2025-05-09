@@ -428,3 +428,4 @@ This document describes the individual widgets available for use within the SETA
 *   **Key Features:** Displays a Recharts stacked Area Chart. Each colored area represents an income source's total amount per month. Includes a legend and tooltip. Handles potential missing source names ('Unknown Source').
 *   **Notes:** Aggregates data monthly. Requires at least two months of income data for visualization. Uses distinct colors for income sources.
 ![Pasted image 20250424180200.png](images/Pasted%20image%2020250424180200.png)
+

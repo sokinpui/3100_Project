@@ -84,3 +84,4 @@ seta-ui/seta_local.db
 /.obsidian/
 
 *.zip
+!doc/project_documents/*.zip

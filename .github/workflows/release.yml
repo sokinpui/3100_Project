@@ -116,12 +116,12 @@ jobs:
         # The -- means pass the flag to the underlying electron-builder command
         run: npm run electron:build -- ${{ matrix.electron_build_flag }} --publish never
 
-      - name: Fix macOS App Permissions
-        if: matrix.os == 'macos-latest'
-        working-directory: ./seta-ui/release
-        run: |
-          chmod -R +x *.dmg
-          find . -type f -name "*.app" -exec chmod -R +x {} \;
+      # - name: Fix macOS App Permissions
+      #   if: matrix.os == 'macos-latest'
+      #   working-directory: ./seta-ui/release
+      #   run: |
+      #     chmod -R +x *.dmg
+      #     find . -type f -name "*.app" -exec chmod -R +x {} \;
 
       # 4. Prepare Artifacts for Upload
       - name: List release files # Helpful for debugging
