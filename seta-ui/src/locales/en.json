@@ -456,7 +456,11 @@
         "noIncomeTimelineData": "Not enough income data for timeline view.",
         "unknownSource": "Unknown Source",
         "incomeEntries": "Income Entries",
-        "Entries": "Entries"
+        "Entries": "Entries",
+        "autoAdjustMaxAmount": "Auto-adjust to max available amount",
+        "widgetPreviewAlt": "{{widgetName}} preview",
+        "noPreviewAvailable": "No preview available",
+        "hoverForPreview": "Hover over a widget to see a preview."
     },
     "planningManager": {
         "title": "Financial Planning",

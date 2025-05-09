@@ -44,7 +44,7 @@ import AccountDetailWidget from './widgets/AccountDetailWidget';
 import ExpenseNotifications from '../ExpenseManager/components/ExpenseNotifications';
 import BudgetComparisonWidget from './widgets/BudgetComparisonWidget';
 import IncomeTimelineWidget from './widgets/IncomeTimelineWidget';
-import TimelineIcon from '@mui/icons-material/Timeline';
+// import TimelineIcon from '@mui/icons-material/Timeline'; // Already imported but not directly used in WIDGET_COMPONENTS map
 
 import AddWidgetDialog from './AddWidgetDialog';
 
@@ -68,7 +68,7 @@ const WIDGET_COMPONENTS = {
     filterWidget: {
         component: FilterWidget,
         titleKey: 'dynamicDashboard.filterWidgetTitle',
-        defaultLayout: { w: 3, h: 5, minW: 2, minH: 4, isResizable: true }
+        defaultLayout: { w: 3, h: 6, minW: 2, minH: 5, isResizable: true }
     },
     categoryBreakdown: {
         component: CategoryBreakdownWidget,
@@ -215,10 +215,10 @@ const WIDGET_COMPONENTS = {
         titleKey: 'dynamicDashboard.budgetComparison',
         defaultLayout: { w: 6, h: 7, minW: 4, minH: 5 }
     },
-    incomeTimeline: { // <-- New Widget ID
+    incomeTimeline: {
         component: IncomeTimelineWidget,
-        titleKey: 'dynamicDashboard.incomeTimeline', // <-- Use new title key
-        defaultLayout: { w: 8, h: 7, minW: 4, minH: 4 } // Same layout as expense timeline for now
+        titleKey: 'dynamicDashboard.incomeTimeline',
+        defaultLayout: { w: 8, h: 7, minW: 4, minH: 4 }
     },
 };
 
@@ -240,28 +240,25 @@ export default function DynamicDashboard() {
     const [timePeriod, setTimePeriod] = useState({ startDate: null, endDate: null });
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
-    // Initialize activeFilters from localStorage if available
     const [activeFilters, setActiveFilters] = useState(() => {
         const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
         if (savedFilters) {
             try {
                 const parsedFilters = JSON.parse(savedFilters);
-                // Validate saved filters, especially the range
                 const validRange = Array.isArray(parsedFilters.amountRange) && parsedFilters.amountRange.length === 2
                     ? [Math.max(0, parsedFilters.amountRange[0]), Math.max(0, parsedFilters.amountRange[1])]
-                    : DEFAULT_FILTERS.amountRange; // Fallback to placeholder if invalid
+                    : DEFAULT_FILTERS.amountRange;
                 const validCategories = Array.isArray(parsedFilters.categories) ? parsedFilters.categories : [];
                 return { categories: validCategories, amountRange: validRange };
             } catch (e) {
                 console.error("Failed to parse saved filters", e);
-                return { ...DEFAULT_FILTERS }; // Use a copy of the placeholder on error
+                return { ...DEFAULT_FILTERS };
             }
         }
-        return { ...DEFAULT_FILTERS }; // Use a copy of the placeholder if nothing saved
+        return { ...DEFAULT_FILTERS };
     });
-    const [initialMaxAmountSet, setInitialMaxAmountSet] = useState(false); // Flag
+    const [initialMaxAmountSet, setInitialMaxAmountSet] = useState(false);
 
-    // --- Notification Handlers ---
     const showNotification = useCallback((message, severity = 'success') => {
         setNotification({ open: true, message, severity });
     }, []);
@@ -273,7 +270,6 @@ export default function DynamicDashboard() {
         setNotification(prev => ({ ...prev, open: false }));
     };
 
-    // --- Load Layout ---
     useEffect(() => {
         const savedData = localStorage.getItem(LAYOUT_STORAGE_KEY);
         if (savedData) {
@@ -300,7 +296,6 @@ export default function DynamicDashboard() {
         setIsMounted(true);
     }, []);
 
-    // --- Initialize Default ---
     const initializeDefaultLayout = () => {
         const initialWidgets = [
             { id: uuidv4(), type: 'overviewSummary' },
@@ -313,13 +308,12 @@ export default function DynamicDashboard() {
         const initialLgLayout = initialWidgets.map((widget, index) => ({
             i: widget.id,
             x: (index % 3) * 4,
-            y: Math.floor(index / 3) * 6,
+            y: Math.floor(index / 3) * (WIDGET_COMPONENTS[widget.type]?.defaultLayout?.h || 6),
             ...WIDGET_COMPONENTS[widget.type].defaultLayout,
         }));
         setLayouts({ lg: initialLgLayout });
     };
 
-    // --- Save Layout ---
     useEffect(() => {
         if (isMounted && widgets.length > 0) {
             try {
@@ -333,7 +327,6 @@ export default function DynamicDashboard() {
         }
     }, [layouts, widgets, isMounted]);
 
-    // --- Save Filters ---
     useEffect(() => {
         if (isMounted) {
             try {
@@ -344,7 +337,6 @@ export default function DynamicDashboard() {
         }
     }, [activeFilters, isMounted]);
 
-    // --- Fetch ALL Expenses, Income, Budgets, Goals, and Accounts ---
     const fetchDashboardData = useCallback(async () => {
         if (!userId) {
             setIsLoadingData(false);
@@ -386,7 +378,6 @@ export default function DynamicDashboard() {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    // --- Calculate Time-Period Filtered Expenses ---
     const timePeriodFilteredExpenses = useMemo(() => {
         let expensesToFilter = allExpenses;
         if (timePeriod && timePeriod.startDate && timePeriod.endDate) {
@@ -407,7 +398,6 @@ export default function DynamicDashboard() {
         return expensesToFilter;
     }, [allExpenses, timePeriod]);
 
-    // --- Calculate Time-Period Filtered Income ---
     const timePeriodFilteredIncome = useMemo(() => {
         let incomeToFilter = allIncome;
         if (timePeriod && timePeriod.startDate && timePeriod.endDate) {
@@ -428,16 +418,13 @@ export default function DynamicDashboard() {
         return incomeToFilter;
     }, [allIncome, timePeriod]);
 
-    // --- Calculate Combined Categories/Sources ---
     const allCategoriesAndSources = useMemo(() => {
         const expenseCats = new Set(allExpenses.map(e => e.category_name).filter(Boolean));
         const incomeSources = new Set(allIncome.map(i => i.source).filter(Boolean));
         return Array.from(new Set([...expenseCats, ...incomeSources])).sort();
     }, [allExpenses, allIncome]);
 
-    // --- Calculate Max Transaction Amount ---
     const maxTransactionAmount = useMemo(() => {
-        // Calculate based on time-period filtered data
         const expensesToConsider = timePeriodFilteredExpenses || [];
         const incomeToConsider = timePeriodFilteredIncome || [];
 
@@ -445,51 +432,43 @@ export default function DynamicDashboard() {
         const maxIncome = incomeToConsider.reduce((maxVal, item) => Math.max(maxVal, parseFloat(item.amount) || 0), 0);
 
         const overallMax = Math.max(maxExpense, maxIncome);
-        // Ensure a minimum range for the slider if max is very low or zero, e.g., 100
         return Math.max(overallMax, 100);
     }, [timePeriodFilteredExpenses, timePeriodFilteredIncome]);
 
-    // --- Adjust amount range filter if maxTransactionAmount decreases ---
     useEffect(() => {
-        // Only run if data is loaded, max amount is calculated, and we haven't set the initial filter yet
         if (!isLoadingData && maxTransactionAmount > 0 && !initialMaxAmountSet) {
             const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
             if (!savedFilters) {
-                // No saved filters, set initial range to [0, max]
-                console.log(`Setting initial filter range to [0, ${maxTransactionAmount}]`);
                 setActiveFilters(prev => ({
                     ...prev,
                     amountRange: [0, maxTransactionAmount]
                 }));
             }
-            // Mark that we've considered the initial max amount setting, regardless of whether we changed it
             setInitialMaxAmountSet(true);
         }
-    }, [isLoadingData, maxTransactionAmount, initialMaxAmountSet]); // Add flag to dependencies
+    }, [isLoadingData, maxTransactionAmount, initialMaxAmountSet]);
 
     useEffect(() => {
-        // Only run after initial setting check is done and data is not loading
         if (!isLoadingData && initialMaxAmountSet) {
             const [currentMin, currentMax] = activeFilters.amountRange;
-            // Adjust only if currentMax EXCEEDS the new possible max
             if (currentMax > maxTransactionAmount) {
-                console.log(`Adjusting filter max from ${currentMax} down to ${maxTransactionAmount}`);
                 const newMax = maxTransactionAmount;
-                // Ensure min isn't greater than the new max
                 const newMin = Math.min(currentMin, newMax);
                 setActiveFilters(prev => ({
                     ...prev,
                     amountRange: [newMin, newMax]
                 }));
             }
+            else if (currentMax === 0 && maxTransactionAmount > 0 && activeFilters.amountRange[0] === 0) {
+                 setActiveFilters(prev => ({
+                    ...prev,
+                    amountRange: [0, maxTransactionAmount]
+                }));
+            }
         }
-        // Depend on maxTransactionAmount to react to its changes (e.g., time period change)
-        // Also depend on isLoadingData and the flag to ensure it runs at the right time
-        // Depend on activeFilters.amountRange to get the current values for comparison
     }, [maxTransactionAmount, isLoadingData, initialMaxAmountSet, activeFilters.amountRange]);
 
 
-    // --- Apply Active Filters to Expenses ---
     const filteredExpenses = useMemo(() => {
         let expensesToFilter = timePeriodFilteredExpenses;
         if (activeFilters.categories && activeFilters.categories.length > 0) {
@@ -498,16 +477,15 @@ export default function DynamicDashboard() {
             );
         }
         if (activeFilters.amountRange) {
-            const [minAmount, maxAmount] = activeFilters.amountRange;
+            const [minAmount, maxAmountVal] = activeFilters.amountRange;
             expensesToFilter = expensesToFilter.filter(expense => {
                 const amount = parseFloat(expense.amount) || 0;
-                return amount >= minAmount && amount <= maxAmount;
+                return amount >= minAmount && amount <= maxAmountVal;
             });
         }
         return expensesToFilter;
     }, [timePeriodFilteredExpenses, activeFilters]);
 
-    // --- Apply Active Filters to Income ---
     const filteredIncome = useMemo(() => {
         let incomeToFilter = timePeriodFilteredIncome;
         if (activeFilters.categories && activeFilters.categories.length > 0) {
@@ -516,23 +494,21 @@ export default function DynamicDashboard() {
             );
         }
         if (activeFilters.amountRange) {
-            const [minAmount, maxAmount] = activeFilters.amountRange;
+            const [minAmount, maxAmountVal] = activeFilters.amountRange;
             incomeToFilter = incomeToFilter.filter(income => {
                 const amount = parseFloat(income.amount) || 0;
-                return amount >= minAmount && amount <= maxAmount;
+                return amount >= minAmount && amount <= maxAmountVal;
             });
         }
         return incomeToFilter;
     }, [timePeriodFilteredIncome, activeFilters]);
 
-    // --- Layout Change Handler ---
     const handleLayoutChange = useCallback((layout, allLayouts) => {
         if (isMounted && JSON.stringify(allLayouts) !== JSON.stringify(layouts)) {
             setLayouts(allLayouts);
         }
     }, [isMounted, layouts]);
 
-    // --- Add/Remove Widget Helpers ---
     const addSingleWidget = useCallback((widgetType) => {
         const widgetConfig = WIDGET_COMPONENTS[widgetType];
         if (!widgetConfig) return;
@@ -569,7 +545,6 @@ export default function DynamicDashboard() {
         });
     }, [maxTransactionAmount]);
 
-    // --- Handler for Dialog Apply Changes ---
     const handleApplyWidgetChanges = useCallback((desiredStates) => {
         const currentWidgetsMap = new Map(widgets.map(w => [w.type, w.id]));
         Object.entries(desiredStates).forEach(([widgetType, shouldBePresent]) => {
@@ -586,18 +561,18 @@ export default function DynamicDashboard() {
         setIsAddWidgetDialogOpen(false);
     }, [widgets, addSingleWidget, removeSingleWidget]);
 
-    // --- Callback for Filter Widget ---
     const handleFilterChange = useCallback((newFilters) => {
         const adjustedRange = [...newFilters.amountRange];
         if (adjustedRange[1] > maxTransactionAmount) adjustedRange[1] = maxTransactionAmount;
         if (adjustedRange[0] > adjustedRange[1]) adjustedRange[0] = adjustedRange[1];
+        if (adjustedRange[0] < 0) adjustedRange[0] = 0;
+
         setActiveFilters({
             categories: newFilters.categories,
             amountRange: adjustedRange
         });
     }, [maxTransactionAmount]);
 
-    // --- Render Widgets ---
     const renderWidgets = () => {
         return widgets.map((widget) => {
             const config = WIDGET_COMPONENTS[widget.type];
@@ -644,7 +619,7 @@ export default function DynamicDashboard() {
                 widgetId={widget.id}
                 onRemoveWidget={handleRemoveThisWidget}
                 >
-                {widget.type === 'filterWidget' && isLoadingData ? (
+                {widget.type === 'filterWidget' && isLoadingData && maxTransactionAmount === 0 ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                     <CircularProgress size={24} />
                     </Box>
@@ -675,7 +650,7 @@ export default function DynamicDashboard() {
 
         <TimePeriodSelectorWidget onPeriodChange={setTimePeriod} />
 
-        {!isMounted || isLoadingData ? (
+        {!isMounted || (isLoadingData && widgets.length > 0 && !allExpenses.length && !allIncome.length) ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>
         ) : widgets.length === 0 ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 5, border: '1px dashed grey', borderRadius: 1, minHeight: 200 }}>
@@ -702,12 +677,28 @@ export default function DynamicDashboard() {
         )}
 
         <AddWidgetDialog
-        open={isAddWidgetDialogOpen}
-        onClose={() => setIsAddWidgetDialogOpen(false)}
-        onApplyChanges={handleApplyWidgetChanges}
-        existingWidgetTypes={widgets.map(w => w.type)}
+            open={isAddWidgetDialogOpen}
+            onClose={() => setIsAddWidgetDialogOpen(false)}
+            onApplyChanges={handleApplyWidgetChanges}
+            existingWidgetTypes={widgets.map(w => w.type)}
+            widgetComponentsMap={WIDGET_COMPONENTS}
+            livePreviewData={{
+                expenses: filteredExpenses,
+                income: filteredIncome,
+                budgets: allBudgets,
+                goals: allGoals,
+                accounts: allAccounts,
+                timePeriod: timePeriod,
+                activeFilters: activeFilters,
+                userId: userId,
+                isLoading: isLoadingData,
+                availableCategories: allCategoriesAndSources,
+                maxAmount: maxTransactionAmount,
+                showNotification: () => {},
+                onDataAdded: () => {},
+                onFilterChange: () => {},
+            }}
         />
         </Container>
     );
 }
-

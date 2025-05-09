@@ -135,13 +135,13 @@ export function MiniCalendarWidget({ expenses = [], income = [], timePeriod }) {
         <Box sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
              {/* Month Navigation Header */}
              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                 <IconButton onClick={handlePrevMonth} size="small" aria-label={t('Previous month')}>
+                 <IconButton onClick={handlePrevMonth} size="small" aria-label={'Previous month'}>
                      <ChevronLeftIcon />
                  </IconButton>
                  <Typography variant="subtitle2" align="center" sx={{ flexGrow: 1 }}>
                     {monthName}
                  </Typography>
-                 <IconButton onClick={handleNextMonth} size="small" aria-label={t('Next month')}>
+                 <IconButton onClick={handleNextMonth} size="small" aria-label={'Next month'}>
                      <ChevronRightIcon />
                  </IconButton>
             </Box>
