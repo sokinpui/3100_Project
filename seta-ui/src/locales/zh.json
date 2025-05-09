@@ -446,7 +446,8 @@
         "noIncomeTimelineData": "数据不足，无法显示收入时间线视图。",
         "unknownSource": "未知来源",
         "incomeEntries": "收入条目",
-        "Entries": "条目"
+        "Entries": "条目",
+        "autoAdjustMaxAmount": "自动调整最大金额"
     },
     "quickAdd": {
         "addExpense": "添加支出",
