@@ -12,19 +12,36 @@ from typing import Dict, List, Optional
 
 import models
 import pandas as pd
-from config_manager import (get_database_url, get_local_db_path,
-                            is_local_db_configured, update_database_config)
+from config_manager import (
+    get_database_url,
+    get_local_db_path,
+    is_local_db_configured,
+    update_database_config,
+)
 from dotenv import load_dotenv
-from fastapi import (Depends, FastAPI, File, HTTPException, Query, UploadFile,
-                     status)
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import (FileResponse, JSONResponse, RedirectResponse,
-                               StreamingResponse)
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+
 # from models import get_db, User, Expense
-from models import (Account, Budget, Expense, FrequencyEnum, Goal, Income,
-                    RecurringExpense, User)
+from models import (
+    Account,
+    Budget,
+    Expense,
+    FrequencyEnum,
+    Goal,
+    Income,
+    RecurringExpense,
+    User,
+)
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from PyPDF2 import PdfWriter
 from reportlab.lib import colors
@@ -32,14 +49,166 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
-from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
-                                TableStyle)
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from sqlalchemy import asc, create_engine, desc, func
 from sqlalchemy.orm import Session, sessionmaker
 
 load_dotenv()
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000") # For links pointing TO the API
+VERIFICATION_TEXTS = {
+    "en": {
+        "successTitle": "Email Verified!",
+        "successMessageDesktop": "Your email address has been successfully verified. You can now log in to your SETA account.",
+        "alreadyVerifiedTitle": "Email Already Verified",
+        "alreadyVerifiedMessageDesktop": "This email address has already been verified. You can proceed to log in.",
+        "errorTitle": "Verification Failed",
+        "errorInvalidTokenDesktop": "The verification link is invalid or has expired. Please try signing up again or request a new verification email if applicable.",
+        "errorServerDesktop": "An unexpected error occurred on our server. Please try again later.",
+        "errorGenericDesktop": "An error occurred during email verification. Please check the link or contact support.",
+        "closeWindowHint": "You can now close this window.",
+        "invalidAccessTitle": "Invalid Access",
+        "invalidAccessMessage": "This page was accessed incorrectly. Please ensure you are using a valid verification link.",
+    },
+    "zh": {
+        "successTitle": "邮箱已验证！",
+        "successMessageDesktop": "您的邮箱地址已成功验证。您现在可以登录您的 SETA 账户了。",
+        "alreadyVerifiedTitle": "邮箱已被验证",
+        "alreadyVerifiedMessageDesktop": "此邮箱地址已被验证。您可以继续登录。",
+        "errorTitle": "验证失败",
+        "errorInvalidTokenDesktop": "验证链接无效或已过期。请尝试重新注册，或在适用的情况下请求新的验证邮件。",
+        "errorServerDesktop": "我们的服务器发生意外错误。请稍后再试。",
+        "errorGenericDesktop": "邮箱验证过程中发生错误。请检查链接或联系支持人员。",
+        "closeWindowHint": "您现在可以关闭此窗口。",
+        "invalidAccessTitle": "访问无效",
+        "invalidAccessMessage": "此页面访问不正确。请确保您使用的是有效的验证链接。",
+    },
+}
+
+
+def generate_verification_html(status: str, code: Optional[str] = None) -> str:
+    """Generates a styled HTML page for email verification results."""
+
+    title_en, message_en, title_zh, message_zh = "", "", "", ""
+    icon_char, icon_color = "", ""
+
+    if status == "success":
+        title_en = VERIFICATION_TEXTS["en"]["successTitle"]
+        message_en = VERIFICATION_TEXTS["en"]["successMessageDesktop"]
+        title_zh = VERIFICATION_TEXTS["zh"]["successTitle"]
+        message_zh = VERIFICATION_TEXTS["zh"]["successMessageDesktop"]
+        icon_char = "✔"
+        icon_color = "#4CAF50"  # Green
+    elif status == "already_verified":
+        title_en = VERIFICATION_TEXTS["en"]["alreadyVerifiedTitle"]
+        message_en = VERIFICATION_TEXTS["en"]["alreadyVerifiedMessageDesktop"]
+        title_zh = VERIFICATION_TEXTS["zh"]["alreadyVerifiedTitle"]
+        message_zh = VERIFICATION_TEXTS["zh"]["alreadyVerifiedMessageDesktop"]
+        icon_char = "ℹ"
+        icon_color = "#2196F3"  # Blue
+    elif status == "error":
+        title_en = VERIFICATION_TEXTS["en"]["errorTitle"]
+        title_zh = VERIFICATION_TEXTS["zh"]["errorTitle"]
+        icon_char = "✖"
+        icon_color = "#F44336"  # Red
+        if code == "invalid_token":
+            message_en = VERIFICATION_TEXTS["en"]["errorInvalidTokenDesktop"]
+            message_zh = VERIFICATION_TEXTS["zh"]["errorInvalidTokenDesktop"]
+        elif code == "server_error":
+            message_en = VERIFICATION_TEXTS["en"]["errorServerDesktop"]
+            message_zh = VERIFICATION_TEXTS["zh"]["errorServerDesktop"]
+        elif code == "invalid_access":
+            title_en = VERIFICATION_TEXTS["en"]["invalidAccessTitle"]
+            message_en = VERIFICATION_TEXTS["en"]["invalidAccessMessage"]
+            title_zh = VERIFICATION_TEXTS["zh"]["invalidAccessTitle"]
+            message_zh = VERIFICATION_TEXTS["zh"]["invalidAccessMessage"]
+        else:
+            message_en = VERIFICATION_TEXTS["en"]["errorGenericDesktop"]
+            message_zh = VERIFICATION_TEXTS["zh"]["errorGenericDesktop"]
+    else:  # Should not happen if called correctly
+        title_en = "Unknown Status"
+        message_en = "Something went wrong."
+        title_zh = "未知状态"
+        message_zh = "出现了一些问题。"
+        icon_char = "❓"
+        icon_color = "#757575"  # Grey
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SETA Email Verification</title>
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+                background-color: #f4f6f8;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                color: #333;
+            }}
+            .container {{
+                background-color: #ffffff;
+                padding: 30px 40px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                max-width: 500px;
+                width: 90%;
+            }}
+            .icon {{
+                font-size: 60px;
+                color: {icon_color};
+                margin-bottom: 20px;
+            }}
+            h1 {{
+                font-size: 24px;
+                font-weight: 500;
+                margin-bottom: 10px;
+                color: #333;
+            }}
+            p {{
+                font-size: 16px;
+                line-height: 1.6;
+                color: #555;
+                margin-bottom: 25px;
+            }}
+            .lang-separator {{
+                margin: 5px 0;
+                font-weight: bold;
+            }}
+            .hint {{
+                font-size: 14px;
+                color: #777;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="icon">{icon_char}</div>
+            <h1>{title_en}</h1>
+            <p>{message_en}</p>
+            <hr style="border: 0; height: 1px; background: #e0e0e0; margin: 20px 0;">
+            <h1>{title_zh}</h1>
+            <p>{message_zh}</p>
+            <p class="hint">
+                {VERIFICATION_TEXTS["en"]["closeWindowHint"]}<br>
+                {VERIFICATION_TEXTS["zh"]["closeWindowHint"]}
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
+
+API_BASE_URL = os.getenv(
+    "API_BASE_URL", "http://localhost:8000"
+)  # For links pointing TO the API
 
 # MODIFIED: Get FRONTEND_BASE_URL from an environment variable set by Electron
 # Fallback to localhost:3000 for standalone backend testing or if env var is not set.
@@ -59,9 +228,9 @@ DATABASE_URL = get_database_url()  # Get URL based on config file
 engine = create_engine(
     DATABASE_URL,
     # Add connect_args for SQLite if needed
-    connect_args={"check_same_thread": False}
-    if DATABASE_URL.startswith("sqlite")
-    else {},
+    connect_args=(
+        {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+    ),
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -965,41 +1134,41 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     )
 
 
-@app.get(
-    "/verify-email/{token}", status_code=status.HTTP_307_TEMPORARY_REDIRECT
-)
+@app.get("/verify-email/{token}")
 async def verify_email(token: str, db: Session = Depends(get_db)):
-    """Verify user's email address using the provided token and redirect."""
+    """Verify user's email address using the provided token and display result page."""
     user = db.query(models.User).filter(models.User.verification_token == token).first()
 
-    # THE redirect_base will now use the FRONTEND_BASE_URL from env var
-    redirect_base = (
-        f"{FRONTEND_BASE_URL}/#/verify-result" # Using HashRouter path
-    )
+    status_param = "error"
+    code_param = None
 
     if not user:
         logger.warning(f"Verification attempt with invalid token: {token[:10]}...")
-        return RedirectResponse(url=f"{redirect_base}?status=error&code=invalid_token")
-
-    if user.email_verified:
+        status_param = "error"
+        code_param = "invalid_token"
+    elif user.email_verified:
         logger.info(f"Email already verified for user: {user.username}")
-        return RedirectResponse(url=f"{redirect_base}?status=already_verified")
+        status_param = "already_verified"
+    else:
+        user.email_verified = True
+        user.verification_token = None  # Clear the token
+        user.is_active = True  # Activate the user
+        try:
+            db.commit()
+            db.refresh(user)
+            logger.info(f"Email successfully verified for user: {user.username}")
+            status_param = "success"
+        except Exception as e:
+            db.rollback()
+            logger.error(
+                f"Database error during email verification for token {token[:10]}...: {e}",
+                exc_info=True,
+            )
+            status_param = "error"
+            code_param = "server_error"
 
-    user.email_verified = True
-    user.verification_token = None
-    user.is_active = True
-    try:
-        db.commit()
-        db.refresh(user)
-        logger.info(f"Email successfully verified for user: {user.username}")
-        return RedirectResponse(url=f"{redirect_base}?status=success")
-    except Exception as e:
-        db.rollback()
-        logger.error(
-            f"Database error during email verification for token {token[:10]}...: {e}",
-            exc_info=True,
-        )
-        return RedirectResponse(url=f"{redirect_base}?status=error&code=server_error")
+    html_page = generate_verification_html(status_param, code_param)
+    return HTMLResponse(content=html_page, status_code=200)
 
 
 @app.post("/request-password-reset", status_code=status.HTTP_200_OK)
@@ -1716,9 +1885,7 @@ async def get_user_recurring_expenses(user_id: int, db: Session = Depends(get_db
     recurring = (
         db.query(models.RecurringExpense)
         .filter(models.RecurringExpense.user_id == user_id)
-        .order_by(
-            models.RecurringExpense.start_date.desc()  # Keep sorting
-        )
+        .order_by(models.RecurringExpense.start_date.desc())  # Keep sorting
         .all()
     )
     return recurring

@@ -60,13 +60,6 @@ export const ModuleProvider = ({ children }) => {
             path: '/settings',
             component: React.lazy(() => import('../modules/Settings.jsx')),
         },
-        {
-            id: 'verify-result',
-            name: 'Email Verification', // Name for internal reference, not usually shown
-            path: '/verify-result',     // This matches the #/verify-result part of the URL
-            component: React.lazy(() => import('../modules/VerificationResultPage.jsx')),
-            isPublic: true, // This page should be accessible without login
-        },
     ];
 
     return (
