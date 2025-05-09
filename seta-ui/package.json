@@ -104,10 +104,8 @@
             }
         ],
         "mac": {
-            "target": "dmg",
-            "category": "public.app-category.developer-tools",
+            "target": "zip",
             "icon": "assets/icon.icns",
-            "identity": null
         },
         "win": {
             "target": "nsis",
