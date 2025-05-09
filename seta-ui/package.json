@@ -100,7 +100,7 @@
             }
         ],
         "mac": {
-            "target": "zip",
+            "target": "dmg",
             "icon": "assets/icon.icns"
         },
         "win": {
