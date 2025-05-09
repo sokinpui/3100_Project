@@ -457,7 +457,10 @@
         "unknownSource": "Unknown Source",
         "incomeEntries": "Income Entries",
         "Entries": "Entries",
-        "autoAdjustMaxAmount": "Auto-adjust to max available amount"
+        "autoAdjustMaxAmount": "Auto-adjust to max available amount",
+        "widgetPreviewAlt": "{{widgetName}} preview",
+        "noPreviewAvailable": "No preview available",
+        "hoverForPreview": "Hover over a widget to see a preview."
     },
     "planningManager": {
         "title": "Financial Planning",
