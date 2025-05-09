@@ -39,7 +39,7 @@ jobs:
           - os: macos-latest
             os_name: mac # Used for electron-builder flag and artifact naming
             electron_build_flag: '--mac'
-            artifact_glob: '*.zip' # Or '*.pkg', etc. depending on electron-builder config
+            artifact_glob: '*.dmg' # Or '*.pkg', etc. depending on electron-builder config
           - os: windows-latest
             os_name: win
             electron_build_flag: '--win'
