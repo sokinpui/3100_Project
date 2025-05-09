@@ -1,61 +1,49 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Query, UploadFile, File
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import (
-    JSONResponse,
-    FileResponse,
-    StreamingResponse,
-    RedirectResponse,
-)
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from sqlalchemy import func, asc, desc
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import models
-from config_manager import (
-    get_database_url,
-    is_local_db_configured,
-    get_local_db_path,
-    update_database_config,
-)
-from datetime import date, datetime, timedelta, timezone  # Add timezone here
-
-# from models import get_db, User, Expense
-from models import (
-    User,
-    Expense,
-    Income,
-    RecurringExpense,
-    Budget,
-    Goal,
-    Account,
-    FrequencyEnum,
-)
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, Field
-from typing import List, Optional, Dict
+import csv
 import hashlib
+import io
+import json
+import logging
+import os  # Ideally use environment variables
+import re
 import secrets
 import string
-import csv
-import io
-import pandas as pd
-from PyPDF2 import PdfWriter
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-from reportlab.lib.units import inch
-from fastapi.responses import FileResponse, StreamingResponse
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-import os  # Ideally use environment variables
-from dotenv import load_dotenv
-import logging
-import json
-import re
+from datetime import date, datetime, timedelta, timezone  # Add timezone here
+from typing import Dict, List, Optional
 
+import models
+import pandas as pd
+from config_manager import (get_database_url, get_local_db_path,
+                            is_local_db_configured, update_database_config)
+from dotenv import load_dotenv
+from fastapi import (Depends, FastAPI, File, HTTPException, Query, UploadFile,
+                     status)
+from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import (FileResponse, JSONResponse, RedirectResponse,
+                               StreamingResponse)
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+# from models import get_db, User, Expense
+from models import (Account, Budget, Expense, FrequencyEnum, Goal, Income,
+                    RecurringExpense, User)
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from PyPDF2 import PdfWriter
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
+                                TableStyle)
+from sqlalchemy import asc, create_engine, desc, func
+from sqlalchemy.orm import Session, sessionmaker
 
 load_dotenv()
+
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000") # For links pointing TO the API
+
+# MODIFIED: Get FRONTEND_BASE_URL from an environment variable set by Electron
+# Fallback to localhost:3000 for standalone backend testing or if env var is not set.
+FRONTEND_BASE_URL = os.getenv("ELECTRON_APP_FRONTEND_URL", "http://localhost:3000")
 
 
 # Configure basic logging (optional but good practice)
@@ -979,32 +967,31 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @app.get(
     "/verify-email/{token}", status_code=status.HTTP_307_TEMPORARY_REDIRECT
-)  # Change status code if needed (302 or 307)
+)
 async def verify_email(token: str, db: Session = Depends(get_db)):
     """Verify user's email address using the provided token and redirect."""
     user = db.query(models.User).filter(models.User.verification_token == token).first()
+
+    # THE redirect_base will now use the FRONTEND_BASE_URL from env var
     redirect_base = (
-        f"{FRONTEND_BASE_URL}/#/verify-result"  # Use HashRouter base if needed
+        f"{FRONTEND_BASE_URL}/#/verify-result" # Using HashRouter path
     )
 
     if not user:
         logger.warning(f"Verification attempt with invalid token: {token[:10]}...")
-        # Redirect to frontend page indicating failure
         return RedirectResponse(url=f"{redirect_base}?status=error&code=invalid_token")
 
     if user.email_verified:
         logger.info(f"Email already verified for user: {user.username}")
-        # Redirect to frontend page indicating already verified
         return RedirectResponse(url=f"{redirect_base}?status=already_verified")
 
     user.email_verified = True
-    user.verification_token = None  # Invalidate the token
+    user.verification_token = None
     user.is_active = True
     try:
         db.commit()
         db.refresh(user)
         logger.info(f"Email successfully verified for user: {user.username}")
-        # Redirect to frontend page indicating success
         return RedirectResponse(url=f"{redirect_base}?status=success")
     except Exception as e:
         db.rollback()
@@ -1012,7 +999,6 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
             f"Database error during email verification for token {token[:10]}...: {e}",
             exc_info=True,
         )
-        # Redirect to frontend page indicating server error
         return RedirectResponse(url=f"{redirect_base}?status=error&code=server_error")
 
 
