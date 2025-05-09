@@ -82,7 +82,7 @@
         ]
     },
     "build": {
-        "appId": "com.yourcompany.setadesktop",
+        "appId": "com.electron.seta",
         "productName": "SETA",
         "files": [
             "build/**/*",
@@ -105,7 +105,9 @@
         ],
         "mac": {
             "target": "dmg",
-            "icon": "assets/icon.icns"
+            "category": "public.app-category.developer-tools",
+            "icon": "assets/icon.icns",
+            "identity": null
         },
         "win": {
             "target": "nsis",
