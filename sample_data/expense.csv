@@ -1,0 +1,211 @@
+date,category_name,amount,description,data_source
+2025-04-26,Travel,67.6100000000,Hotel stay,expenses
+2025-05-05,Housing,44.5400000000,Furniture,expenses
+2025-04-19,Food & Dining,327.7400000000,Lunch,expenses
+2025-05-08,Travel,59.7300000000,Souvenirs,expenses
+2025-04-13,Transportation,288.1900000000,Car maintenance,expenses
+2025-05-06,Subscriptions,367.6700000000,Netflix,expenses
+2025-04-28,Transportation,164.7400000000,Fuel,expenses
+2025-04-30,Healthcare,161.8100000000,Doctor visit,expenses
+2025-04-11,Entertainment,69.1000000000,Concert,expenses
+2025-04-17,Education,64.7500000000,School supplies,expenses
+2025-04-29,Subscriptions,148.5000000000,Netflix,expenses
+2025-04-14,Utilities,345.2700000000,Water bill,expenses
+2025-04-13,Healthcare,170.7000000000,Dental checkup,expenses
+2025-04-14,Personal Care,381.2700000000,Spa/Massage,expenses
+2025-04-15,Healthcare,183.0400000000,Dental checkup,expenses
+2025-05-08,Shopping,21.4500000000,Electronics,expenses
+2025-04-19,Healthcare,158.3200000000,Dental checkup,expenses
+2025-05-05,Education,100.2200000000,Textbooks,expenses
+2025-04-10,Housing,357.8500000000,Furniture,expenses
+2025-05-05,Utilities,43.5100000000,Gas bill,expenses
+2025-04-17,Transportation,245.7000000000,Public transport,expenses
+2025-04-14,Entertainment,260.9300000000,Movie tickets,expenses
+2025-05-05,Food & Dining,343.9300000000,Take-out,expenses
+2025-04-23,Personal Care,295.0100000000,Spa/Massage,expenses
+2025-04-19,Shopping,299.9700000000,Gifts,expenses
+2025-05-01,Food & Dining,207.1000000000,Restaurant dinner,expenses
+2025-04-19,Transportation,1.6100000000,Parking,expenses
+2025-04-15,Housing,32.7300000000,Property Tax,expenses
+2025-04-19,Travel,9.3500000000,Train ticket,expenses
+2025-04-28,Food & Dining,130.4200000000,Take-out,expenses
+2025-04-14,Transportation,307.2000000000,Taxi/Uber,expenses
+2025-05-07,Personal Care,90.0300000000,Pharmacy items,expenses
+2025-04-26,Shopping,249.1600000000,Clothing,expenses
+2025-04-23,Subscriptions,273.0000000000,Spotify,expenses
+2025-05-07,Education,390.2300000000,School supplies,expenses
+2025-05-04,Healthcare,197.2900000000,Health insurance premium,expenses
+2025-05-07,Personal Care,163.8300000000,Haircut,expenses
+2025-04-12,Entertainment,10.1800000000,Movie tickets,expenses
+2025-04-26,Education,36.1700000000,Tuition fees,expenses
+2025-04-10,Food & Dining,342.3700000000,Lunch,expenses
+2025-05-09,Education,68.2100000000,Online course,expenses
+2025-05-01,Healthcare,301.1400000000,Medication,expenses
+2025-04-14,Food & Dining,63.6400000000,Lunch,expenses
+2025-05-03,Subscriptions,179.5100000000,Cloud storage,expenses
+2025-04-17,Entertainment,40.1400000000,Video games,expenses
+2025-04-20,Transportation,36.2400000000,Fuel,expenses
+2025-05-09,Shopping,276.7000000000,Personal care items,expenses
+2025-04-26,Entertainment,358.6200000000,Streaming services,expenses
+2025-04-26,Education,243.7400000000,Workshop,expenses
+2025-04-21,Subscriptions,55.7700000000,Cloud storage,expenses
+2025-04-15,Education,269.1100000000,School supplies,expenses
+2025-04-10,Housing,134.8700000000,Home repairs,expenses
+2025-04-11,Housing,216.4300000000,Furniture,expenses
+2025-05-04,Subscriptions,252.4100000000,Netflix,expenses
+2025-04-18,Food & Dining,194.0700000000,Take-out,expenses
+2025-04-17,Subscriptions,357.7900000000,Spotify,expenses
+2025-04-18,Shopping,249.6300000000,Electronics,expenses
+2025-05-02,Personal Care,325.1900000000,Spa/Massage,expenses
+2025-05-01,Healthcare,360.0100000000,Medication,expenses
+2025-04-25,Healthcare,296.3200000000,Doctor visit,expenses
+2025-05-06,Shopping,384.1800000000,Gifts,expenses
+2025-05-02,Transportation,85.9300000000,Car maintenance,expenses
+2025-05-08,Personal Care,276.6900000000,Haircut,expenses
+2025-04-10,Healthcare,91.9200000000,Doctor visit,expenses
+2025-05-05,Personal Care,268.4300000000,Cosmetics,expenses
+2025-04-18,Travel,183.9900000000,Hotel stay,expenses
+2025-04-12,Utilities,223.0800000000,Electricity bill,expenses
+2025-04-24,Food & Dining,25.8800000000,Coffee,expenses
+2025-04-29,Education,54.3900000000,Online course,expenses
+2025-05-04,Transportation,307.5400000000,Fuel,expenses
+2025-05-08,Travel,361.5400000000,Flight tickets,expenses
+2025-04-10,Shopping,116.2400000000,Clothing,expenses
+2025-05-02,Utilities,70.3500000000,Gas bill,expenses
+2025-04-21,Healthcare,284.0100000000,Medication,expenses
+2025-04-20,Entertainment,83.8900000000,Movie tickets,expenses
+2025-04-20,Transportation,147.2300000000,Public transport,expenses
+2025-04-21,Personal Care,100.6600000000,Toiletries,expenses
+2025-04-30,Food & Dining,169.4700000000,Lunch,expenses
+2025-04-29,Food & Dining,300.0000000000,Coffee,expenses
+2025-04-12,Shopping,150.0100000000,Personal care items,expenses
+2025-04-15,Travel,215.1200000000,Train ticket,expenses
+2025-05-06,Food & Dining,385.2300000000,Lunch,expenses
+2025-04-30,Food & Dining,84.2000000000,Grocery shopping,expenses
+2025-04-28,Healthcare,254.5600000000,Vision care,expenses
+2025-05-08,Utilities,242.3100000000,Water bill,expenses
+2025-05-01,Transportation,88.0000000000,Public transport,expenses
+2025-04-15,Travel,271.8700000000,Flight tickets,expenses
+2025-04-23,Transportation,30.1700000000,Car maintenance,expenses
+2025-04-16,Entertainment,307.1400000000,Concert,expenses
+2025-04-22,Healthcare,244.1500000000,Medication,expenses
+2025-04-20,Travel,49.9600000000,Souvenirs,expenses
+2025-05-07,Entertainment,65.3400000000,Movie tickets,expenses
+2025-05-02,Food & Dining,343.7200000000,Coffee,expenses
+2025-05-03,Transportation,234.2000000000,Taxi/Uber,expenses
+2025-05-08,Transportation,95.7900000000,Car maintenance,expenses
+2025-04-30,Utilities,173.1000000000,Water bill,expenses
+2025-05-02,Healthcare,160.3200000000,Vision care,expenses
+2025-04-24,Subscriptions,94.4700000000,Netflix,expenses
+2025-05-08,Housing,131.8900000000,Property Tax,expenses
+2025-04-16,Utilities,149.5300000000,Phone bill,expenses
+2025-04-29,Healthcare,166.2000000000,Medication,expenses
+2025-04-30,Utilities,260.6600000000,Gas bill,expenses
+2025-04-24,Transportation,298.9800000000,Public transport,expenses
+2025-04-25,Healthcare,108.6200000000,Medication,expenses
+2025-04-15,Education,270.2900000000,Tuition fees,expenses
+2025-04-26,Travel,67.6100000000,Hotel stay,expenses
+2025-05-05,Housing,44.5400000000,Furniture,expenses
+2025-04-19,Food & Dining,327.7400000000,Lunch,expenses
+2025-05-08,Travel,59.7300000000,Souvenirs,expenses
+2025-04-13,Transportation,288.1900000000,Car maintenance,expenses
+2025-05-06,Subscriptions,367.6700000000,Netflix,expenses
+2025-04-28,Transportation,164.7400000000,Fuel,expenses
+2025-04-30,Healthcare,161.8100000000,Doctor visit,expenses
+2025-04-11,Entertainment,69.1000000000,Concert,expenses
+2025-04-17,Education,64.7500000000,School supplies,expenses
+2025-04-29,Subscriptions,148.5000000000,Netflix,expenses
+2025-04-14,Utilities,345.2700000000,Water bill,expenses
+2025-04-13,Healthcare,170.7000000000,Dental checkup,expenses
+2025-04-14,Personal Care,381.2700000000,Spa/Massage,expenses
+2025-04-15,Healthcare,183.0400000000,Dental checkup,expenses
+2025-05-08,Shopping,21.4500000000,Electronics,expenses
+2025-04-19,Healthcare,158.3200000000,Dental checkup,expenses
+2025-05-05,Education,100.2200000000,Textbooks,expenses
+2025-04-10,Housing,357.8500000000,Furniture,expenses
+2025-05-05,Utilities,43.5100000000,Gas bill,expenses
+2025-04-17,Transportation,245.7000000000,Public transport,expenses
+2025-04-14,Entertainment,260.9300000000,Movie tickets,expenses
+2025-05-05,Food & Dining,343.9300000000,Take-out,expenses
+2025-04-23,Personal Care,295.0100000000,Spa/Massage,expenses
+2025-04-19,Shopping,299.9700000000,Gifts,expenses
+2025-05-01,Food & Dining,207.1000000000,Restaurant dinner,expenses
+2025-04-19,Transportation,1.6100000000,Parking,expenses
+2025-04-15,Housing,32.7300000000,Property Tax,expenses
+2025-04-19,Travel,9.3500000000,Train ticket,expenses
+2025-04-28,Food & Dining,130.4200000000,Take-out,expenses
+2025-04-14,Transportation,307.2000000000,Taxi/Uber,expenses
+2025-05-07,Personal Care,90.0300000000,Pharmacy items,expenses
+2025-04-26,Shopping,249.1600000000,Clothing,expenses
+2025-04-23,Subscriptions,273.0000000000,Spotify,expenses
+2025-05-07,Education,390.2300000000,School supplies,expenses
+2025-05-04,Healthcare,197.2900000000,Health insurance premium,expenses
+2025-05-07,Personal Care,163.8300000000,Haircut,expenses
+2025-04-12,Entertainment,10.1800000000,Movie tickets,expenses
+2025-04-26,Education,36.1700000000,Tuition fees,expenses
+2025-04-10,Food & Dining,342.3700000000,Lunch,expenses
+2025-05-09,Education,68.2100000000,Online course,expenses
+2025-05-01,Healthcare,301.1400000000,Medication,expenses
+2025-04-14,Food & Dining,63.6400000000,Lunch,expenses
+2025-05-03,Subscriptions,179.5100000000,Cloud storage,expenses
+2025-04-17,Entertainment,40.1400000000,Video games,expenses
+2025-04-20,Transportation,36.2400000000,Fuel,expenses
+2025-05-09,Shopping,276.7000000000,Personal care items,expenses
+2025-04-26,Entertainment,358.6200000000,Streaming services,expenses
+2025-04-26,Education,243.7400000000,Workshop,expenses
+2025-04-21,Subscriptions,55.7700000000,Cloud storage,expenses
+2025-04-15,Education,269.1100000000,School supplies,expenses
+2025-04-10,Housing,134.8700000000,Home repairs,expenses
+2025-04-11,Housing,216.4300000000,Furniture,expenses
+2025-05-04,Subscriptions,252.4100000000,Netflix,expenses
+2025-04-18,Food & Dining,194.0700000000,Take-out,expenses
+2025-04-17,Subscriptions,357.7900000000,Spotify,expenses
+2025-04-18,Shopping,249.6300000000,Electronics,expenses
+2025-05-02,Personal Care,325.1900000000,Spa/Massage,expenses
+2025-05-01,Healthcare,360.0100000000,Medication,expenses
+2025-04-25,Healthcare,296.3200000000,Doctor visit,expenses
+2025-05-06,Shopping,384.1800000000,Gifts,expenses
+2025-05-02,Transportation,85.9300000000,Car maintenance,expenses
+2025-05-08,Personal Care,276.6900000000,Haircut,expenses
+2025-04-10,Healthcare,91.9200000000,Doctor visit,expenses
+2025-05-05,Personal Care,268.4300000000,Cosmetics,expenses
+2025-04-18,Travel,183.9900000000,Hotel stay,expenses
+2025-04-12,Utilities,223.0800000000,Electricity bill,expenses
+2025-04-24,Food & Dining,25.8800000000,Coffee,expenses
+2025-04-29,Education,54.3900000000,Online course,expenses
+2025-05-04,Transportation,307.5400000000,Fuel,expenses
+2025-05-08,Travel,361.5400000000,Flight tickets,expenses
+2025-04-10,Shopping,116.2400000000,Clothing,expenses
+2025-05-02,Utilities,70.3500000000,Gas bill,expenses
+2025-04-21,Healthcare,284.0100000000,Medication,expenses
+2025-04-20,Entertainment,83.8900000000,Movie tickets,expenses
+2025-04-20,Transportation,147.2300000000,Public transport,expenses
+2025-04-21,Personal Care,100.6600000000,Toiletries,expenses
+2025-04-30,Food & Dining,169.4700000000,Lunch,expenses
+2025-04-29,Food & Dining,300.0000000000,Coffee,expenses
+2025-04-12,Shopping,150.0100000000,Personal care items,expenses
+2025-04-15,Travel,215.1200000000,Train ticket,expenses
+2025-05-06,Food & Dining,385.2300000000,Lunch,expenses
+2025-04-30,Food & Dining,84.2000000000,Grocery shopping,expenses
+2025-04-28,Healthcare,254.5600000000,Vision care,expenses
+2025-05-08,Utilities,242.3100000000,Water bill,expenses
+2025-05-01,Transportation,88.0000000000,Public transport,expenses
+2025-04-15,Travel,271.8700000000,Flight tickets,expenses
+2025-04-23,Transportation,30.1700000000,Car maintenance,expenses
+2025-04-16,Entertainment,307.1400000000,Concert,expenses
+2025-04-22,Healthcare,244.1500000000,Medication,expenses
+2025-04-20,Travel,49.9600000000,Souvenirs,expenses
+2025-05-07,Entertainment,65.3400000000,Movie tickets,expenses
+2025-05-02,Food & Dining,343.7200000000,Coffee,expenses
+2025-05-03,Transportation,234.2000000000,Taxi/Uber,expenses
+2025-05-08,Transportation,95.7900000000,Car maintenance,expenses
+2025-04-30,Utilities,173.1000000000,Water bill,expenses
+2025-05-02,Healthcare,160.3200000000,Vision care,expenses
+2025-04-24,Subscriptions,94.4700000000,Netflix,expenses
+2025-05-08,Housing,131.8900000000,Property Tax,expenses
+2025-04-16,Utilities,149.5300000000,Phone bill,expenses
+2025-04-29,Healthcare,166.2000000000,Medication,expenses
+2025-04-30,Utilities,260.6600000000,Gas bill,expenses
+2025-04-24,Transportation,298.9800000000,Public transport,expenses
+2025-04-25,Healthcare,108.6200000000,Medication,expenses
+2025-04-15,Education,270.2900000000,Tuition fees,expenses

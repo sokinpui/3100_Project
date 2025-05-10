@@ -1,9 +1,5 @@
 // src/modules/ExpenseReports.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { CSVLink } from 'react-csv';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import axios from 'axios';
 import {
   Container, Card, CardContent, CardHeader, Button, Typography, Box,
@@ -14,282 +10,157 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import T from '../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
+// getCategoryDetails might not be needed if all formatting/translation happens backend or is not part of this specific report.
+// For now, keeping it in case it's used elsewhere or for button text.
 import { getCategoryDetails } from '../constants';
 
 const API_URL = 'http://localhost:8000';
+
+// Define all data types available for the comprehensive report
+const ALL_REPORT_DATA_TYPES = ['expenses', 'income', 'recurring', 'budgets', 'goals', 'accounts'];
+
+// Define labels for individual download buttons (maps internal key to translation key)
+const INDIVIDUAL_DATA_TYPE_OPTIONS = {
+    expenses: { labelKey: 'common.Expenses' },
+    income: { labelKey: 'common.Income' },
+    recurring_expenses: { labelKey: 'sidebar.recurring', backendKey: 'recurring' }, // Map frontend key to backend key
+    budgets: { labelKey: 'planningManager.budgetsTab' },
+    goals: { labelKey: 'planningManager.goalsTab' },
+    accounts: { labelKey: 'sidebar.accounts' },
+};
+
 
 // --- Helper Functions ---
 const safeFormatDate = (dateString, formatStr = 'yyyy-MM-dd') => {
     if (!dateString) return '-';
     try {
-        // Attempt to parse as ISO string first
         const date = parseISO(dateString);
-        // Check if parsing was successful before formatting
         if (isNaN(date.getTime())) {
-            // If ISO parsing fails, try creating a Date object directly (less reliable)
             const directDate = new Date(dateString);
-            if (isNaN(directDate.getTime())) return dateString; // Return original if still invalid
+            if (isNaN(directDate.getTime())) return dateString;
             return format(directDate, formatStr);
         }
         return format(date, formatStr);
     } catch (e) {
         console.warn("Date formatting error for:", dateString, e);
-        return dateString; // Fallback
+        return dateString;
     }
 };
 
-const formatCurrency = (value) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? '-' : `$${num.toFixed(2)}`;
-};
+// This might not be needed if backend handles all currency formatting in reports
+// const formatCurrency = (value) => {
+//     const num = parseFloat(value);
+//     return isNaN(num) ? '-' : `$${num.toFixed(2)}`;
+// };
 // --- End Helper Functions ---
 
 export default function ExpenseReports() {
   const { t } = useTranslation();
   const userId = localStorage.getItem('userId');
 
-  const [reportData, setReportData] = useState({
+  // State for initial data load (e.g., for total counts, disabling buttons)
+  const [reportSummaryData, setReportSummaryData] = useState({
       expenses: [], income: [], recurring_expenses: [], budgets: [], goals: [], accounts: [], user_info: null,
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(true);
+  const [summaryError, setSummaryError] = useState(null);
 
-  const fetchAllData = useCallback(async () => {
+  // State for download operations
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(null);
+
+
+  const fetchReportSummary = useCallback(async () => {
     if (!userId) {
-        setError(t('expenseReports.errorLoading'));
-        setIsLoading(false);
+        setSummaryError(t('expenseReports.errorLoading'));
+        setIsLoadingSummary(false);
         return;
     }
-    setIsLoading(true);
-    setError(null);
+    setIsLoadingSummary(true);
+    setSummaryError(null);
     try {
+      // This endpoint fetches summary data, used for record counts and disabling buttons.
+      // The actual file downloads will use the /custom endpoint.
       const response = await axios.get(`${API_URL}/reports/${userId}/all`);
-      setReportData(response.data);
+      setReportSummaryData(response.data);
     } catch (error) {
-      console.error('Error fetching report data:', error);
-      setError(t('expenseReports.errorLoading'));
-      setReportData({
+      console.error('Error fetching report summary data:', error);
+      setSummaryError(t('expenseReports.errorLoading'));
+      setReportSummaryData({ // Reset on error
           expenses: [], income: [], recurring_expenses: [], budgets: [], goals: [], accounts: [], user_info: null,
       });
     } finally {
-      setIsLoading(false);
+      setIsLoadingSummary(false);
     }
   }, [userId, t]);
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    fetchReportSummary();
+  }, [fetchReportSummary]);
 
-  // --- CSV Headers ---
-  const expenseHeaders = [
-    { label: t('expenseManager.date'), key: 'date' },
-    { label: t('expenseManager.category'), key: 'category_name' },
-    { label: t('expenseManager.amount'), key: 'amount' },
-    { label: t('expenseManager.description'), key: 'description' },
-    { label: t('common.createdAt'), key: 'created_at' },
-  ];
-  const incomeHeaders = [
-    { label: t('incomeManager.date'), key: 'date' },
-    { label: t('incomeManager.source'), key: 'source' },
-    { label: t('incomeManager.amount'), key: 'amount' },
-    { label: t('incomeManager.description'), key: 'description' },
-    { label: t('incomeManager.account'), key: 'account.name' },
-    { label: t('common.createdAt'), key: 'created_at' },
-  ];
-  const recurringHeaders = [
-    { label: t('recurringManager.name'), key: 'name' },
-    { label: t('expenseManager.category'), key: 'category_name' },
-    { label: t('recurringManager.amount'), key: 'amount' },
-    { label: t('recurringManager.frequency'), key: 'frequency' },
-    { label: t('recurringManager.startDate'), key: 'start_date' },
-    { label: t('recurringManager.endDate'), key: 'end_date' },
-    { label: t('recurringManager.account'), key: 'account.name' },
-  ];
-  const budgetHeaders = [
-    { label: t('expenseManager.category'), key: 'category_name' },
-    { label: t('budgetManager.amountLimit'), key: 'amount_limit' },
-    { label: t('budgetManager.period'), key: 'period' },
-    { label: t('budgetManager.startDate'), key: 'start_date' },
-    { label: t('budgetManager.endDate'), key: 'end_date' },
-  ];
-  const goalHeaders = [
-    { label: t('goalManager.goalName'), key: 'name' },
-    { label: t('goalManager.targetAmount'), key: 'target_amount' },
-    { label: t('goalManager.currentAmount'), key: 'current_amount' },
-    { label: t('goalManager.targetDate'), key: 'target_date' },
-  ];
-  const accountHeaders = [
-    { label: t('accountManager.accountName'), key: 'name' },
-    { label: t('accountManager.accountType'), key: 'account_type' },
-    { label: t('accountManager.startingBalance'), key: 'starting_balance' },
-    { label: t('accountManager.balanceDate'), key: 'balance_date' },
-    { label: 'Currency', key: 'currency' },
-  ];
-
-  // Data preparation for CSV
-  const getCsvData = (dataType) => {
-    const data = reportData[dataType] || [];
-    if (dataType === 'income' || dataType === 'recurring_expenses') {
-      const accountsMap = new Map(reportData.accounts.map(acc => [acc.id, acc.name]));
-      return data.map(item => ({
-        ...item,
-        'account.name': item.account_id ? accountsMap.get(item.account_id) || 'N/A' : '',
-        date: safeFormatDate(item.date),
-        created_at: safeFormatDate(item.created_at, 'Pp'),
-        amount: parseFloat(item.amount).toFixed(2),
-      }));
+  const handleDownload = async (outputFormat, dataTypesToRequest, specificFileNamePart = 'all_data') => {
+    if (!userId) {
+        setDownloadError(t('expenseReports.errorUserNotIdentified'));
+        return;
     }
-    if (dataType === 'budgets') {
-      return data.map(item => ({
-        ...item,
-        category_name: getCategoryDetails(item.category_name) ? t(`expenseManager.category_${getCategoryDetails(item.category_name).key}`) : item.category_name,
-        period: t(`recurringManager.frequency_${item.period}`),
-        start_date: safeFormatDate(item.start_date),
-        end_date: safeFormatDate(item.end_date),
-        amount_limit: parseFloat(item.amount_limit).toFixed(2),
-      }));
-    }
-    return data.map(item => ({
-      ...item,
-      date: safeFormatDate(item.date),
-      created_at: safeFormatDate(item.created_at, 'Pp'),
-      amount: item.amount ? parseFloat(item.amount).toFixed(2) : undefined,
-    }));
-  };
+    setIsDownloading(true);
+    setDownloadError(null);
 
-  // --- Excel Generation ---
-  const generateExcel = () => {
-    const wb = XLSX.utils.book_new();
-    const accountsMap = new Map(reportData.accounts.map(acc => [acc.id, acc.name]));
+    const payload = {
+        data_types: dataTypesToRequest,
+        start_date: null, // No date range for general reports
+        end_date: null,
+        columns: {}, // Let backend use default columns
+        output_format: outputFormat,
+    };
 
-    const addSheet = (sheetName, data, headers) => {
-      const sheetData = data.map(item => {
-        let row = {};
-        headers.forEach(header => {
-          const keys = header.key.split('.');
-          let value = item;
-          try {
-            keys.forEach(k => { value = value[k]; });
-          } catch {
-            value = null;
-          }
-          if (header.key === 'account.name') {
-            value = item.account_id ? accountsMap.get(item.account_id) || 'N/A' : '';
-          } else if (header.key.includes('date')) {
-            value = safeFormatDate(value);
-          } else if (header.key.includes('amount') || header.key.includes('balance')) {
-            value = parseFloat(value);
-          } else if (header.key === 'category_name' && sheetName === 'Budgets') {
-            value = getCategoryDetails(value) ? t(`expenseManager.category_${getCategoryDetails(value).key}`) : value;
-          } else if (header.key === 'period' && sheetName === 'Budgets') {
-            value = t(`recurringManager.frequency_${value}`);
-          } else if (header.key === 'frequency' && sheetName === 'Recurring') {
-            value = t(`recurringManager.frequency_${value}`);
-          }
-          row[header.label] = value ?? '';
+    try {
+        const response = await axios.post(`${API_URL}/reports/${userId}/custom`, payload, {
+            responseType: 'blob', // Important for file download
         });
-        return row;
-      });
-      const ws = XLSX.utils.json_to_sheet(sheetData);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    };
 
-    if (reportData.expenses.length > 0) addSheet(t('common.Expenses'), reportData.expenses, expenseHeaders);
-    if (reportData.income.length > 0) addSheet(t('common.Income'), reportData.income, incomeHeaders);
-    if (reportData.recurring_expenses.length > 0) addSheet(t('sidebar.recurring'), reportData.recurring_expenses, recurringHeaders);
-    if (reportData.budgets.length > 0) addSheet(t('planningManager.budgetsTab'), reportData.budgets, budgetHeaders);
-    if (reportData.goals.length > 0) addSheet(t('planningManager.goalsTab'), reportData.goals, goalHeaders);
-    if (reportData.accounts.length > 0) addSheet(t('sidebar.accounts'), reportData.accounts, accountHeaders);
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
 
-    if (wb.SheetNames.length === 0) {
-      alert(t('expenseReports.noDataToExport'));
-      return;
-    }
-
-    XLSX.writeFile(wb, `seta_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.xlsx`);
-  };
-
-  // --- PDF Generation (Updated) ---
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    const accountsMap = new Map(reportData.accounts.map(acc => [acc.id, acc.name]));
-    let tableDrawn = false;
-
-    let currentY = 30;
-
-    doc.setFontSize(16);
-    doc.text(t('expenseReports.title'), 14, 20);
-    if (reportData.user_info) {
-      doc.setFontSize(10);
-      doc.text(`User: ${reportData.user_info.first_name} ${reportData.user_info.last_name} (${reportData.user_info.email})`, 14, 26);
-      currentY = 32;
-    }
-
-    const addTableToPdf = (titleKey, data, headers) => {
-      if (!data || data.length === 0) return;
-
-      if (tableDrawn) {
-        currentY += 10;
-      }
-
-      const estimatedHeight = 15 + (data.length * 5) + 10;
-      if (currentY + estimatedHeight > doc.internal.pageSize.height - 20) {
-        doc.addPage();
-        currentY = 20;
-      }
-
-      doc.setFontSize(12);
-      doc.text(t(titleKey), 14, currentY);
-      currentY += 6;
-
-      const tableData = data.map(item => headers.map(header => {
-        const keys = header.key.split('.');
-        let value = item;
-        try { keys.forEach(k => { value = value[k]; }); } catch { value = null; }
-        if (header.key === 'account.name') return item.account_id ? accountsMap.get(item.account_id) || 'N/A' : '-';
-        if (header.key.includes('date')) return safeFormatDate(value);
-        if (header.key.includes('amount') || header.key.includes('balance')) return formatCurrency(value);
-        if (header.key === 'category_name' && titleKey === 'planningManager.budgetsTab') return getCategoryDetails(value) ? t(`expenseManager.category_${getCategoryDetails(value).key}`) : value;
-        if (header.key === 'period' && titleKey === 'planningManager.budgetsTab') return t(`recurringManager.frequency_${value}`);
-        if (header.key === 'frequency' && titleKey === 'sidebar.recurring') return t(`recurringManager.frequency_${value}`);
-        return value ?? '-';
-      }));
-
-      autoTable(doc, {
-        startY: currentY,
-        head: [headers.map(h => h.label)],
-        body: tableData,
-        theme: 'striped',
-        styles: { fontSize: 8, cellPadding: 1.5, overflow: 'linebreak' },
-        headStyles: { fillColor: [25, 118, 210], fontSize: 7 },
-        didDrawPage: (data) => {
-          currentY = data.cursor.y;
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `seta_report_${specificFileNamePart}_${safeFormatDate(new Date(), 'yyyyMMdd')}.${outputFormat === 'excel' ? 'xlsx' : outputFormat}`;
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
         }
-      });
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-      if (doc.lastAutoTable?.finalY) {
-        currentY = doc.lastAutoTable.finalY;
-        tableDrawn = true;
-      }
-    };
-
-    addTableToPdf('common.Expenses', reportData.expenses, expenseHeaders);
-    addTableToPdf('common.Income', reportData.income, incomeHeaders);
-    addTableToPdf('sidebar.recurring', reportData.recurring_expenses, recurringHeaders);
-    addTableToPdf('planningManager.budgetsTab', reportData.budgets, budgetHeaders);
-    addTableToPdf('planningManager.goalsTab', reportData.goals, goalHeaders);
-    addTableToPdf('sidebar.accounts', reportData.accounts, accountHeaders);
-
-    if (!tableDrawn) {
-      alert(t('expenseReports.noDataToExport'));
-      return;
+    } catch (err) {
+        console.error("Report generation error:", err.response?.data || err.message);
+        let errorKey = 'customReport.errorGenerationFailed'; // Using key from CustomReport for consistency
+        if (err.response?.status === 403) errorKey = 'customReport.errorLicenceRequired';
+        else if (err.response?.status === 404) errorKey = 'customReport.errorNoDataFound';
+        else if (err.response?.data) {
+            // Try to parse blob error for JSON content
+            try {
+                const errorObj = JSON.parse(await err.response.data.text());
+                setDownloadError(errorObj.detail || t(errorKey));
+            } catch (parseError) {
+                setDownloadError(t(errorKey));
+            }
+            setIsDownloading(false);
+            return;
+        }
+        setDownloadError(t(errorKey));
+    } finally {
+        setIsDownloading(false);
     }
-
-    doc.save(`seta_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.pdf`);
   };
 
-  // --- Get Total Record Count ---
-  const totalRecords = Object.values(reportData)
+
+  const totalRecords = Object.values(reportSummaryData)
     .filter(Array.isArray)
     .reduce((sum, arr) => sum + (arr?.length || 0), 0);
 
@@ -306,15 +177,18 @@ export default function ExpenseReports() {
           sx={{ backgroundColor: 'primary.light', color: 'primary.contrastText', py: 1.5 }}
         />
         <CardContent>
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
+          {summaryError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{summaryError}</Alert>
+          )}
+          {downloadError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{downloadError}</Alert>
           )}
 
           <Typography variant="body1" sx={{ mb: 3 }}>
             <T>expenseReports.descriptionMultipleFormats</T>
           </Typography>
 
-          {isLoading ? (
+          {isLoadingSummary ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
               <CircularProgress />
               <Typography sx={{ ml: 2 }}><T>expenseReports.loading</T></Typography>
@@ -325,14 +199,37 @@ export default function ExpenseReports() {
                 <T>expenseReports.totalRecords</T> {totalRecords}
               </Typography>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={5}>
-                  <Button fullWidth variant="contained" startIcon={<DownloadIcon />} onClick={generateExcel}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+                    onClick={() => handleDownload('csv', ALL_REPORT_DATA_TYPES, 'all_data')}
+                    disabled={isDownloading || totalRecords === 0}
+                  >
+                    <T>expenseReports.downloadCsvAll</T>
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+                    onClick={() => handleDownload('excel', ALL_REPORT_DATA_TYPES, 'all_data')}
+                    disabled={isDownloading || totalRecords === 0}
+                  >
                     <T>expenseReports.downloadExcelAll</T>
                   </Button>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <Button fullWidth variant="contained" startIcon={<DownloadIcon />} onClick={generatePDF}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+                    onClick={() => handleDownload('pdf', ALL_REPORT_DATA_TYPES, 'all_data')}
+                    disabled={isDownloading || totalRecords === 0}
+                  >
                     <T>expenseReports.downloadPdfAll</T>
                   </Button>
                 </Grid>
@@ -341,36 +238,27 @@ export default function ExpenseReports() {
               <Divider sx={{ my: 3 }}><Typography variant="overline"><T>expenseReports.downloadIndividualCsv</T></Typography></Divider>
 
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={4} md={3}>
-                  <CSVLink data={getCsvData('expenses')} headers={expenseHeaders} filename={`expenses_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.csv`} style={{ textDecoration: 'none' }}>
-                    <Button fullWidth variant="outlined" size="small" startIcon={<DownloadIcon />} disabled={!reportData.expenses?.length}> <T>common.Expenses</T> CSV </Button>
-                  </CSVLink>
-                </Grid>
-                <Grid item xs={6} sm={4} md={3}>
-                  <CSVLink data={getCsvData('income')} headers={incomeHeaders} filename={`income_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.csv`} style={{ textDecoration: 'none' }}>
-                    <Button fullWidth variant="outlined" size="small" startIcon={<DownloadIcon />} disabled={!reportData.income?.length}> <T>common.Income</T> CSV </Button>
-                  </CSVLink>
-                </Grid>
-                <Grid item xs={6} sm={4} md={3}>
-                  <CSVLink data={getCsvData('recurring_expenses')} headers={recurringHeaders} filename={`recurring_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.csv`} style={{ textDecoration: 'none' }}>
-                    <Button fullWidth variant="outlined" size="small" startIcon={<DownloadIcon />} disabled={!reportData.recurring_expenses?.length}> <T>sidebar.recurring</T> CSV </Button>
-                  </CSVLink>
-                </Grid>
-                <Grid item xs={6} sm={4} md={3}>
-                  <CSVLink data={getCsvData('budgets')} headers={budgetHeaders} filename={`budgets_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.csv`} style={{ textDecoration: 'none' }}>
-                    <Button fullWidth variant="outlined" size="small" startIcon={<DownloadIcon />} disabled={!reportData.budgets?.length}> <T>planningManager.budgetsTab</T> CSV </Button>
-                  </CSVLink>
-                </Grid>
-                <Grid item xs={6} sm={4} md={3}>
-                  <CSVLink data={getCsvData('goals')} headers={goalHeaders} filename={`goals_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.csv`} style={{ textDecoration: 'none' }}>
-                    <Button fullWidth variant="outlined" size="small" startIcon={<DownloadIcon />} disabled={!reportData.goals?.length}> <T>planningManager.goalsTab</T> CSV </Button>
-                  </CSVLink>
-                </Grid>
-                <Grid item xs={6} sm={4} md={3}>
-                  <CSVLink data={getCsvData('accounts')} headers={accountHeaders} filename={`accounts_report_${safeFormatDate(new Date(), 'yyyyMMdd')}.csv`} style={{ textDecoration: 'none' }}>
-                    <Button fullWidth variant="outlined" size="small" startIcon={<DownloadIcon />} disabled={!reportData.accounts?.length}> <T>sidebar.accounts</T> CSV </Button>
-                  </CSVLink>
-                </Grid>
+                {Object.entries(INDIVIDUAL_DATA_TYPE_OPTIONS).map(([key, config]) => {
+                  const reportDataKey = key; // e.g., 'expenses', 'recurring_expenses'
+                  const backendDataType = config.backendKey || key; // e.g., 'expenses', 'recurring'
+                  const dataArray = reportSummaryData[reportDataKey];
+                  const hasData = dataArray && dataArray.length > 0;
+
+                  return (
+                    <Grid item xs={6} sm={4} md={3} key={key}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        startIcon={isDownloading ? <CircularProgress size={16} /> : <DownloadIcon />}
+                        onClick={() => handleDownload('csv', [backendDataType], backendDataType)}
+                        disabled={isDownloading || !hasData}
+                      >
+                        <T>{config.labelKey}</T> CSV
+                      </Button>
+                    </Grid>
+                  );
+                })}
               </Grid>
             </Box>
           )}

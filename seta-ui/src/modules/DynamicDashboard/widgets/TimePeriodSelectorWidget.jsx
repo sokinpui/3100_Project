@@ -1,5 +1,5 @@
 // src/modules/DynamicDashboard/widgets/TimePeriodSelectorWidget.jsx
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState, useEffect } from 'react';
 import { Box, Button, Menu, MenuItem, TextField, Tooltip } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
@@ -7,10 +7,10 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useTranslation } from 'react-i18next';
-// Import more date-fns functions
 import {
     startOfMonth, endOfMonth, subDays, startOfDay, endOfDay,
-    startOfQuarter, endOfQuarter, startOfYear, endOfYear, getMonth, addMonths, isValid, parseISO // Added functions
+    startOfQuarter, endOfQuarter, startOfYear, endOfYear, getMonth, addMonths, isValid, parseISO,
+    subYears
 } from 'date-fns';
 import T from '../../../utils/T';
 
@@ -24,8 +24,10 @@ const PRESET_PERIODS = [
     { key: 'last7days', labelKey: 'timePeriods.last7days' },
     { key: 'last30days', labelKey: 'timePeriods.last30days' },
     { key: 'currentMonth', labelKey: 'timePeriods.currentMonth' },
-    { key: 'currentQuarter', labelKey: 'timePeriods.currentQuarter' }, // New
-    { key: 'currentHalfYear', labelKey: 'timePeriods.currentHalfYear' }, // New
+    { key: 'currentQuarter', labelKey: 'timePeriods.currentQuarter' },
+    { key: 'currentHalfYear', labelKey: 'timePeriods.currentHalfYear' },
+    { key: 'thisYear', labelKey: 'timePeriods.thisYear' }, // New "This Year" option
+    { key: 'lastYear', labelKey: 'timePeriods.lastYear' },
     { key: 'allTime', labelKey: 'timePeriods.allTime' },
     { key: 'custom', labelKey: 'timePeriods.customRange' },
 ];
@@ -40,16 +42,30 @@ const getDatesForPreset = (presetKey) => {
             return { startDate: startOfDay(subDays(now, 29)), endDate: endOfDay(now) };
         case 'currentMonth':
             return { startDate: startOfDay(startOfMonth(now)), endDate: endOfDay(endOfMonth(now)) };
-        case 'currentQuarter': // New
+        case 'currentQuarter':
             return { startDate: startOfDay(startOfQuarter(now)), endDate: endOfDay(endOfQuarter(now)) };
-        case 'currentHalfYear': { // New
-            const currentMonth = getMonth(now); // 0-11
-            const isFirstHalf = currentMonth < 6; // Jan-Jun (0-5)
+        case 'currentHalfYear': {
+            const currentMonth = getMonth(now);
+            const isFirstHalf = currentMonth < 6;
             const yearStart = startOfYear(now);
             const yearEnd = endOfYear(now);
+            const firstHalfEndDate = endOfDay(endOfMonth(addMonths(yearStart, 5)));
             const startDate = isFirstHalf ? startOfDay(yearStart) : startOfDay(addMonths(yearStart, 6));
-            const endDate = isFirstHalf ? endOfDay(addMonths(yearStart, 5)) : endOfDay(yearEnd); // End of June or End of Dec
+            const endDate = isFirstHalf ? firstHalfEndDate : endOfDay(yearEnd);
             return { startDate, endDate };
+        }
+        case 'thisYear': { // New case for "This Year"
+            return {
+                startDate: startOfDay(startOfYear(now)),
+                endDate: endOfDay(endOfYear(now))
+            };
+        }
+        case 'lastYear': {
+            const lastYearDate = subYears(now, 1);
+            return {
+                startDate: startOfDay(startOfYear(lastYearDate)),
+                endDate: endOfDay(endOfYear(lastYearDate))
+            };
         }
         case 'allTime':
         default:
@@ -59,12 +75,11 @@ const getDatesForPreset = (presetKey) => {
 // --- End Helper ---
 
 // --- Component ---
-export function TimePeriodSelectorWidget({ onPeriodChange }) { // Removed initialPeriod prop
+export function TimePeriodSelectorWidget({ onPeriodChange }) {
     const { t } = useTranslation();
 
-    // --- State Initialization from localStorage ---
     const [selectedPreset, setSelectedPreset] = useState(() => {
-        return localStorage.getItem(PRESET_STORAGE_KEY) || 'currentMonth'; // Default to currentMonth
+        return localStorage.getItem(PRESET_STORAGE_KEY) || 'currentMonth';
     });
     const [customStartDate, setCustomStartDate] = useState(() => {
         const savedStart = localStorage.getItem(CUSTOM_START_STORAGE_KEY);
@@ -76,46 +91,42 @@ export function TimePeriodSelectorWidget({ onPeriodChange }) { // Removed initia
         const parsedDate = savedEnd ? parseISO(savedEnd) : null;
         return isValid(parsedDate) ? parsedDate : null;
     });
-    // --- End State Initialization ---
 
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
-    // --- Effect to notify parent on initial load ---
     useEffect(() => {
         let initialDates;
-        if (selectedPreset === 'custom' && customStartDate && customEndDate) {
+        if (selectedPreset === 'custom' && customStartDate && customEndDate && isValid(customStartDate) && isValid(customEndDate)) {
             initialDates = { startDate: startOfDay(customStartDate), endDate: endOfDay(customEndDate) };
         } else if (selectedPreset !== 'custom') {
             initialDates = getDatesForPreset(selectedPreset);
         } else {
-            // Custom selected but dates invalid/missing, default to currentMonth
             initialDates = getDatesForPreset('currentMonth');
-            setSelectedPreset('currentMonth'); // Update state to reflect default
+            setSelectedPreset('currentMonth');
             localStorage.setItem(PRESET_STORAGE_KEY, 'currentMonth');
             localStorage.removeItem(CUSTOM_START_STORAGE_KEY);
             localStorage.removeItem(CUSTOM_END_STORAGE_KEY);
         }
-        onPeriodChange(initialDates);
+        onPeriodChange({...initialDates, presetKey: selectedPreset});
          // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Run only once on mount
+    }, []);
 
     const handleClick = (event) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
 
     const handlePresetSelect = (presetKey) => {
         setSelectedPreset(presetKey);
-        localStorage.setItem(PRESET_STORAGE_KEY, presetKey); // Save preset
+        localStorage.setItem(PRESET_STORAGE_KEY, presetKey);
         handleClose();
 
         if (presetKey !== 'custom') {
-            setCustomStartDate(null); // Clear custom dates
+            setCustomStartDate(null);
             setCustomEndDate(null);
-            localStorage.removeItem(CUSTOM_START_STORAGE_KEY); // Clear saved custom dates
+            localStorage.removeItem(CUSTOM_START_STORAGE_KEY);
             localStorage.removeItem(CUSTOM_END_STORAGE_KEY);
-            onPeriodChange(getDatesForPreset(presetKey)); // Notify parent
+            onPeriodChange({...getDatesForPreset(presetKey), presetKey: presetKey});
         } else {
-            // If switching to custom, check if previously saved dates exist and are valid
             const savedStartStr = localStorage.getItem(CUSTOM_START_STORAGE_KEY);
             const savedEndStr = localStorage.getItem(CUSTOM_END_STORAGE_KEY);
             const savedStart = savedStartStr ? parseISO(savedStartStr) : null;
@@ -124,13 +135,11 @@ export function TimePeriodSelectorWidget({ onPeriodChange }) { // Removed initia
             if (isValid(savedStart) && isValid(savedEnd) && savedStart <= savedEnd) {
                 setCustomStartDate(savedStart);
                 setCustomEndDate(savedEnd);
-                 onPeriodChange({ startDate: startOfDay(savedStart), endDate: endOfDay(savedEnd) });
+                 onPeriodChange({ startDate: startOfDay(savedStart), endDate: endOfDay(savedEnd), presetKey: 'custom' });
             } else {
-                // Don't call onPeriodChange yet, wait for user to select dates
-                 setCustomStartDate(null); // Ensure state is clear if loaded dates were invalid
+                 setCustomStartDate(null);
                  setCustomEndDate(null);
-                 // Optionally call onPeriodChange with null/empty dates if needed
-                 // onPeriodChange({ startDate: null, endDate: null });
+                 onPeriodChange({ startDate: null, endDate: null, presetKey: 'custom' });
             }
         }
     };
@@ -142,16 +151,18 @@ export function TimePeriodSelectorWidget({ onPeriodChange }) { // Removed initia
         if (type === 'start') setCustomStartDate(date);
         if (type === 'end') setCustomEndDate(date);
 
-        // Only update if both dates are valid and start is not after end
         if (newStart && newEnd && isValid(newStart) && isValid(newEnd) && newStart <= newEnd) {
-             // Save custom dates to localStorage
              localStorage.setItem(CUSTOM_START_STORAGE_KEY, newStart.toISOString());
              localStorage.setItem(CUSTOM_END_STORAGE_KEY, newEnd.toISOString());
-             // Notify parent
              onPeriodChange({
                  startDate: startOfDay(newStart),
-                 endDate: endOfDay(newEnd)
+                 endDate: endOfDay(newEnd),
+                 presetKey: 'custom'
              });
+        } else if (newStart && isValid(newStart)) {
+            if (type === 'start') localStorage.setItem(CUSTOM_START_STORAGE_KEY, newStart.toISOString());
+        } else if (newEnd && isValid(newEnd)) {
+            if (type === 'end') localStorage.setItem(CUSTOM_END_STORAGE_KEY, newEnd.toISOString());
         }
     };
 

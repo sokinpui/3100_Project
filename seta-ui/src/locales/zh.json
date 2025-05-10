@@ -474,7 +474,9 @@
         "startDate": "开始日期",
         "endDate": "结束日期",
         "currentQuarter": "本季度",
-        "currentHalfYear": "本半年度"
+        "currentHalfYear": "本半年度",
+        "lastYear": "最近一年",
+        "thisYear": "本年度"
     },
     "expenseManager": {
         "confirm": "确认",
@@ -552,7 +554,8 @@
         "downloadIndividualCsv": "下载单个 CSV 文件",
         "formatCsv": "CSV (.csv)",
         "formatExcel": "Excel (.xlsx)",
-        "formatPdf": "PDF (.pdf)"
+        "formatPdf": "PDF (.pdf)",
+        "downloadCsvAll": "CSV (所有数据)"
     },
     "dashboard": {
         "overview": {
