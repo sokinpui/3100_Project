@@ -1,18 +1,18 @@
 {
   "user": {
-    "id": 2,
+    "id": 1,
     "username": "test",
-    "email": "test@gmail.com",
+    "email": "sosokinpui@gmail.com",
     "first_name": "test",
     "last_name": "test"
   },
   "generation_summary": {
-    "accounts_generated": 4,
-    "income_records_generated": 15,
-    "random_expenses_generated": 24,
-    "recurring_rules_generated": 3,
-    "budgets_generated": 3,
-    "goals_generated": 3,
-    "timestamp": "2025-04-20T09:09:57.806886"
+    "accounts_generated": 5,
+    "income_records_generated": 1000,
+    "random_expenses_generated": 6000,
+    "recurring_rules_generated": 8,
+    "budgets_generated": 5,
+    "goals_generated": 5,
+    "timestamp": "2025-05-10T11:21:07.481975"
   }
 }
