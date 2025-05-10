@@ -552,7 +552,8 @@
         "downloadIndividualCsv": "下载单个 CSV 文件",
         "formatCsv": "CSV (.csv)",
         "formatExcel": "Excel (.xlsx)",
-        "formatPdf": "PDF (.pdf)"
+        "formatPdf": "PDF (.pdf)",
+        "downloadCsvAll": "CSV (所有数据)"
     },
     "dashboard": {
         "overview": {

@@ -550,7 +550,6 @@
         "fillRequiredFields": "Please fill in all required fields.",
         "expenseAddedSuccess": "Expense added successfully!",
         "bulkDeleteSuccess": "{{count}} expense(s) deleted successfully!"
-
     },
     "expenseReports": {
         "title": "Generate Reports",
@@ -569,7 +568,8 @@
         "downloadIndividualCsv": "Download Individual CSV File",
         "formatCsv": "CSV (.csv)",
         "formatExcel": "Excel (.xlsx)",
-        "formatPdf": "PDF (.pdf)"
+        "formatPdf": "PDF (.pdf)",
+        "downloadCsvAll": "CSV (All Data)"
     },
     "dashboard": {
         "overview": {
