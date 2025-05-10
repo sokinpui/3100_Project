@@ -490,7 +490,9 @@
         "endDate": "End Date",
         "currentQuarter": "Current Quarter",
         "currentHalfYear": "Current Half Year",
-        "allTime": "All Time"
+        "allTime": "All Time",
+        "lastYear": "Last Year",
+        "thisYear": "This Year"
     },
     "expenseManager": {
         "confirm": "Confirm",
