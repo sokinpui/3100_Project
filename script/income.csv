@@ -1,0 +1,31 @@
+date,source,amount,description,account_id,data_source
+2025-04-18,Interest Income,565.0900000000,Interest Income deposit,2,income
+2025-04-23,Salary,4423.5500000000,Salary deposit,3,income
+2025-04-24,Salary,2518.8200000000,Salary deposit,1,income
+2025-05-07,Side Hustle,474.9800000000,Side Hustle deposit,5,income
+2025-04-20,Salary,3370.5100000000,Salary deposit,,income
+2025-04-19,Investment Dividend,81.0200000000,Investment Dividend deposit,2,income
+2025-05-06,Bonus,1681.3000000000,Bonus deposit,3,income
+2025-05-09,Salary,2357.8800000000,Salary deposit,1,income
+2025-04-19,Gift,825.5900000000,Gift deposit,2,income
+2025-05-02,Freelance Project,765.5900000000,Freelance Project deposit,,income
+2025-05-10,Investment Dividend,574.0900000000,Investment Dividend deposit,3,income
+2025-04-21,Bonus,1281.2300000000,Bonus deposit,5,income
+2025-04-14,Rental Income,978.4800000000,Rental Income deposit,5,income
+2025-04-27,Side Hustle,522.8400000000,Side Hustle deposit,2,income
+2025-05-07,Side Hustle,410.1600000000,Side Hustle deposit,5,income
+2025-04-18,Interest Income,565.0900000000,Interest Income deposit,2,income
+2025-04-23,Salary,4423.5500000000,Salary deposit,3,income
+2025-04-24,Salary,2518.8200000000,Salary deposit,1,income
+2025-05-07,Side Hustle,474.9800000000,Side Hustle deposit,5,income
+2025-04-20,Salary,3370.5100000000,Salary deposit,,income
+2025-04-19,Investment Dividend,81.0200000000,Investment Dividend deposit,2,income
+2025-05-06,Bonus,1681.3000000000,Bonus deposit,3,income
+2025-05-09,Salary,2357.8800000000,Salary deposit,1,income
+2025-04-19,Gift,825.5900000000,Gift deposit,2,income
+2025-05-02,Freelance Project,765.5900000000,Freelance Project deposit,,income
+2025-05-10,Investment Dividend,574.0900000000,Investment Dividend deposit,3,income
+2025-04-21,Bonus,1281.2300000000,Bonus deposit,5,income
+2025-04-14,Rental Income,978.4800000000,Rental Income deposit,5,income
+2025-04-27,Side Hustle,522.8400000000,Side Hustle deposit,2,income
+2025-05-07,Side Hustle,410.1600000000,Side Hustle deposit,5,income
