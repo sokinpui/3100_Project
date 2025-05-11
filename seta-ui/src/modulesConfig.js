@@ -43,6 +43,22 @@ export const appModules = [
     isPublic: true,
     icon: <LockResetIcon />,
   },
+  {
+    id: "forgot-password-request",
+    name: "Forgot Password",
+    path: "/forgot-password",
+    component: React.lazy(() => import("./login/ForgotPasswordRequestPage")),
+    isPublic: true,
+    icon: <LockResetIcon />,
+  },
+  {
+    id: "verify-code-reset-password",
+    name: "Reset Password",
+    path: "/verify-code-reset",
+    component: React.lazy(() => import("./login/VerifyCodeAndResetPage")),
+    isPublic: true,
+    icon: <LockResetIcon />,
+  },
 
   // --- Protected Routes (will appear in sidebar if icon is provided) ---
   {

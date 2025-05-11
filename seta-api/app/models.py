@@ -1,26 +1,17 @@
 # app/models.py
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    DateTime,
-    Boolean,
-    Numeric,
-    Date,
-    ForeignKey,
-    Interval,
-    Enum as SQLAlchemyEnum,
-)
-from sqlalchemy.orm import sessionmaker, relationship
+import datetime
+import enum
+
+from sqlalchemy import Boolean, Column, Date, DateTime
+from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlalchemy import ForeignKey, Integer, Interval, Numeric, String, create_engine
 from sqlalchemy.ext.declarative import (
     declarative_base,
 )  # Use this if you are on older SQLAlchemy, otherwise use DeclarativeBase
+from sqlalchemy.orm import relationship, sessionmaker
 
 # from sqlalchemy.orm import DeclarativeBase # Use this for modern SQLAlchemy
 from sqlalchemy.sql import func
-import datetime
-import enum
 
 # Database connection string
 Base = declarative_base()
@@ -177,6 +168,11 @@ class User(Base):
     # Add these two columns for password reset
     password_reset_token = Column(String, unique=True, index=True, nullable=True)
     password_reset_token_expiry = Column(DateTime(timezone=True), nullable=True)
+
+    password_reset_code = Column(
+        String, nullable=True, index=True
+    )  # Store the 6-digit code
+    password_reset_code_expiry = Column(DateTime(timezone=True), nullable=True)
 
     licence_key = Column(
         String, nullable=True, index=True

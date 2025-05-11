@@ -599,6 +599,37 @@ class RequestPasswordResetPayload(BaseModel):
     email: EmailStr
 
 
+class RequestPasswordResetCodePayload(BaseModel):
+    email: EmailStr
+
+
+class VerifyCodeAndResetPasswordPayload(BaseModel):
+    email: EmailStr  # Or username, depending on how you want to identify the user
+    code: str
+    new_password: str
+    confirm_password: str
+
+    @field_validator("confirm_password")
+    def passwords_match(cls, v, values, **kwargs):
+        if (
+            "new_password" in values.data and v != values.data["new_password"]
+        ):  # Pydantic v2 uses .data
+            raise ValueError("Passwords do not match")
+        return v
+
+    @field_validator("new_password")
+    def password_strength(cls, v):
+        if len(v) < 8:  # Add more strength checks as needed
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+
+    @field_validator("code")
+    def code_format(cls, v):
+        if not re.match(r"^\d{6}$", v):
+            raise ValueError("Code must be 6 digits")
+        return v
+
+
 class ResetPasswordPayload(BaseModel):
     """Payload expected when resetting the password using a token."""
 
@@ -692,6 +723,41 @@ class CustomReportRequest(BaseModel):
 
 
 # --------- Helper Functions ---------
+
+
+def generate_6_digit_code() -> str:
+    """Generates a random 6-digit code."""
+    return "{:06d}".format(secrets.randbelow(1000000))
+
+
+async def send_password_reset_code_email(email_to: str, username: str, code: str):
+    """Sends the password reset 6-digit code via email."""
+    html_content = f"""
+ <html>
+     <body>
+         <h1>SETA Password Reset Code</h1>
+         <p>Hello {username},</p>
+         <p>Your password reset code is: <strong>{code}</strong></p>
+         <p>This code will expire in 15 minutes.</p>
+         <p>If you did not request a password reset, please ignore this email.</p>
+     </body>
+ </html>
+ """
+    message = MessageSchema(
+        subject="SETA Password Reset Code",
+        recipients=[email_to],
+        body=html_content,
+        subtype=MessageType.html,
+    )
+    try:
+        await fm.send_message(message)
+        logger.info(f"Password reset code email sent successfully to {email_to}")
+    except Exception as e:
+        logger.error(
+            f"Error sending password reset code email to {email_to}: {e}", exc_info=True
+        )
+        # Do not raise HTTPException here, handle failure in the calling endpoint
+        # to ensure generic message is sent to user.
 
 
 # --- Helper function to get all user data (reusable) ---
@@ -1291,6 +1357,92 @@ async def request_password_reset(
             status_code=500,
             detail="An internal error occurred while processing the request.",
         )
+
+
+@app.post("/verify-code-and-reset-password", status_code=status.HTTP_200_OK)
+async def verify_code_and_reset_password(
+    payload: VerifyCodeAndResetPasswordPayload,
+    db: Session = Depends(
+        get_db
+    ),  # Ensure VerifyCodeAndResetPasswordPayload is defined/imported
+):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email or code.",  # More generic message
+        )
+
+    expiry_from_db = user.password_reset_code_expiry
+    current_time_utc = datetime.now(timezone.utc)
+
+    # Make expiry_from_db offset-aware if it's naive (assuming it's UTC)
+    if expiry_from_db and expiry_from_db.tzinfo is None:
+        expiry_from_db = expiry_from_db.replace(tzinfo=timezone.utc)
+
+    if not (
+        user.password_reset_code
+        and user.password_reset_code == payload.code
+        and expiry_from_db  # Check if it exists (it should if code was set)
+        and expiry_from_db > current_time_utc
+    ):  # Now comparing aware with aware
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired code.",
+        )
+
+    # If code is valid and not expired
+    user.password_hash = hash_password(payload.new_password)
+    user.password_reset_code = None  # Invalidate the code
+    user.password_reset_code_expiry = None
+
+    try:
+        db.commit()
+        # It's good practice to refresh the user object if you return it or parts of it
+        # db.refresh(user)
+        return {"message": "Password has been reset successfully. You can now log in."}
+    except Exception as e:
+        db.rollback()
+        logger.error(
+            f"Database error during password reset confirmation for {payload.email}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal error occurred while resetting the password.",
+        )
+
+
+@app.post("/request-password-reset-code", status_code=status.HTTP_200_OK)
+async def request_password_reset_code(
+    payload: RequestPasswordResetCodePayload, db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+
+    if user and user.is_active:  # Only send if user exists and is active
+        reset_code = generate_6_digit_code()
+        expiry_time = datetime.now(timezone.utc) + timedelta(
+            minutes=15
+        )  # Code valid for 15 mins
+
+        user.password_reset_code = reset_code  # Store plain code
+        user.password_reset_code_expiry = expiry_time
+        try:
+            db.commit()
+            await send_password_reset_code_email(user.email, user.username, reset_code)
+        except Exception as e:
+            db.rollback()
+            logger.error(
+                f"Failed to process password reset code for {payload.email}: {e}",
+                exc_info=True,
+            )
+            # Generic error response will be sent below if email sending fails or DB commit fails
+
+    # Always return a generic message to prevent email enumeration
+    return {
+        "message": "If an account with this email exists and is active, a password reset code has been sent."
+    }
 
 
 @app.post("/reset-password/{token}", status_code=status.HTTP_200_OK)

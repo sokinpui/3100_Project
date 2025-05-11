@@ -195,13 +195,11 @@ export default function Login() {
                     />
 
                     {/* Optional: Add Forgot Password Link Here */}
-                    {/*
-                    <Box sx={{ textAlign: 'right', my: 1 }}>
+                    <Box sx={{ textAlign: 'right', width: '100%', mt: 1, mb: 1 }}>
                          <Link component={RouterLink} to="/forgot-password" variant="body2">
                             <T>login.forgotPasswordPrompt</T>
                         </Link>
                     </Box>
-                    */}
 
                     <Button
                         type="submit"

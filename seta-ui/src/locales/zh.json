@@ -715,7 +715,8 @@
         "devPasswordLabel": "密码：",
         "devPasswordSetDuringSignup": "[注册时设置]",
         "devNoteBackendRunning": "注意：登录前请确保 Python 后端正在运行！",
-        "devNoteNewUserCredentials": "附加说明：新注册用户的凭据会在此处显示（供开发使用）。"
+        "devNoteNewUserCredentials": "附加说明：新注册用户的凭据会在此处显示（供开发使用）。",
+        "forgotPasswordPrompt": "忘记密码？"
     },
     "resetPassword": {
         "title": "重设您的密码",
@@ -729,6 +730,39 @@
         "confirmPasswordLabel": "确认新密码",
         "resetButton": "重设密码",
         "goToLoginButton": "前往登录"
+    },
+    "forgotPassword": {
+        "title": "忘记密码？",
+        "instruction": "请输入您的电子邮箱地址，我们将向您发送一个代码以重设密码。",
+        "emailLabel": "电子邮箱地址",
+        "sendResetCodeButton": "发送重设代码",
+        "backToLogin": "返回登录",
+        "successTitleRequest": "代码已发送！",
+        "successMessageRequest": "如果该邮箱存在账户，一个6位数的代码已发送至您的邮箱（请检查收件箱和垃圾邮件）。您将很快被重定向。",
+        "validationEmailRequired": "必须填写邮箱地址。",
+        "validationEmailInvalid": "请输入有效的电子邮箱地址。",
+        "errorGeneric": "发生错误，请重试。"
+    },
+    "verifyResetCode": {
+        "title": "重设您的密码",
+        "instruction": "请输入发送到您邮箱的6位数代码以及您的新密码。",
+        "emailLabel": "电子邮箱地址",
+        "codeLabel": "6位数代码",
+        "newPasswordLabel": "新密码",
+        "confirmPasswordLabel": "确认新密码",
+        "resetButton": "重设密码",
+        "backToLogin": "返回登录",
+        "successTitle": "密码已重设！",
+        "successMessage": "您的密码已成功重设。您现在可以使用新密码登录。",
+        "errorEmailMissing": "缺少邮箱地址。请重新开始密码重置流程。",
+        "validationEmailRequired": "必须填写邮箱地址。",
+        "validationCodeRequired": "必须填写代码。",
+        "validationCodeFormat": "代码必须是6位数字。",
+        "validationNewPasswordRequired": "必须填写新密码。",
+        "validationPasswordLength": "密码必须至少包含8个字符。",
+        "validationConfirmPasswordRequired": "请确认您的新密码。",
+        "validationPasswordMatch": "新密码与确认密码不匹配。",
+        "errorGeneric": "发生错误。代码可能无效、已过期或服务器出现问题。请重试或请求新代码。"
     },
     "verifyEmail": {
         "successTitle": "邮箱已验证！",

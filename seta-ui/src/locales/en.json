@@ -731,7 +731,8 @@
         "devPasswordLabel": "Password:",
         "devPasswordSetDuringSignup": "[Set during signup]",
         "devNoteBackendRunning": "Note: Make sure Python backend is running before logging in!",
-        "devNoteNewUserCredentials": "Additional Note: Newly registered user credentials appear here for development."
+        "devNoteNewUserCredentials": "Additional Note: Newly registered user credentials appear here for development.",
+        "forgotPasswordPrompt": "Forgot Password?"
     },
     "resetPassword": {
         "title": "Reset Your Password",
@@ -745,6 +746,18 @@
         "confirmPasswordLabel": "Confirm New Password",
         "resetButton": "Reset Password",
         "goToLoginButton": "Go to Login"
+    },
+    "forgotPassword": {
+        "title": "Forgot Your Password?",
+        "instruction": "Enter your email address below and we'll send you a code to reset your password.",
+        "emailLabel": "Email Address",
+        "sendResetCodeButton": "Send Reset Code",
+        "backToLogin": "Back to Login",
+        "successTitleRequest": "Code Sent!",
+        "successMessageRequest": "If an account with this email exists, a 6-digit code has been sent. Please check your inbox (and spam folder). You will be redirected shortly.",
+        "validationEmailRequired": "Email is required.",
+        "validationEmailInvalid": "Please enter a valid email address.",
+        "errorGeneric": "An error occurred. Please try again."
     },
     "verifyEmail": {
         "successTitle": "Email Verified!",
@@ -762,5 +775,26 @@
         "errorGenericDesktop": "Something went wrong during verification. Please close this page and try again later, or contact support.",
         "goToLogin": "Go to Login",
         "closeWindowHint": "You may now close this window or tab."
+    },
+    "verifyResetCode": {
+        "title": "Reset Your Password",
+        "instruction": "Please enter the 6-digit code sent to your email, along with your new password.",
+        "emailLabel": "Email Address",
+        "codeLabel": "6-Digit Code",
+        "newPasswordLabel": "New Password",
+        "confirmPasswordLabel": "Confirm New Password",
+        "resetButton": "Reset Password",
+        "backToLogin": "Back to Login",
+        "successTitle": "Password Reset!",
+        "successMessage": "Your password has been successfully reset. You can now log in with your new password.",
+        "errorEmailMissing": "Email address is missing. Please start the password reset process again.",
+        "validationEmailRequired": "Email is required.",
+        "validationCodeRequired": "Code is required.",
+        "validationCodeFormat": "Code must be 6 digits.",
+        "validationNewPasswordRequired": "New password is required.",
+        "validationPasswordLength": "Password must be at least 8 characters.",
+        "validationConfirmPasswordRequired": "Please confirm your new password.",
+        "validationPasswordMatch": "New passwords do not match.",
+        "errorGeneric": "An error occurred. The code might be invalid, expired, or an issue occurred on our server. Please try again or request a new code."
     }
 }

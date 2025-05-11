@@ -39,7 +39,8 @@ export default function AuthGuard({ setIsLoggedIn }) {
       // If not logged in and trying to access anything other than public routes, redirect to login
       const isPublicPath = location.pathname === '/login' ||
                            location.pathname === '/signup' ||
-                           location.pathname.startsWith('/reset-password') ||  // Allow password reset
+                           location.pathname === '/forgot-password' ||
+                           location.pathname === '/verify-code-reset' ||
                            location.pathname === '/verify-result';
 
       if (!isPublicPath) {
