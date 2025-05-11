@@ -731,33 +731,35 @@ def generate_6_digit_code() -> str:
 
 
 async def send_password_reset_code_email(email_to: str, username: str, code: str):
-    """Sends the password reset 6-digit code via email."""
+    """Sends the password reset 6-digit code via email AND reminds the user of their username."""
     html_content = f"""
- <html>
-     <body>
-         <h1>SETA Password Reset Code</h1>
-         <p>Hello {username},</p>
-         <p>Your password reset code is: <strong>{code}</strong></p>
-         <p>This code will expire in 15 minutes.</p>
-         <p>If you did not request a password reset, please ignore this email.</p>
-     </body>
- </html>
- """
+    <html>
+        <body>
+            <h1>SETA Account Recovery</h1>
+            <p>Hello,</p>
+            <p>We received a request to reset the password for the SETA account associated with this email address.</p>
+            <p>Your username is: <strong>{username}</strong></p>
+            <p>Your password reset code is: <strong>{code}</strong></p>
+            <p>This code will expire in 15 minutes.</p>
+            <p>If you did not request this, please ignore this email.</p>
+        </body>
+    </html>
+    """
     message = MessageSchema(
-        subject="SETA Password Reset Code",
+        subject="SETA Account Recovery Information",  # Updated subject
         recipients=[email_to],
         body=html_content,
         subtype=MessageType.html,
     )
     try:
         await fm.send_message(message)
-        logger.info(f"Password reset code email sent successfully to {email_to}")
+        logger.info(
+            f"Account recovery (password reset code & username reminder) email sent successfully to {email_to}"
+        )
     except Exception as e:
         logger.error(
-            f"Error sending password reset code email to {email_to}: {e}", exc_info=True
+            f"Error sending account recovery email to {email_to}: {e}", exc_info=True
         )
-        # Do not raise HTTPException here, handle failure in the calling endpoint
-        # to ensure generic message is sent to user.
 
 
 # --- Helper function to get all user data (reusable) ---
