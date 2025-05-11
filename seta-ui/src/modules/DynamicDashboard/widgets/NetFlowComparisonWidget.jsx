@@ -64,7 +64,7 @@ export function NetFlowComparisonWidget({ expenses = [], income = [], isLoading 
         // Calculate net flow and format for chart
         return Object.entries(monthlyMap)
             .map(([monthYear, totals]) => ({
-                name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'), // X-axis label
+                name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yyyy'), // X-axis label
                 netFlow: totals.income - totals.expense,
                 monthYear: monthYear // For sorting
             }))

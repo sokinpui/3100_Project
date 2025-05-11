@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { format, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -22,6 +23,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export function IncomeComparisonWidget({ income = [], isLoading }) {
     const { t } = useTranslation(); // Get t function
+    const { format: formatLocaleDate } = useLocalizedDateFormat()
 
     const monthlyData = useMemo(() => {
         if (!income || income.length === 0) return [];
@@ -38,7 +40,7 @@ export function IncomeComparisonWidget({ income = [], isLoading }) {
         }, {});
         return Object.entries(monthlyMap)
           .map(([monthYear, total]) => ({
-              name: format(parseISO(`${monthYear}-01`), 'MMM yy'), // Format month name
+              name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yyyy'), // Format month name
               total: total,
               monthYear: monthYear
            }))

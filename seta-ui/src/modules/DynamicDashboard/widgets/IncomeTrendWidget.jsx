@@ -5,22 +5,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { format, parseISO, isValid } from 'date-fns';
 import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
-        <Typography variant="caption">{label}</Typography>
-        {/* Add specific translation key */}
-        <Typography variant="body2" sx={{ color: payload[0].stroke }}>{T('dynamicDashboard.totalIncome')} : ${payload[0].value.toFixed(2)}</Typography>
-      </Box>
-    );
-  }
-  return null;
-};
 
 export function IncomeTrendWidget({ income = [], isLoading }) {
   const { t } = useTranslation(); // Get t function
+  const { format: formatLocaleDate } = useLocalizedDateFormat();
 
   const dailyData = useMemo(() => {
     if (!income || income.length === 0) return [];
@@ -40,12 +30,32 @@ export function IncomeTrendWidget({ income = [], isLoading }) {
     return Object.entries(dailyMap)
       .map(([dateString, total]) => ({
           date: dateString,
-          name: format(parseISO(dateString), 'MMM d'), // X-axis label
+          name: formatLocaleDate(parseISO(dateString), 'MMM d'), // X-axis label
           total: total,
        }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-  }, [income]);
+  }, [income, formatLocaleDate]);
+
+  const CustomTooltipContent = ({ active, payload, label: xAxisLabel }) => {
+    const { format: formatTooltipDate } = useLocalizedDateFormat();
+
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      const fullDate = dataPoint.date ? parseISO(dataPoint.date) : null;
+      const displayDate = fullDate && isValid(fullDate) ? formatTooltipDate(fullDate, 'MMM d, yyyy') : xAxisLabel;
+
+      return (
+        <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
+          <Typography variant="caption">{displayDate}</Typography>
+          <Typography variant="body2" sx={{ color: payload[0].stroke }}>
+              <T>dynamicDashboard.totalIncome</T> : ${payload[0].value.toFixed(2)}
+          </Typography>
+        </Box>
+      );
+    }
+    return null;
+  };
 
   if (isLoading) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>;
@@ -75,7 +85,7 @@ export function IncomeTrendWidget({ income = [], isLoading }) {
             tickFormatter={(value) => `$${value.toFixed(0)}`}
             allowDecimals={false}
             />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltipContent />} />
         {/* <Legend /> */}
         <Line
             type="monotone"

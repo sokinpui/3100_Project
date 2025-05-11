@@ -22,11 +22,11 @@ const formatPeriodLabel = (periodKey, periodType, formatLocaleDate) => { // Pass
         if (periodType === 'monthly') {
             const [year, month] = periodKey.split('-');
             // Use the localized formatter
-            return formatLocaleDate(new Date(parseInt(year), parseInt(month) - 1), 'MMM yy');
+            return formatLocaleDate(new Date(parseInt(year), parseInt(month) - 1), 'MMM yyyy');
         } else if (periodType === 'quarterly') {
             const [year, quarter] = periodKey.split('-Q');
             // Format year, but quarter is just a number
-            return `Q${quarter} ${formatLocaleDate(new Date(parseInt(year), 0), 'yy')}`; // Format year part
+            return `Q${quarter} ${formatLocaleDate(new Date(parseInt(year), 0), 'yyyy')}`; // Format year part
         } else if (periodType === 'yearly') {
              // Format the year
             return formatLocaleDate(new Date(parseInt(periodKey), 0), 'yyyy');

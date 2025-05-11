@@ -7,23 +7,6 @@ import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat'; // Import the hook
 
-const CustomTooltip = ({ active, payload, label }) => {
-    // UseTranslation hook is needed here if T component isn't used or if t() is preferred
-    const { t } = useTranslation();
-    if (active && payload && payload.length) {
-        const value = payload[0].value;
-        const color = value >= 0 ? '#4CAF50' : '#f44336'; // Green for positive, red for negative
-        return (
-        <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
-            <Typography variant="caption">{label}</Typography>
-            {/* Use t() directly here for simplicity inside the tooltip */}
-            <Typography variant="body2" sx={{ color: color }}>{t('dynamicDashboard.netFlow')} : ${value.toFixed(2)}</Typography>
-        </Box>
-        );
-    }
-    return null;
-};
-
 
 export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
   const { t } = useTranslation();
@@ -107,6 +90,30 @@ export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
         return [domainMin, domainMax];
    }, [minNetFlow, maxNetFlow]);
 
+  const CustomTooltipContent = ({ active, payload, label: xAxisLabel }) => {
+    const { t: t_tooltip } = useTranslation();
+    const { format: formatTooltipDate } = useLocalizedDateFormat();
+
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      const fullDate = dataPoint.date ? parseISO(dataPoint.date) : null;
+      const displayDate = fullDate && isValid(fullDate) ? formatTooltipDate(fullDate, 'MMM d, yyyy') : xAxisLabel;
+
+      const value = payload[0].value;
+      const color = value >= 0 ? '#4CAF50' : '#f44336';
+
+      return (
+        <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
+          <Typography variant="caption">{displayDate}</Typography>
+          <Typography variant="body2" sx={{ color: color }}>
+            {t_tooltip('dynamicDashboard.netFlow')} : ${value.toFixed(2)}
+          </Typography>
+        </Box>
+      );
+    }
+    return null;
+  };
+
   if (isLoading) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>;
   }
@@ -136,7 +143,7 @@ export function NetFlowTrendWidget({ expenses = [], income = [], isLoading }) {
             allowDataOverflow={true} // Keep this
             domain={yAxisDomain} // Explicitly set the domain
             />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltipContent />} />
         <ReferenceLine y={0} stroke="#888" strokeDasharray="3 3" />
         {/* <Legend /> */}
         <Line

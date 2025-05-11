@@ -71,7 +71,7 @@ export function IncomeTimelineWidget({ income, isLoading }) { // Changed prop fr
         .map(([monthYear, sources]) => {
             const monthEntry = {
                 // Use localized date format for the X-axis label
-                name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'),
+                name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yyyy'),
                 monthYear: monthYear,
             };
             sourceNamesArray.forEach(srcName => {

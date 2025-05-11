@@ -7,19 +7,6 @@ import T from '../../../utils/T';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { useLocalizedDateFormat } from '../../../utils/useLocalizedDateFormat';
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    // Label should now be a formatted date string (e.g., 'Jan 15')
-    return (
-      <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
-        <Typography variant="caption">{label}</Typography>
-        <Typography variant="body2">{`Total : $${payload[0].value.toFixed(2)}`}</Typography>
-      </Box>
-    );
-  }
-  return null;
-};
-
 export function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Added timePeriod prop if needed for axis formatting later
   const { t } = useTranslation(); // Get translation function
   const { format: formatLocaleDate } = useLocalizedDateFormat();
@@ -49,12 +36,30 @@ export function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Add
           date: dateString,
           // Format date for X-axis label (e.g., 'Jan 15')
           // Consider adjusting format based on timePeriod range (e.g., show year if range > 1 year)
-          name: formatLocaleDate(parseISO(dateString), 'MMM d'),
+          name: formatLocaleDate(parseISO(dateString), 'MMM yyyy'),
           total: total,
        }))
       .sort((a, b) => a.date.localeCompare(b.date)); // Sort by YYYY-MM-DD string
 
-  }, [expenses]); // Removed timePeriod dependency unless used for formatting
+  }, [expenses, formatLocaleDate]);
+
+  const CustomTooltipContent = ({ active, payload, label: xAxisLabel }) => {
+    const { format: formatTooltipDate } = useLocalizedDateFormat();
+
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      const fullDate = dataPoint.date ? parseISO(dataPoint.date) : null;
+      const displayDate = fullDate && isValid(fullDate) ? formatTooltipDate(fullDate, 'MMM d, yyyy') : xAxisLabel;
+
+      return (
+        <Box sx={{ bgcolor: 'background.paper', p: 1, border: '1px solid #ccc', borderRadius: 1, boxShadow: 1 }}>
+          <Typography variant="caption">{displayDate}</Typography>
+          <Typography variant="body2">{`Total : $${payload[0].value.toFixed(2)}`}</Typography>
+        </Box>
+      );
+    }
+    return null;
+  };
 
   // --- Update title key (optional but recommended) ---
   // You might want a new translation key like 'dynamicDashboard.dailyExpenseTrend'
@@ -95,7 +100,7 @@ export function ExpenseTrendWidget({ expenses, isLoading, timePeriod }) { // Add
             tickFormatter={(value) => `$${value.toFixed(0)}`}
             allowDecimals={false}
             />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltipContent />} />
         {/* Legend might be less useful for a single line, can be removed */}
         {/* <Legend /> */}
         <Line

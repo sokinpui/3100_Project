@@ -65,7 +65,7 @@ export function CategorySpendingTimelineWidget({ expenses, isLoading }) {
     const data = Object.entries(monthlyCategoryMap)
       .map(([monthYear, categories]) => {
         const monthEntry = {
-          name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'),
+          name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yyyy'),
           monthYear: monthYear,
         };
         allCategories.forEach(catName => {

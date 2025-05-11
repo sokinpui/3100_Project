@@ -47,7 +47,7 @@ export function MonthlyComparisonWidget({ expenses, isLoading }) {
         return Object.entries(monthlyMap)
           .map(([monthYear, total]) => ({
               // Use localized format for display name ('MMM yy')
-              name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yy'),
+              name: formatLocaleDate(parseISO(`${monthYear}-01`), 'MMM yyyy'),
               total: total,
               monthYear: monthYear // Keep for sorting
            }))
