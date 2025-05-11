@@ -11,22 +11,21 @@ import T from '../utils/T';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 // getCategoryDetails might not be needed if all formatting/translation happens backend or is not part of this specific report.
-// For now, keeping it in case it's used elsewhere or for button text.
-import { getCategoryDetails } from '../constants';
 
 const API_URL = 'http://localhost:8000';
 
-// Define all data types available for the comprehensive report
-const ALL_REPORT_DATA_TYPES = ['expenses', 'income', 'recurring', 'budgets', 'goals', 'accounts'];
+// Define all data types available for the comprehensive report (backend keys)
+const ALL_REPORT_DATA_TYPES_BACKEND = ['expenses', 'income', 'recurring', 'budgets', 'goals', 'accounts'];
 
-// Define labels for individual download buttons (maps internal key to translation key)
+// Define labels for individual download buttons
+// Maps frontend key (used for summary data access) to translation key and backend data type key
 const INDIVIDUAL_DATA_TYPE_OPTIONS = {
-    expenses: { labelKey: 'common.Expenses' },
-    income: { labelKey: 'common.Income' },
-    recurring_expenses: { labelKey: 'sidebar.recurring', backendKey: 'recurring' }, // Map frontend key to backend key
-    budgets: { labelKey: 'planningManager.budgetsTab' },
-    goals: { labelKey: 'planningManager.goalsTab' },
-    accounts: { labelKey: 'sidebar.accounts' },
+    expenses: { labelKey: 'common.Expenses', backendKey: 'expenses' },
+    income: { labelKey: 'common.Income', backendKey: 'income' },
+    recurring_expenses: { labelKey: 'sidebar.recurring', backendKey: 'recurring' },
+    budgets: { labelKey: 'planningManager.budgetsTab', backendKey: 'budgets' },
+    goals: { labelKey: 'planningManager.goalsTab', backendKey: 'goals' },
+    accounts: { labelKey: 'sidebar.accounts', backendKey: 'accounts' },
 };
 
 
@@ -46,47 +45,42 @@ const safeFormatDate = (dateString, formatStr = 'yyyy-MM-dd') => {
         return dateString;
     }
 };
-
-// This might not be needed if backend handles all currency formatting in reports
-// const formatCurrency = (value) => {
-//     const num = parseFloat(value);
-//     return isNaN(num) ? '-' : `$${num.toFixed(2)}`;
-// };
 // --- End Helper Functions ---
 
 export default function ExpenseReports() {
   const { t } = useTranslation();
   const userId = localStorage.getItem('userId');
 
-  // State for initial data load (e.g., for total counts, disabling buttons)
   const [reportSummaryData, setReportSummaryData] = useState({
       expenses: [], income: [], recurring_expenses: [], budgets: [], goals: [], accounts: [], user_info: null,
   });
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
   const [summaryError, setSummaryError] = useState(null);
 
-  // State for download operations
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState(null);
 
 
   const fetchReportSummary = useCallback(async () => {
     if (!userId) {
-        setSummaryError(t('expenseReports.errorLoading'));
+        setSummaryError(t('expenseReports.errorUserNotIdentified'));
         setIsLoadingSummary(false);
         return;
     }
     setIsLoadingSummary(true);
     setSummaryError(null);
     try {
-      // This endpoint fetches summary data, used for record counts and disabling buttons.
-      // The actual file downloads will use the /custom endpoint.
-      const response = await axios.get(`${API_URL}/reports/${userId}/all`);
+      // Use the new UNLICENSED summary endpoint
+      const response = await axios.get(`${API_URL}/reports/${userId}/general_summary`);
       setReportSummaryData(response.data);
     } catch (error) {
       console.error('Error fetching report summary data:', error);
-      setSummaryError(t('expenseReports.errorLoading'));
-      setReportSummaryData({ // Reset on error
+      let errorMsg = t('expenseReports.errorLoading');
+      if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      }
+      setSummaryError(errorMsg);
+      setReportSummaryData({
           expenses: [], income: [], recurring_expenses: [], budgets: [], goals: [], accounts: [], user_info: null,
       });
     } finally {
@@ -98,7 +92,7 @@ export default function ExpenseReports() {
     fetchReportSummary();
   }, [fetchReportSummary]);
 
-  const handleDownload = async (outputFormat, dataTypesToRequest, specificFileNamePart = 'all_data') => {
+  const handleDownload = async (outputFormat, dataTypesToRequest, specificFileNamePart = 'data') => {
     if (!userId) {
         setDownloadError(t('expenseReports.errorUserNotIdentified'));
         return;
@@ -107,16 +101,17 @@ export default function ExpenseReports() {
     setDownloadError(null);
 
     const payload = {
-        data_types: dataTypesToRequest,
-        start_date: null, // No date range for general reports
+        data_types: dataTypesToRequest, // Array of backend data type keys
+        start_date: null,
         end_date: null,
-        columns: {}, // Let backend use default columns
+        columns: {}, // Backend will use default columns for this unlicensed endpoint
         output_format: outputFormat,
     };
 
     try {
-        const response = await axios.post(`${API_URL}/reports/${userId}/custom`, payload, {
-            responseType: 'blob', // Important for file download
+        // Use the new UNLICENSED output endpoint
+        const response = await axios.post(`${API_URL}/reports/${userId}/custom_unlicensed_output`, payload, {
+            responseType: 'blob',
         });
 
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -124,6 +119,7 @@ export default function ExpenseReports() {
         link.href = url;
 
         const contentDisposition = response.headers['content-disposition'];
+        // Filename construction will now be primarily driven by backend's Content-Disposition
         let filename = `seta_report_${specificFileNamePart}_${safeFormatDate(new Date(), 'yyyyMMdd')}.${outputFormat === 'excel' ? 'xlsx' : outputFormat}`;
         if (contentDisposition) {
             const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
@@ -138,31 +134,37 @@ export default function ExpenseReports() {
         window.URL.revokeObjectURL(url);
 
     } catch (err) {
-        console.error("Report generation error:", err.response?.data || err.message);
-        let errorKey = 'customReport.errorGenerationFailed'; // Using key from CustomReport for consistency
-        if (err.response?.status === 403) errorKey = 'customReport.errorLicenceRequired';
-        else if (err.response?.status === 404) errorKey = 'customReport.errorNoDataFound';
-        else if (err.response?.data) {
-            // Try to parse blob error for JSON content
-            try {
-                const errorObj = JSON.parse(await err.response.data.text());
-                setDownloadError(errorObj.detail || t(errorKey));
-            } catch (parseError) {
-                setDownloadError(t(errorKey));
+        console.error("Report generation error:", err);
+        let errorKey = 'customReport.errorGenerationFailed';
+        let detailMsg = '';
+        if (err.response) {
+            if (err.response.status === 404) errorKey = 'customReport.errorNoDataFound';
+            // Try to parse blob error for JSON content if it's a blob
+            if (err.response.data instanceof Blob && err.response.data.type === "application/json") {
+                try {
+                    const errorObj = JSON.parse(await err.response.data.text());
+                    detailMsg = errorObj.detail;
+                } catch (parseError) {
+                    // Blob wasn't JSON or failed to parse
+                }
+            } else if (err.response.data?.detail) { // Standard JSON error
+                 detailMsg = err.response.data.detail;
             }
-            setIsDownloading(false);
-            return;
         }
-        setDownloadError(t(errorKey));
+        setDownloadError(detailMsg || t(errorKey));
     } finally {
         setIsDownloading(false);
     }
   };
 
+  // Calculate total records based on the keys present in INDIVIDUAL_DATA_TYPE_OPTIONS
+  // and their corresponding arrays in reportSummaryData
+  const totalRecords = Object.keys(INDIVIDUAL_DATA_TYPE_OPTIONS)
+    .reduce((sum, frontendKey) => {
+        const dataArray = reportSummaryData[frontendKey];
+        return sum + (Array.isArray(dataArray) ? dataArray.length : 0);
+    }, 0);
 
-  const totalRecords = Object.values(reportSummaryData)
-    .filter(Array.isArray)
-    .reduce((sum, arr) => sum + (arr?.length || 0), 0);
 
   return (
     <Container maxWidth="lg">
@@ -205,7 +207,7 @@ export default function ExpenseReports() {
                     fullWidth
                     variant="contained"
                     startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
-                    onClick={() => handleDownload('csv', ALL_REPORT_DATA_TYPES, 'all_data')}
+                    onClick={() => handleDownload('csv', ALL_REPORT_DATA_TYPES_BACKEND, 'all_data')}
                     disabled={isDownloading || totalRecords === 0}
                   >
                     <T>expenseReports.downloadCsvAll</T>
@@ -216,7 +218,7 @@ export default function ExpenseReports() {
                     fullWidth
                     variant="contained"
                     startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
-                    onClick={() => handleDownload('excel', ALL_REPORT_DATA_TYPES, 'all_data')}
+                    onClick={() => handleDownload('excel', ALL_REPORT_DATA_TYPES_BACKEND, 'all_data')}
                     disabled={isDownloading || totalRecords === 0}
                   >
                     <T>expenseReports.downloadExcelAll</T>
@@ -227,7 +229,7 @@ export default function ExpenseReports() {
                     fullWidth
                     variant="contained"
                     startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
-                    onClick={() => handleDownload('pdf', ALL_REPORT_DATA_TYPES, 'all_data')}
+                    onClick={() => handleDownload('pdf', ALL_REPORT_DATA_TYPES_BACKEND, 'all_data')}
                     disabled={isDownloading || totalRecords === 0}
                   >
                     <T>expenseReports.downloadPdfAll</T>
@@ -238,20 +240,19 @@ export default function ExpenseReports() {
               <Divider sx={{ my: 3 }}><Typography variant="overline"><T>expenseReports.downloadIndividualCsv</T></Typography></Divider>
 
               <Grid container spacing={2}>
-                {Object.entries(INDIVIDUAL_DATA_TYPE_OPTIONS).map(([key, config]) => {
-                  const reportDataKey = key; // e.g., 'expenses', 'recurring_expenses'
-                  const backendDataType = config.backendKey || key; // e.g., 'expenses', 'recurring'
-                  const dataArray = reportSummaryData[reportDataKey];
+                {Object.entries(INDIVIDUAL_DATA_TYPE_OPTIONS).map(([frontendKey, config]) => {
+                  const dataArray = reportSummaryData[frontendKey]; // Use frontendKey to access summary data
                   const hasData = dataArray && dataArray.length > 0;
 
                   return (
-                    <Grid item xs={6} sm={4} md={3} key={key}>
+                    <Grid item xs={6} sm={4} md={3} key={frontendKey}>
                       <Button
                         fullWidth
                         variant="outlined"
                         size="small"
                         startIcon={isDownloading ? <CircularProgress size={16} /> : <DownloadIcon />}
-                        onClick={() => handleDownload('csv', [backendDataType], backendDataType)}
+                        // Pass the backendKey for the API request
+                        onClick={() => handleDownload('csv', [config.backendKey], config.backendKey)}
                         disabled={isDownloading || !hasData}
                       >
                         <T>{config.labelKey}</T> CSV

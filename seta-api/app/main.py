@@ -694,6 +694,85 @@ class CustomReportRequest(BaseModel):
 # --------- Helper Functions ---------
 
 
+# --- Helper function to get all user data (reusable) ---
+async def get_all_user_data_for_processing(user_id: int, db: Session):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        # This will be caught by the endpoint and raise HTTPException
+        return None
+
+    expenses_orm = (
+        db.query(models.Expense)
+        .filter(models.Expense.user_id == user_id)
+        .order_by(models.Expense.date.desc())
+        .all()
+    )
+    income_orm = (
+        db.query(models.Income)
+        .filter(models.Income.user_id == user_id)
+        .order_by(models.Income.date.desc())
+        .all()
+    )
+    recurring_expenses_orm = (
+        db.query(models.RecurringExpense)
+        .filter(models.RecurringExpense.user_id == user_id)
+        .order_by(models.RecurringExpense.name.asc())
+        .all()
+    )
+    budgets_orm = (
+        db.query(models.Budget)
+        .filter(models.Budget.user_id == user_id)
+        .order_by(models.Budget.category_name.asc())
+        .all()
+    )
+    goals_orm = (
+        db.query(models.Goal)
+        .filter(models.Goal.user_id == user_id)
+        .order_by(models.Goal.name.asc())
+        .all()
+    )
+    accounts_orm = (
+        db.query(models.Account)
+        .filter(models.Account.user_id == user_id)
+        .order_by(models.Account.name.asc())
+        .all()
+    )
+
+    try:
+        expenses_response = [
+            ExpenseResponse.model_validate(exp) for exp in expenses_orm
+        ]
+        income_response = [IncomeResponse.model_validate(inc) for inc in income_orm]
+        recurring_response = [
+            RecurringExpenseResponse.model_validate(rec)
+            for rec in recurring_expenses_orm
+        ]
+        budgets_response = [BudgetResponse.model_validate(bud) for bud in budgets_orm]
+        goals_response = [GoalResponse.model_validate(goal) for goal in goals_orm]
+        accounts_response = [
+            AccountResponse.model_validate(acc) for acc in accounts_orm
+        ]
+        user_info_response = UserResponse.model_validate(user)
+    except Exception as e:
+        logger.error(
+            f"Pydantic validation error during data processing for user {user_id}: {e}",
+            exc_info=True,
+        )
+        # This will be caught by the endpoint and raise HTTPException
+        return "validation_error"
+
+    return AllDataReportResponse(
+        user_info=user_info_response,
+        expenses=expenses_response,
+        income=income_response,
+        recurring_expenses=recurring_response,
+        budgets=budgets_response,
+        goals=goals_response,
+        accounts=accounts_response,
+        generated_at=datetime.now(timezone.utc),
+    )
+
+
 def hash_password(password: str) -> str:
     """Hash a password for storing."""
     return hashlib.sha256(password.encode()).hexdigest()
@@ -2472,6 +2551,376 @@ async def get_licence_status(user_id: int, db: Session = Depends(get_db)):
     return LicenceStatusResponse(status=status, key_prefix=prefix)
 
 
+@app.post("/reports/{user_id}/custom_unlicensed_output")
+async def generate_custom_unlicensed_report_output(
+    user_id: int,
+    request_body: CustomReportRequest,  # Re-use the same request body for simplicity
+    db: Session = Depends(get_db),
+):
+    """
+    Generates a custom data report output (CSV, Excel, PDF) based on selections.
+    This endpoint is UNLICENSED and uses default columns for selected data types.
+    Date filtering from request_body will be IGNORED for this general report.
+    Column filtering from request_body will be IGNORED; uses default columns.
+    """
+    logger.info(
+        f"Generating UNLICENSED custom report output for user {user_id} with params: {request_body.model_dump()}"
+    )
+
+    data_map = {  # Keep this map for consistency
+        "expenses": {
+            "model": models.Expense,
+            "default_cols": [
+                "date",
+                "category_name",
+                "amount",
+                "description",
+                "created_at",
+            ],
+        },
+        "income": {
+            "model": models.Income,
+            "default_cols": [
+                "date",
+                "source",
+                "amount",
+                "description",
+                "account_id",
+                "created_at",
+            ],
+        },
+        "recurring": {  # Renamed from recurring_expenses for backend key consistency
+            "model": models.RecurringExpense,
+            "default_cols": [
+                "name",
+                "category_name",
+                "amount",
+                "frequency",
+                "start_date",
+                "end_date",
+                "account_id",
+                "created_at",
+            ],
+        },
+        "budgets": {
+            "model": models.Budget,
+            "default_cols": [
+                "category_name",
+                "amount_limit",
+                "period",
+                "start_date",
+                "end_date",
+                "created_at",
+            ],
+        },
+        "goals": {
+            "model": models.Goal,
+            "default_cols": [
+                "name",
+                "target_amount",
+                "current_amount",
+                "target_date",
+                "created_at",
+            ],
+        },
+        "accounts": {
+            "model": models.Account,
+            "default_cols": [
+                "name",
+                "account_type",
+                "starting_balance",
+                "balance_date",
+                "currency",
+                "created_at",
+            ],
+        },
+    }
+    selected_data = {}
+    # Use data_types from request, but ignore date/column filters from request_body for this endpoint.
+    valid_types = [dt for dt in request_body.data_types if dt in data_map]
+
+    if not valid_types:
+        raise HTTPException(
+            status_code=400, detail="No valid data types selected for the report."
+        )
+
+    def format_for_output(value):  # Keep this helper
+        if isinstance(value, (datetime, date)):
+            return value.strftime("%Y-%m-%d")
+        elif isinstance(value, (float, models.Numeric)):  # Handle Numeric from DB
+            # Ensure value is not None before formatting
+            return f"{float(value):.2f}" if value is not None else ""
+        elif value is None:
+            return ""
+        elif hasattr(value, "value"):
+            return str(value.value)
+        else:
+            return str(value)
+
+    for data_type_key in valid_types:  # e.g., 'expenses', 'recurring'
+        model_info = data_map[data_type_key]
+        query = db.query(model_info["model"]).filter(
+            model_info["model"].user_id == user_id
+        )
+
+        # For general reports, we fetch all data, ignore date filters from request_body
+        # results = query.order_by(getattr(model_info["model"], "id", None)).all()
+        # Order by a common field if available, e.g., created_at or a date field
+        order_field_name = (
+            "date"
+            if hasattr(model_info["model"], "date")
+            else (
+                "start_date"
+                if hasattr(model_info["model"], "start_date")
+                else (
+                    "created_at" if hasattr(model_info["model"], "created_at") else "id"
+                )
+            )
+        )  # fallback to id
+
+        order_attribute = getattr(model_info["model"], order_field_name, None)
+        if order_attribute:
+            query = query.order_by(
+                desc(order_attribute)
+            )  # Or asc() depending on preference
+
+        results = query.all()
+
+        # Use default columns, ignore columns from request_body for this endpoint
+        valid_cols = model_info["default_cols"]
+
+        data_list = []
+        for item in results:
+            row_data = {}
+            for col_name in valid_cols:
+                # Special handling for account_id to fetch account name if an account model exists
+                if (
+                    col_name == "account_id"
+                    and hasattr(item, "account")
+                    and item.account
+                ):
+                    row_data["account_name"] = item.account.name  # Add account_name
+                else:
+                    row_data[col_name] = getattr(item, col_name, None)
+            data_list.append(row_data)
+
+        # Adjust columns for output if account_name was added
+        output_cols = list(valid_cols)  # Make a copy
+        if "account_id" in output_cols and any(
+            "account_name" in row for row in data_list
+        ):
+            try:
+                idx = output_cols.index("account_id")
+                output_cols.insert(
+                    idx + 1, "account_name"
+                )  # Insert account_name after account_id
+                # output_cols.remove("account_id") # Optionally remove raw account_id
+            except ValueError:
+                pass  # account_id not in default_cols somehow
+
+        selected_data[data_type_key] = {"data": data_list, "columns": output_cols}
+
+    output_format = request_body.output_format.lower()
+    filename_prefix = "seta_general_report"
+    if len(valid_types) == 1:  # If only one data type, use its name in filename
+        filename_prefix = f"seta_{valid_types[0]}_report"
+
+    filename = f"{filename_prefix}_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    try:
+        if output_format == "csv":
+            all_data_frames = []
+            for data_type, data_info in selected_data.items():
+                if data_info["data"]:
+                    formatted_data_list = [
+                        {
+                            col: format_for_output(row.get(col))
+                            for col in data_info["columns"]
+                        }
+                        for row in data_info["data"]
+                    ]
+                    df = pd.DataFrame(formatted_data_list, columns=data_info["columns"])
+                    # Add a column to distinguish data source if multiple types are combined
+                    if len(valid_types) > 1:
+                        df["data_source"] = data_type
+                    all_data_frames.append(df)
+
+            if not all_data_frames:
+                raise HTTPException(
+                    status_code=404, detail="No data found for the selected criteria."
+                )
+
+            # If only one df, use it directly. If multiple, concat.
+            if len(all_data_frames) == 1:
+                final_df = all_data_frames[0]
+            else:
+                final_df = pd.concat(all_data_frames, ignore_index=True)
+
+            stream = io.StringIO()
+            # Ensure quoting is minimal for CSV, similar to the licensed custom report
+            final_df.to_csv(stream, index=False, quoting=csv.QUOTE_MINIMAL)
+            response = StreamingResponse(
+                iter([stream.getvalue()]), media_type="text/csv"
+            )
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={filename}.csv"
+            )
+            return response
+
+        elif output_format == "excel":
+            stream = io.BytesIO()
+            with pd.ExcelWriter(stream, engine="openpyxl") as writer:
+                has_data = False
+                for data_type, data_info in selected_data.items():
+                    if data_info["data"]:
+                        formatted_data_list = [
+                            {
+                                col: format_for_output(row.get(col))
+                                for col in data_info["columns"]
+                            }
+                            for row in data_info["data"]
+                        ]
+                        df = pd.DataFrame(
+                            formatted_data_list, columns=data_info["columns"]
+                        )
+                        df.to_excel(
+                            writer, sheet_name=data_type.capitalize()[:30], index=False
+                        )  # Sheet name max 31 chars
+                        has_data = True
+                if not has_data:
+                    raise HTTPException(
+                        status_code=404, detail="No data found for selected criteria."
+                    )
+            stream.seek(0)
+            response = StreamingResponse(
+                stream,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={filename}.xlsx"
+            )
+            return response
+
+        elif output_format == "pdf":
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(
+                buffer,
+                pagesize=letter,
+                leftMargin=0.5 * inch,
+                rightMargin=0.5 * inch,
+                topMargin=0.5 * inch,
+                bottomMargin=0.5 * inch,
+            )
+            styles = getSampleStyleSheet()
+            story = []
+            has_data = False
+
+            story.append(
+                Paragraph(
+                    f"SETA General Report ({', '.join(s.capitalize() for s in valid_types)})",
+                    styles["h1"],
+                )
+            )
+            story.append(
+                Paragraph(
+                    f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                    styles["Normal"],
+                )
+            )
+            story.append(Spacer(1, 0.2 * inch))
+
+            for data_type, data_info in selected_data.items():
+                if data_info["data"]:
+                    has_data = True
+                    story.append(
+                        Paragraph(f"Data: {data_type.capitalize()}", styles["h2"])
+                    )
+                    story.append(Spacer(1, 0.1 * inch))
+
+                    headers = data_info["columns"]
+                    formatted_pdf_data = [
+                        [format_for_output(row.get(col)) for col in headers]
+                        for row in data_info["data"]
+                    ]
+                    table_data = [headers] + formatted_pdf_data
+
+                    table = Table(table_data, repeatRows=1, hAlign="LEFT")
+                    table.setStyle(
+                        TableStyle(
+                            [
+                                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                                (
+                                    "ALIGN",
+                                    (0, 0),
+                                    (-1, -1),
+                                    "LEFT",
+                                ),  # Usually better for reports
+                                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                                ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+                                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                                (
+                                    "FONTSIZE",
+                                    (0, 0),
+                                    (-1, -1),
+                                    7,
+                                ),  # Smaller for more data
+                                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                            ]
+                        )
+                    )
+                    # Calculate column widths to fit page (approximate)
+                    num_cols = len(headers)
+                    page_width_points = letter[0] - 1 * inch  # Subtract margins
+                    col_width = (
+                        page_width_points / num_cols
+                        if num_cols > 0
+                        else page_width_points
+                    )
+
+                    # Apply word wrapping by setting colWidths
+                    # This is a simple equal distribution, might need more sophisticated logic for varied content
+                    table._argW = [col_width] * num_cols
+
+                    story.append(table)
+                    story.append(Spacer(1, 0.2 * inch))
+
+            if not has_data:
+                raise HTTPException(
+                    status_code=404, detail="No data found for selected criteria."
+                )
+
+            try:
+                doc.build(story)
+            except Exception as pdf_error:
+                logger.error(
+                    f"Error building PDF for general report (user {user_id}): {pdf_error}",
+                    exc_info=True,
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to build PDF report: {pdf_error}"
+                )
+
+            buffer.seek(0)
+            response = StreamingResponse(buffer, media_type="application/pdf")
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={filename}.pdf"
+            )
+            return response
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported output format.")
+
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(
+            f"Error generating unlicensed report file for user {user_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="Failed to generate report file.")
+
+
 @app.put("/users/{user_id}/licence", status_code=status.HTTP_200_OK)
 async def update_licence_key(
     user_id: int, payload: LicenceUpdateRequest, db: Session = Depends(get_db)
@@ -2836,6 +3285,26 @@ async def generate_custom_report(
             exc_info=True,
         )
         raise HTTPException(status_code=500, detail="Failed to generate report file.")
+
+
+# --- UNLICENSED ENDPOINT for fetching general report summary data ---
+@app.get("/reports/{user_id}/general_summary", response_model=AllDataReportResponse)
+async def get_general_report_summary_data(user_id: int, db: Session = Depends(get_db)):
+    """
+    Fetches all relevant data for a user for general reporting (summary view).
+    This endpoint is UNLICENSED.
+    """
+    report_data = await get_all_user_data_for_processing(user_id=user_id, db=db)
+    if report_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    if report_data == "validation_error":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error processing report data during validation.",
+        )
+    return report_data
 
 
 if __name__ == "__main__":
